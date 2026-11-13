@@ -1,0 +1,1240 @@
+/* ==========================================================================
+   WIZARD DE GESTIÓN DE MUNICIPIOS - Estilos generales y responsive
+   Proyecto: POU
+   Descripción:
+   - Estilo base de los pasos del wizard (iconos circulares, etiquetas, líneas de conexión)
+   - Responsive completo para móviles, tablets y escritorio
+   - Lógica visual de líneas: solo se muestran entre pasos de la misma fila
+========================================================================== */
+
+/* --------------------------------------
+   Estilo base del contenedor wizard
+----------------------------------------- */
+.wizard {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 40px;
+  position: relative;
+  counter-reset: wizard-step;
+}
+
+/* --------------------------------------
+     Paso individual del wizard
+  ----------------------------------------- */
+.wizard-step {
+  position: relative;
+  text-align: center;
+  flex: 1;
+  min-width: 100px;
+  cursor: pointer;
+}
+
+/* Círculo del paso */
+.wizard-step .circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 10px;
+  color: #ccc;
+  position: relative;
+  z-index: 1;
+}
+
+/* Etiqueta del paso */
+.wizard-step .label {
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+/* Paso activo */
+.wizard-step.active .circle {
+  border-color: #fd0d2388;
+  color: #fd0d23;
+}
+
+.wizard-step.active .label {
+  color: #fd0d23;
+}
+
+/* Paso completado */
+.wizard-step.complete .circle {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.wizard-step.complete .label {
+  color: #28a745;
+}
+
+/* Línea conectora entre pasos (por defecto) */
+.wizard-step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  background-color: #ccc;
+  top: 32px;
+  left: -50%;
+  width: 100%;
+  z-index: 0;
+}
+
+/* Línea verde si el paso anterior está completo */
+.wizard-step.complete + .wizard-step::before {
+  background-color: #28a745;
+}
+
+/* ==========================================================================
+     RESPONSIVE - Móviles (<768px)
+  ========================================================================== */
+@media (max-width: 767.98px) {
+  .wizard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  .wizard-step {
+    flex: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .wizard-step .circle {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .wizard-step .label {
+    text-align: left;
+    font-size: 1rem;
+    margin: 0;
+    color: inherit;
+  }
+
+  .wizard-step::before {
+    content: none !important; /* No mostrar líneas en vertical */
+  }
+
+  .wizard-section h5 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ==========================================================================
+     RESPONSIVE - Tablets (768px a 1199px)
+  ========================================================================== */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .wizard {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .wizard-step {
+    flex: 0 0 calc(33.333% - 1rem); /* 3 por fila */
+    min-width: 140px;
+  }
+
+  /* Mostrar líneas solo entre pasos de la misma fila */
+  .wizard-step:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    height: 2px;
+    background-color: #ccc;
+    top: 32px;
+    left: -50%;
+    width: 100%;
+    z-index: 0;
+  }
+
+  .wizard-step.complete + .wizard-step::before {
+    background-color: #28a745;
+  }
+
+  /* Eliminar líneas entre filas (ej. fase → documentos) */
+  .wizard-step:nth-child(4)::before,
+  .wizard-step:nth-child(7)::before {
+    content: none !important;
+  }
+}
+
+/* ==========================================================================
+     CONTENIDO DEL WIZARD
+  ========================================================================== */
+#wizard-content {
+  min-height: 100px;
+  font-weight: 500;
+  position: relative;
+}
+
+.wizard-paso {
+  transition: opacity 0.3s ease;
+}
+
+.wizard-section {
+  border: 1px solid #e6dedf;
+  border-radius: 12px;
+  padding: 30px;
+  background-color: #fdfcfc;
+  box-shadow: 0 2px 8px rgba(253, 13, 35, 0.08);
+  margin-top: 30px;
+  transition: all 0.3s ease;
+}
+
+.wizard-section h5 {
+  color: #fd0d23;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+}
+
+/* ==========================================================================
+     NAVEGACIÓN DEL WIZARD (botones)
+  ========================================================================== */
+#wizardButtons {
+  margin-top: 2rem;
+}
+
+#wizardButtons .btn,
+#wizardWrapper .btn {
+  min-width: 100px;
+}
+
+#nextBtn {
+  background-color: #fd0d23;
+  border-color: #fd0d23;
+}
+
+#nextBtn:hover {
+  background-color: #d70b1d;
+  border-color: #ca0a1b;
+}
+
+/* ==========================================================================
+     TRANSICIONES ENTRE PASOS
+  ========================================================================== */
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ==========================================================================
+     SPINNER DE CARGA EN MODAL
+  ========================================================================== */
+.modal-spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #faf8f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.14s ease, visibility 0.14s ease;
+}
+
+.modal-spinner-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Mientras se cargan los siete pasos mantenemos una única superficie estable.
+   El contenido aparece de una vez cuando todos los formularios están listos. */
+#modalWizard .wizard-modal-content.is-loading .wizard,
+#modalWizard .wizard-modal-content.is-loading #wizard-content {
+  visibility: hidden;
+}
+
+/* ==========================================================================
+    TABLA DOCUMENTOS DE WIZARDS
+  ========================================================================== */
+#tablaDocumentos {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+#tablaDocumentos th,
+#tablaDocumentos td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* TABLA DOCUMENTOS, BOTONES y NOTICIAS DE WIZARDS*/
+@media (min-width: 1200px) {
+  #tablaDocumentosWrapper {
+    overflow-x: hidden !important;
+  }
+
+  #tablaBotonesParticipacionWrapper {
+    overflow-x: hidden !important;
+  }
+
+  #tablaNoticiasWrapper {
+    overflow-x: hidden !important;
+  }
+}
+
+/* ==========================================================================
+    CONFIGURACION SCROLL VERTICAL CONTENEDORES WIZARD
+========================================================================== */
+
+/* Scroll vertical solo si se desborda en pasos 3, 4, 5, 6 y 7 */
+#wizard-content .wizard-paso[data-step="3"],
+#wizard-content .wizard-paso[data-step="4"],
+#wizard-content .wizard-paso[data-step="5"],
+#wizard-content .wizard-paso[data-step="6"],
+#wizard-content .wizard-paso[data-step="7"] {
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Scroll bonito (opcional) para todos esos pasos */
+#wizard-content .wizard-paso[data-step="3"]::-webkit-scrollbar,
+#wizard-content .wizard-paso[data-step="4"]::-webkit-scrollbar,
+#wizard-content .wizard-paso[data-step="5"]::-webkit-scrollbar,
+#wizard-content .wizard-paso[data-step="6"]::-webkit-scrollbar,
+#wizard-content .wizard-paso[data-step="7"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+#wizard-content .wizard-paso[data-step="3"]::-webkit-scrollbar-thumb,
+#wizard-content .wizard-paso[data-step="4"]::-webkit-scrollbar-thumb,
+#wizard-content .wizard-paso[data-step="5"]::-webkit-scrollbar-thumb,
+#wizard-content .wizard-paso[data-step="6"]::-webkit-scrollbar-thumb,
+#wizard-content .wizard-paso[data-step="7"]::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+    ESTILO EDITOR
+  ========================================================================== */
+/* Estilo para el contenido visual de CKEditor */
+.ck-editor__editable {
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  font-weight: 400;
+}
+
+/* Asegura que los párrafos se vean con margen vertical y mejor legibilidad */
+.ck-editor__editable p {
+  margin-bottom: 1em;
+}
+
+/* ==========================================================================
+    ESTILO BOTON SWAL
+  ========================================================================== */
+.swal2-confirm {
+  background-color: #fd0d23 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.swal2-cancel {
+  background-color: #6c757d !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* ==========================================================================
+    TEXTO RESPUESTA FAQS
+  ========================================================================== */
+.faq-respuesta {
+  font-family: system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: #495057;
+  background-color: #faf8f8;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #fd0d23;
+  border-radius: 0.25rem;
+}
+
+/* ==========================================================================
+    PANEL DE CATEGORÍAS: estilo responsive centrado en móvil
+  ========================================================================== */
+#panelCrearCategoria {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  min-width: 300px;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  z-index: 10;
+}
+
+.titulo-categoria-custom {
+  font-size: 1.035rem;
+  font-weight: 600;
+  color: #fd0d23;
+}
+
+/* PANEL CATEGORÍAS RESPONSIVE */
+@media (max-width: 768px) {
+  #panelCrearCategoria {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90% !important;
+    max-width: 400px;
+    z-index: 1055;
+  }
+}
+
+/* ==========================================================================
+    BOTONES DE CABECERA DEL WIZARD: TOUR + PREVIEW
+  ========================================================================== */
+.btn-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: #e50b1f;
+  border: 1px solid #e50b1f;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-tour:hover {
+  background-color: rgba(229, 11, 31, 0.15);
+  color: #e50b1f !important;
+  border-color: #e50b1f !important;
+}
+
+.btn-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: #fd0d23;
+  border: 1px solid #fd0d23;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-preview:hover {
+  background-color: rgba(253, 13, 35, 0.08);
+  color: #fd0d23 !important;
+  border-color: #fd0d23 !important;
+}
+
+.btn-tour,
+.btn-preview {
+  padding: 0.4rem 0.9rem;
+}
+
+.btn-tour i,
+.btn-preview i {
+  font-size: 1rem;
+  line-height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+/* ==========================================================================
+   CABECERA DEL WIZARD (título + botones)
+   ========================================================================== */
+
+/* Layout general del header del wizard */
+.wizard-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Contenedor de los botones de la derecha */
+.wizard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive: móvil */
+@media (max-width: 575.98px) {
+  .wizard-modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .wizard-modal-header .modal-title {
+    width: 100%;
+    text-align: left;
+  }
+
+  .wizard-header-actions {
+    width: 100%;
+    justify-content: flex-start; /* botones alineados a la izquierda */
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================
+   SELECTOR DE MUNICIPIO CON BÚSQUEDA (bootstrap-select)
+   ============================================================ */
+
+/* 1) Quitar doble caret/punto extraño */
+.bootstrap-select > .dropdown-toggle::after,
+.bootstrap-select .caret,
+.bootstrap-select .bs-caret {
+  display: none !important;
+}
+
+/* 2) Ajustar el botón principal para que se vea como un form-select */
+.bootstrap-select > .btn.form-select {
+  text-align: left;
+  height: 38px;
+  line-height: 1.5;
+  display: inline-flex;
+  align-items: center;
+  background-image: none !important;
+  border: 1px solid var(--bs-border-color);
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Estado focus/active igual al form-control Bootstrap */
+.bootstrap-select > .btn.form-select:focus,
+.bootstrap-select > .btn.form-select:active {
+  border-color: #fe8691 !important;
+  box-shadow: 0 0 0 0.25rem rgba(253, 13, 35, 0.25) !important;
+  outline: none !important;
+}
+
+/* Disabled sin gris feo */
+.bootstrap-select > .btn.form-select.disabled,
+.bootstrap-select > .btn.form-select:disabled {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* 3) Eliminar el espacio en blanco entre buscador y primer municipio */
+.bootstrap-select .bs-searchbox {
+  padding: .25rem .5rem !important;
+  margin: 0 !important;
+}
+.bootstrap-select .bs-searchbox .form-control {
+  margin-bottom: 0 !important;
+}
+.bootstrap-select .dropdown-menu {
+  padding-top: 0 !important;
+}
+.bootstrap-select .bs-searchbox + .inner,
+.bootstrap-select .bs-searchbox + .inner .dropdown-menu {
+  margin-top: 0 !important;
+}
+
+/* 4) Ocultar ítems fantasma (placeholder/headers/dividers) */
+.bootstrap-select .dropdown-menu li.bs-title-option,
+.bootstrap-select .dropdown-menu li.bs-placeholder,
+.bootstrap-select .dropdown-menu li.dropdown-header,
+.bootstrap-select .dropdown-menu li.divider {
+  display: none !important;
+}
+
+/* 5) Compactar un poco las opciones */
+.bootstrap-select .dropdown-menu li a {
+  padding-top: .35rem;
+  padding-bottom: .35rem;
+}
+
+/* ============================
+   Estilo para checkboxes y switches
+   ============================ */
+
+/* Contenedor general de checkboxes */
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+  font-weight: normal;
+  color: #333;
+  margin-top: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+
+/* Checkbox normal */
+.form-check-input {
+  margin-top: 0.3rem;
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+/* Texto descriptivo del checkbox */
+.form-check-label {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #555;
+  user-select: none;
+}
+
+.form-check-input:checked {
+  background-color: #fd0d23;
+  border-color: #fd0d23;
+}
+
+/* Espaciado extra entre los dos bloques de checks */
+.form-check + .form-check {
+  margin-top: 0.25rem;
+}
+
+/* Switch (buzón de participación) */
+.form-switch {
+  margin-top: 0.2rem !important; /* reducimos el espacio extra */
+}
+
+/* Mejora en pantallas pequeñas */
+@media (max-width: 768px) {
+  .form-check-label {
+    font-size: 0.95rem;
+  }
+}
+
+/* ============================
+   Drag and Drop TABLA FAQS
+   ============================ */
+/* cursor “mano” al pasar por el asa */
+.drag-handle { cursor: grab; }
+.handle-cell { width: 48px; }
+
+/* ==========================================================================
+   PASO 4: DOCUMENTOS - UX de acciones
+========================================================================== */
+
+/* Botones redondos solo-icono para acciones */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.btn-icon i {
+  font-size: 0.9rem;
+}
+
+/* Cabeceras y filas de la tabla algo más suaves */
+#tablaDocumentos thead th {
+  font-weight: 600;
+}
+
+#tablaDocumentos tbody tr:hover {
+  background-color: #fff5f6;
+}
+
+.bloque-edicion-ajustado {
+  margin-top: -3px !important;
+}
+
+/* Paso 4: tarjeta "Gestionar documentos" */
+.card-gestion-documentos {
+  background-color: #ffffff;
+}
+
+.btn-gestionar-docs {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.btn-gestionar-docs i {
+  font-size: 1rem;
+}
+
+.btn-gestionar-docs:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(253, 13, 35, 0.18);
+}
+
+/* =========================================================
+   BASE MODAL WIZARD (necesario para que offcanvas internos no se recorten)
+========================================================= */
+#modalWizard .modal-content {
+  position: relative;
+  overflow: visible;
+}
+
+#modalWizard .modal-body {
+  position: relative;
+  overflow: visible;
+}
+
+.offcanvas-backdrop {
+  display: none !important;
+}
+
+/* =========================================================
+   BLOQUEO del wizard cuando el inspector está abierto
+========================================================= */
+#modalWizard .wizard-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(1px);
+  z-index: 1060;   /* por debajo del panel (1065) */
+  display: none;
+  cursor: not-allowed;
+}
+
+#modalWizard .wizard-lock-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(1px);
+  z-index: 1060;
+  display: none;
+  cursor: not-allowed;
+}
+
+#modalWizard.locked .wizard-lock,
+#modalWizard.locked .wizard-lock-footer {
+  display: block;
+}
+
+/* =========================================================
+   PASO 5 -PARTICIPACION (Offcanvas) integrado en #modalWizard
+   - Más alto (top/bottom ajustados)
+   - Animación suave
+   - Sin backdrop
+   - Sin recorte
+========================================================= */
+#modalWizard .offcanvas-participacion {
+  position: absolute;
+  right: 12px;
+  top: 44px;
+  bottom: auto;
+  height: auto;
+  width: min(560px, 94vw);
+  background: #fff;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+
+  z-index: 1065;
+  overflow: hidden;
+
+  /* Animación suave */
+  transform: translateX(24px);
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.18s ease;
+}
+
+#modalWizard .offcanvas-participacion.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+#modalWizard .offcanvas-participacion .offcanvas-body {
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+/* Móvil */
+@media (max-width: 576px) {
+  #modalWizard .offcanvas-participacion {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    top: 40px;
+    bottom: 50px;
+    border-radius: 12px;
+  }
+}
+
+/* =======================================================================
+   FIX SWEETALERT2 + BOOTSTRAP MODAL (EVITA DESBORDE Y SCROLL RARO)
+   - SweetAlert añade swal2-height-auto y rompe tu layout fijo.
+   - Forzamos height:100% y overflow:hidden cuando Swal está activo.
+======================================================================= */
+
+/* Z-index bien alto para que Swal SIEMPRE esté por encima del wizard */
+.swal2-container {
+  z-index: 20000 !important;
+}
+
+/* SweetAlert2 a veces añade swal2-height-auto en html/body */
+html.swal2-height-auto,
+body.swal2-height-auto,
+html.swal2-shown,
+body.swal2-shown {
+  height: 100% !important;
+  overflow: hidden !important; /* evita que "aparezca" scroll y se mueva el panel */
+}
+
+/* Evita que Bootstrap/SweetAlert metan padding-right y te “descuadre” el layout */
+body.swal2-height-auto,
+body.swal2-shown,
+body.modal-open {
+  padding-right: 0 !important;
+}
+
+/* Cuando hay modal abierto, no queremos scroll del documento (solo el modal) */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* =========================================================
+   OFFCANVAS - NOTICIAS - PASO 6
+========================================================= */
+
+/* Offcanvas noticias */
+#modalWizard .offcanvas-noticias {
+  position: absolute;
+  right: 12px;
+  top: -175px;
+  bottom: 12px;
+  height: 695px;
+
+  width: min(620px, 94vw);
+  background: #fff;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+
+  z-index: 1065;
+  overflow: hidden;
+
+  transform: translateX(24px);
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.18s ease;
+}
+
+#modalWizard .offcanvas-noticias.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Header + body */
+#modalWizard .offcanvas-noticias .offcanvas-header {
+  background: #fff;
+}
+
+#modalWizard .offcanvas-noticias .offcanvas-body {
+  height: calc(100% - 64px);
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+/* Móvil */
+@media (max-width: 576px) {
+  #modalWizard .offcanvas-noticias {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: auto;
+    height: auto; /* coherente en móvil */
+    border-radius: 12px;
+  }
+}
+
+/* =========================================================
+   PASO 6 - TABLA NOTICIAS (ANTI-DESBORDE PREMIUM)
+========================================================= */
+
+/* El paso 6 nunca genera scroll horizontal del wizard */
+#wizard-content .wizard-paso[data-step="6"] {
+  overflow-x: hidden !important;
+}
+
+/* Wrapper principal */
+#tablaNoticiasWrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Wrappers internos de DataTables */
+#tablaNoticiasWrapper .dataTables_wrapper,
+#tablaNoticiasWrapper .dt-container,
+#tablaNoticiasWrapper .dt-layout-row {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Tabla estable */
+#tablaNoticiasWrapper table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed; /* CLAVE */
+}
+
+/* Cabecera */
+#tablaNoticiasWrapper thead th {
+  font-weight: 600;
+  color: #212529;
+  background: #faf8f8;
+  border-bottom: 1px solid rgba(0,0,0,.08) !important;
+}
+
+/* Celdas */
+#tablaNoticiasWrapper th,
+#tablaNoticiasWrapper td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Hover suave */
+#tablaNoticiasWrapper tbody tr:hover {
+  background-color: #fff5f6;
+}
+
+/* TÍTULO SIEMPRE PROTAGONISTA */
+#tablaNoticiasWrapper th:nth-child(1),
+#tablaNoticiasWrapper td:nth-child(1) {
+  width: 62% !important;
+}
+
+/* Botones icono */
+#tablaNoticiasWrapper .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 12px;
+}
+
+#tablaNoticiasWrapper .btn-icon i {
+  font-size: 0.95rem;
+}
+
+/* =========================================================
+   RESPONSIVE TABLA
+   - Scroll horizontal SOLO en la tabla cuando haga falta
+========================================================= */
+@media (max-width: 992px) {
+  #tablaNoticiasWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #tablaNoticiasWrapper table {
+    min-width: 720px;
+  }
+}
+
+/* =========================================================
+   SWITCH ESTADO (VERDE MÁS POTENTE)
+========================================================= */
+.switch-activa {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.switch-activa input {
+  display: none;
+}
+
+.switch-activa .slider {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  position: relative;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(108,117,125,.15);
+  transition: all .18s ease;
+}
+
+.switch-activa .slider::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  transition: all .18s ease;
+}
+
+/* Activo */
+.switch-activa input:checked + .slider {
+  background: rgba(25,135,84,.38);
+  border-color: rgba(25,135,84,.55);
+}
+
+.switch-activa input:checked + .slider::after {
+  left: 22px;
+  box-shadow: 0 2px 10px rgba(25,135,84,.35);
+}
+
+.switch-activa .switch-label {
+  font-weight: 600;
+  font-size: .9rem;
+  color: #212529;
+  min-width: 70px;
+}
+
+/* =========================================================
+   MINI TOAST (FEEDBACK PREMIUM)
+========================================================= */
+.toast-mini {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2000;
+  background: #212529;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.toast-mini.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================================================== */
+/* CONFIGURACIÓN VISUAL DEL PORTAL                                             */
+/* ========================================================================== */
+
+/* ========================================================================== */
+/* ACCESO AL DISEÑADOR VISUAL DEL PORTAL                                      */
+/* ========================================================================== */
+
+.portal-design-launcher {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: #fff7f8;
+    border: 1px solid #f6cfd3;
+    border-radius: 14px;
+}
+
+.portal-design-launcher.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.portal-design-launcher__icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    color: #930f1b;
+    background: #ffe5e7;
+    border-radius: 14px;
+    font-size: 1.35rem;
+}
+
+.portal-design-launcher__icon--participacion {
+    color: #267249;
+    background: #eaf5ee;
+}
+
+.portal-design-launcher__copy span,
+.portal-design-launcher__copy h6,
+.portal-design-launcher__copy p {
+    display: block;
+}
+
+.portal-design-launcher__copy span {
+    margin-bottom: 2px;
+    color: #930f1b;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.portal-design-launcher__copy h6 {
+    margin: 0 0 3px;
+    color: #67242a;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.portal-design-launcher__copy p {
+    margin: 0;
+    color: #8d696c;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+@media (max-width: 991.98px) {
+    .portal-design-launcher {
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+    }
+
+}
+
+@media (max-width: 767.98px) {
+    .portal-design-launcher {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .portal-design-launcher__icon {
+        display: none;
+    }
+
+}
+
+/* =====================================================
+   ORDEN DE LAS SECCIONES DEL PORTAL
+===================================================== */
+
+/* ========================================================================== */
+/* EL ASISTENTE CABE EN LA PANTALLA SIN PERDER FUNCIONALIDAD                   */
+/* ========================================================================== */
+#modalWizard .wizard-modal-content {
+  max-height: 94vh;
+  overflow: hidden;
+}
+
+#modalWizard .modal-header {
+  padding: 10px 16px;
+}
+
+#modalWizard .modal-body {
+  min-height: 0;
+  padding: 10px 16px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#modalWizard .wizard {
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+#modalWizard .wizard-step {
+  min-width: 76px;
+}
+
+#modalWizard .wizard-step .circle {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 5px;
+  font-size: 19px;
+}
+
+#modalWizard .wizard-step:not(:first-child)::before {
+  top: 23px;
+}
+
+#modalWizard .wizard-step .label {
+  font-size: .78rem;
+}
+
+#modalWizard .contenido {
+  margin-top: 10px !important;
+}
+
+#modalWizard .wizard-section {
+  margin-top: 8px;
+  padding: 18px 20px;
+}
+
+#modalWizard .wizard-section h5 {
+  margin-bottom: 1rem;
+  font-size: 1.08rem;
+}
+
+#modalWizard #wizardButtons {
+  margin-top: 0;
+  padding: 9px 14px;
+}
+
+#modalWizard #wizardButtons .btn {
+  min-width: 88px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+#modalWizard .ck-editor__editable_inline {
+  min-height: 120px;
+  max-height: 210px;
+}
+
+@media (max-height: 760px) and (min-width: 768px) {
+  #modalWizard .wizard-step .circle {
+    width: 40px;
+    height: 40px;
+    font-size: 17px;
+  }
+
+  #modalWizard .wizard-step:not(:first-child)::before {
+    top: 20px;
+  }
+
+  #modalWizard .wizard-section {
+    padding: 13px 16px;
+  }
+}

@@ -1,0 +1,247 @@
+/* =========================================================
+   1) BASE Intro.js (ajustes visuales generales)
+   ========================================================= */
+
+.introjs-tooltip {
+  background-color: #fff !important;
+  color: #212529 !important;
+  border: 1px solid #e6dedf !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.15) !important;
+  padding: 2rem 2rem 3.5rem !important;
+  position: relative !important;
+  max-width: 700px !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  z-index: 999999 !important;
+}
+
+/* Contenedor del texto */
+.introjs-tooltiptext {
+  width: 100%;
+  text-align: justify !important;
+  padding-left: 8px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Flecha del tooltip */
+.introjs-tooltip:before {
+  border-color: #ffffff transparent transparent transparent !important;
+}
+
+/* Header plano */
+.introjs-tooltip-header {
+  position: static;
+  padding-top: 0;
+}
+
+/* Botón "×" de cerrar (añadido por JS) */
+.introjs-tooltip .btn-cerrar-tour {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: 0;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  line-height: 1;
+  font-weight: 700;
+  transition: color .2s ease;
+}
+.introjs-tooltip .btn-cerrar-tour:hover { color: #dc3545; }
+
+/* =========================================================
+   2) BOTONES y BULLETS (look Bootstrap)
+   ========================================================= */
+
+.introjs-button {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: .875rem;
+  font-weight: 400;
+  padding: .4rem .75rem;
+  border-radius: .25rem;
+  text-shadow: none !important;
+  outline: none;
+  text-decoration: none;
+}
+
+.introjs-nextbutton,
+.introjs-donebutton {
+  color: #fff !important;
+  background-color: #fd0d23 !important;
+  border: 1px solid #fd0d23 !important;
+}
+.introjs-prevbutton {
+  color: #6c757d !important;
+  background-color: #fff !important;
+  border: 1px solid #e6dcdd !important;
+}
+.introjs-skipbutton {
+  color: #fd0d23 !important;
+  background: none !important;
+  border: none !important;
+  font-weight: 400 !important;
+}
+.introjs-button.introjs-disabled {
+  opacity: .65 !important;
+  pointer-events: none !important;
+  background-color: #f4f4f4 !important;
+  border: 1px solid #bdbdbd !important;
+  color: #9e9e9e !important;
+}
+
+/* Bullets de progreso */
+.introjs-bullets {
+  margin-top: 1.5rem !important;
+  text-align: center !important;
+}
+.introjs-bullets ul {
+  display: inline-flex;
+  gap: .35rem;
+}
+.introjs-bullets li a {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ccc !important;
+}
+.introjs-bullets li a.active {
+  background-color: #540000 !important;
+}
+
+/* =========================================================
+   3) TEMA customTooltip (estilo principal del tour)
+   ========================================================= */
+
+.customTooltip.introjs-tooltip {
+  width: min(92vw, 720px) !important;
+  max-width: 720px !important;
+
+  /* Altura: auto por defecto */
+  height: auto !important;
+  max-height: 85vh !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;   /* evita desbordes verticales */
+  padding: 1.5rem 1.5rem 1rem !important;
+}
+
+/* Modo alto (añadido por JS cuando el contenido es grande) */
+.customTooltip.introjs-tooltip.customTooltip--tall {
+  height: 520px !important;
+}
+
+/* Cuerpo del contenido (scroll cuando hace falta) */
+.customTooltip .introjs-tooltiptext {
+  flex: 1 1 auto !important;     /* puede crecer y encogerse */
+  min-height: 0 !important;      /* necesario para que el scroll funcione */
+  overflow-y: auto !important;
+  padding-right: 8px !important;
+  padding-left: 8px !important;
+}
+
+/* Footer fijo abajo (botones) */
+.customTooltip .introjs-tooltipbuttons {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: .5rem;
+  margin-top: .75rem;
+  z-index: 1;
+}
+
+/* Tipografía global */
+.customTooltip .introjs-tooltiptext,
+.customTooltip .introjs-tooltiptext * {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-weight: 400 !important;
+  color: #462f31 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.55 !important;
+}
+
+/* Primer bloque destacado */
+.customTooltip .introjs-tooltiptext p:first-child,
+.customTooltip .introjs-tooltiptext div:first-child {
+  font-weight: 500 !important;
+  margin-bottom: .5rem !important;
+}
+
+/* Negritas */
+.customTooltip .introjs-tooltiptext b,
+.customTooltip .introjs-tooltiptext strong {
+  font-weight: 600 !important;
+}
+
+/* Listas compactas y justificadas */
+.customTooltip .introjs-tooltiptext ul {
+  margin: .5rem 0 .25rem 1.25rem !important;
+  padding: 0 !important;
+  list-style-position: inside !important;
+  text-align: justify !important;
+}
+.customTooltip .introjs-tooltiptext li {
+  margin: .25rem 0 !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
+  text-align: justify !important;
+}
+.customTooltip .introjs-tooltiptext li::marker {
+  font-size: .8rem;
+  color: #5c6670;
+}
+
+/* Imágenes adaptables con sombra */
+.customTooltip .introjs-tooltiptext img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 6px auto 0;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0,0,0,.2);
+}
+
+/* Subtítulos bajo imágenes */
+.customTooltip .introjs-tooltiptext p.caption,
+.customTooltip .introjs-tooltiptext p:last-child {
+  margin-top: 5px;
+  font-size: .9rem;
+  color: #555 !important;
+  text-align: center !important;
+}
+
+/* =========================================================
+   4) Responsive fino (móvil)
+   ========================================================= */
+
+@media (max-width: 576px) {
+  .customTooltip.introjs-tooltip {
+    width: 94vw !important;
+    max-width: 94vw !important;
+    height: auto !important;
+    max-height: 80vh !important;
+    overflow: hidden !important;
+    padding: 1rem 1rem .75rem !important;
+  }
+  .customTooltip.introjs-tooltip.customTooltip--tall {
+    height: 460px !important;
+  }
+}
+
+/* Listas con sangría colgante (viñeta fuera, texto alineado) */
+.customTooltip.introjs-tooltip .introjs-tooltiptext ul {
+  list-style-position: outside !important; /* <— clave */
+  padding-left: 1.25rem !important;       /* espacio para la viñeta */
+  margin-left: 0 !important;
+}
+
+.customTooltip.introjs-tooltip .introjs-tooltiptext li {
+  text-indent: 0 !important;              /* sin arrastre de 1ª línea */
+  padding-left: 0 !important;             /* el padding lo lleva el UL */
+  margin: .25rem 0 !important;
+  line-height: 1.5 !important;
+  text-align: justify !important;         /* si quieres mantener justificado */
+}

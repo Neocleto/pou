@@ -1,0 +1,5 @@
+/* Pie institucional liso. El fondo toma el color corporativo del portal. */
+.access-footer, .portal-page .portal-footer {
+    position: relative;
+    background: var(--pou-primary, #540000);
+}

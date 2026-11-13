@@ -1,0 +1,23 @@
+/* Los iconos de las guías conservan sus dibujos originales con tinta burdeos.
+   Esta hoja se comparte entre el portal y el configurador. */
+.bi.bi-pou-fases::before,
+.bi.bi-pou-encuesta-infantil::before,
+.bi.bi-pou-encuesta-participacion::before,
+.bi.bi-pou-manos::before,
+.bi.bi-pou-documentos::before,
+.bi.bi-pou-noticias::before,
+.bi.bi-pou-buzon::before {
+    content: "";
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -.125em;
+    background: var(--pou-icono-original) center / contain no-repeat;
+}
+.bi.bi-pou-manos { --pou-icono-original: url("../images/iconos/participacion.png?v=pou-iconos-20261112-2"); }
+.bi.bi-pou-documentos { --pou-icono-original: url("../images/iconos/documentos.png?v=pou-iconos-20261112-2"); }
+.bi.bi-pou-noticias { --pou-icono-original: url("../images/iconos/noticias.png?v=pou-iconos-20261112-2"); }
+.bi.bi-pou-buzon { --pou-icono-original: url("../images/iconos/original-buzon.svg"); }
+.bi.bi-pou-fases { --pou-icono-original: url("../images/iconos/fases-guia.svg"); }
+.bi.bi-pou-encuesta-infantil { --pou-icono-original: url("../images/iconos/encuesta-infantil.png?v=pou-iconos-20261112-2"); }
+.bi.bi-pou-encuesta-participacion { --pou-icono-original: url("../images/iconos/encuesta-participacion.png?v=pou-iconos-20261112-2"); }

@@ -1,0 +1,451 @@
+/* ========================================================================== */
+/* TABLA DE MUNICIPIOS - PANEL POU                                           */
+/* ========================================================================== */
+
+.dataTables_wrapper {
+    color: #472b2e;
+    font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+    font-size: 0.95rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Barra superior de la tarjeta                                               */
+/* -------------------------------------------------------------------------- */
+
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.table-title {
+    display: flex;
+    align-items: center;
+    color: #33181a;
+    font-size: 1.18rem;
+    font-weight: 600;
+}
+
+.table-title i {
+    margin-right: 8px;
+    color: #6f464a;
+}
+
+.table-subtitle {
+    margin-top: 2px;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Controles de DataTables                                                    */
+/* -------------------------------------------------------------------------- */
+
+.dataTables_wrapper > .row:first-child {
+    align-items: end;
+    margin-bottom: 10px;
+}
+
+.dataTables_length label,
+.dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: #805f62;
+    font-weight: 400;
+}
+
+.dataTables_filter {
+    text-align: right !important;
+}
+
+.dataTables_filter label {
+    justify-content: flex-end;
+}
+
+.dataTables_length select,
+.dataTables_filter input {
+    height: 43px;
+    color: #4e2e31;
+    background: #ffffff;
+    border: 1px solid #ebd8da;
+    border-radius: 9px;
+    font: inherit;
+    outline: none;
+}
+
+.dataTables_length select {
+    width: 105px !important;
+    padding: 0 36px 0 12px;
+}
+
+.dataTables_filter input {
+    width: 340px !important;
+    max-width: 100%;
+    margin-left: 0 !important;
+    padding: 0 13px;
+}
+
+.dataTables_length select:focus,
+.dataTables_filter input:focus {
+    border-color: #d58a91;
+    box-shadow: 0 0 0 3px rgba(147, 15, 27, 0.10);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tabla                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+table.dataTable {
+    width: 100% !important;
+    min-width: 1380px;
+    margin: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+table.dataTable thead th {
+    padding: 12px 14px;
+    color: #866568;
+    background: #faf5f5;
+    border-top: 1px solid #f4edee !important;
+    border-bottom: 1px solid #efe5e6 !important;
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+}
+
+table.dataTable tbody td {
+    padding: 12px 14px;
+    color: #573538;
+    background: #ffffff;
+    border-top: 0 !important;
+    border-bottom: 1px solid #f4edee !important;
+    font-size: 0.92rem;
+    font-weight: 400;
+    text-align: left;
+    vertical-align: middle;
+}
+
+table.dataTable tbody tr:hover td {
+    background: #fefbfb;
+}
+
+.codigo-celda {
+    color: #846467 !important;
+    font-weight: 500 !important;
+}
+
+.municipio-celda {
+    color: #3d2023 !important;
+    font-weight: 500 !important;
+}
+
+.email-celda {
+    max-width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Estado y progreso                                                          */
+/* -------------------------------------------------------------------------- */
+
+.panel-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-publicado {
+    color: #13703e;
+    background: #e4f5eb;
+}
+
+.status-borrador {
+    color: #9b6500;
+    background: #fff2cf;
+}
+
+.status-inactivo {
+    color: #856669;
+    background: #f4edee;
+}
+
+.assistant-progress {
+    min-width: 245px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.assistant-progress__steps {
+    display: flex;
+    gap: 4px;
+}
+
+.assistant-progress__step {
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    color: #b69d9f;
+    background: #ebe2e3;
+    border-radius: 50%;
+    font-size: 0.73rem;
+}
+
+.assistant-progress__step.is-complete {
+    color: #ffffff;
+    background: #20a164;
+}
+
+.assistant-progress small {
+    color: #866366;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px;
+    color: #7a595c;
+    background: #f8f3f3;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Acciones                                                                   */
+/* -------------------------------------------------------------------------- */
+
+#tablaMunicipios th:last-child,
+#tablaMunicipios td:last-child {
+    min-width: 220px;
+    width: 220px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.acciones-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex-wrap: nowrap;
+}
+
+.btn-accion {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.btn-editar {
+    color: #ffffff !important;
+    background: #efa500 !important;
+    border-color: #efa500 !important;
+}
+
+.btn-editar:hover {
+    background: #d99100 !important;
+    border-color: #d99100 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Información y paginación                                                   */
+/* -------------------------------------------------------------------------- */
+
+.dataTables_info {
+    padding-top: 13px !important;
+    color: #86696c;
+    font-size: 0.85rem;
+}
+
+.dataTables_paginate {
+    padding-top: 10px !important;
+}
+
+.dataTables_paginate .pagination {
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+.dataTables_paginate .page-link {
+    min-width: 36px;
+    min-height: 36px;
+    display: grid;
+    place-items: center;
+    padding: 0 10px;
+    color: #7a5659;
+    background: #ffffff;
+    border: 1px solid #ebdfe0 !important;
+    border-radius: 7px !important;
+}
+
+.dataTables_paginate .page-item.active .page-link {
+    color: #ffffff;
+    background: #540000;
+    border-color: #540000 !important;
+    font-weight: 500;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .dataTables_wrapper > .row:first-child {
+        gap: 10px;
+    }
+
+    .dataTables_filter label,
+    .dataTables_length label {
+        justify-content: flex-start;
+    }
+
+    .dataTables_filter input {
+        width: 100% !important;
+    }
+}
+
+/* Filtro de estado junto al buscador del panel. */
+.panel-table-search-tools {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.panel-table-status-filter {
+    width: 185px;
+    height: 43px;
+    color: #4e2e31;
+    background-color: #ffffff;
+    border: 1px solid #ebd8da;
+    border-radius: 9px;
+    font: inherit;
+}
+
+.panel-table-status-filter:focus {
+    border-color: #d58a91;
+    box-shadow: 0 0 0 3px rgba(147, 15, 27, 0.10);
+}
+
+@media (max-width: 991.98px) {
+    .panel-table-search-tools {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .panel-table-status-filter,
+    .dataTables_filter input {
+        width: 100% !important;
+    }
+}
+
+/* ========================================================================== */
+/* TABLA COMPLETA SIN DESPLAZAMIENTO HORIZONTAL                               */
+/* ========================================================================== */
+.table-responsive-wrapper {
+    overflow-x: visible;
+}
+
+table.dataTable {
+    min-width: 0 !important;
+    table-layout: fixed;
+}
+
+table.dataTable thead th,
+table.dataTable tbody td {
+    padding-left: 9px;
+    padding-right: 9px;
+}
+
+#tablaMunicipios th:nth-child(1) { width: 7%; }
+#tablaMunicipios th:nth-child(2) { width: 10%; }
+#tablaMunicipios th:nth-child(3),
+#tablaMunicipios th:nth-child(4) { width: 14%; }
+#tablaMunicipios th:nth-child(5) { width: 9%; }
+#tablaMunicipios th:nth-child(6) { width: 20%; }
+#tablaMunicipios th:nth-child(7) { width: 12%; }
+#tablaMunicipios th:nth-child(8) { width: 14%; }
+
+.email-celda {
+    max-width: none;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.assistant-progress {
+    min-width: 0;
+    gap: 6px;
+}
+
+.assistant-progress__steps {
+    gap: 3px;
+}
+
+.assistant-progress__step {
+    width: 18px;
+    height: 18px;
+    font-size: .68rem;
+}
+
+#tablaMunicipios th:last-child,
+#tablaMunicipios td:last-child {
+    width: auto;
+    min-width: 0;
+}
+
+.acciones-wrap {
+    gap: 4px;
+}
+
+.btn-accion {
+    width: 31px;
+    height: 31px;
+    min-width: 31px;
+    min-height: 31px;
+    font-size: .83rem;
+}
+
+@media (max-width: 1280px) {
+    table.dataTable thead th,
+    table.dataTable tbody td {
+        padding-left: 6px;
+        padding-right: 6px;
+        font-size: .82rem;
+    }
+
+    .assistant-progress small {
+        display: none;
+    }
+}

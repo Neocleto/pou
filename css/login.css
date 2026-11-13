@@ -1,0 +1,149 @@
+/* ========================================================================== */
+/* MODAL DE ACCESO POU                                                       */
+/* ========================================================================== */
+
+#loginModal .modal-dialog {
+    max-width: 480px;
+}
+
+.login-modal {
+    overflow: hidden;
+    border: 0;
+    border-radius: 15px;
+    box-shadow: 0 22px 60px rgba(72, 26, 30, 0.22);
+}
+
+.login-modal .modal-header {
+    align-items: flex-start;
+}
+
+.login-modal__heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 20px;
+}
+
+.login-modal__icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: var(--pou-corporativo, #540000);
+    border-radius: 12px;
+    font-size: 1.25rem;
+}
+
+.login-modal .modal-title {
+    margin: 0;
+    color: var(--pou-corporativo, #540000);
+    font-size: 1.18rem;
+    font-weight: 600;
+}
+
+.login-modal__heading p {
+    margin: 3px 0 0;
+    color: #957275;
+    font-size: 0.84rem;
+}
+
+.login-modal .form-label {
+    color: #5a3437;
+    font-weight: 500;
+}
+
+.login-modal .form-control {
+    min-height: 44px;
+    border: 1px solid #e5ccce;
+    border-radius: 8px;
+}
+
+.login-modal .form-control:focus {
+    border-color: var(--pou-corporativo, #540000);
+    box-shadow: 0 0 0 0.18rem rgba(84, 0, 0, 0.12);
+}
+
+.login-password-group .form-control {
+    border-radius: 8px 0 0 8px;
+}
+
+.login-password-toggle {
+    min-width: 48px;
+    color: var(--pou-corporativo, #540000);
+    background: #fbf6f6;
+    border: 1px solid #e5ccce;
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.login-password-toggle:hover,
+.login-password-toggle:focus {
+    color: #ffffff;
+    background: var(--pou-corporativo, #540000);
+    border-color: var(--pou-corporativo, #540000);
+}
+
+.login-password-toggle i {
+    font-size: 1.05rem;
+}
+
+.btn-login {
+    min-height: 44px;
+    color: #ffffff;
+    background: var(--pou-corporativo, #540000);
+    border: 1px solid var(--pou-corporativo, #540000);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.btn-login:hover,
+.btn-login:focus {
+    color: #ffffff;
+    background: var(--pou-corporativo-hover, #740f18);
+    border-color: var(--pou-corporativo-hover, #740f18);
+}
+
+.login-modal__help {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+    color: #957477;
+    font-size: 0.82rem;
+}
+
+.login-modal__help a {
+    color: var(--pou-corporativo, #540000);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.login-modal__help a:hover {
+    text-decoration: underline;
+}
+
+/* También el botón de IDEMAP y el enlace de vuelta usan el tono corporativo. */
+.login-modal .btn-primary {
+    --bs-btn-bg: var(--pou-corporativo, #540000);
+    --bs-btn-border-color: var(--pou-corporativo, #540000);
+    --bs-btn-hover-bg: var(--pou-corporativo-hover, #740f18);
+    --bs-btn-hover-border-color: var(--pou-corporativo-hover, #740f18);
+    --bs-btn-active-bg: var(--pou-corporativo-hover, #740f18);
+    --bs-btn-active-border-color: var(--pou-corporativo-hover, #740f18);
+    --bs-btn-focus-shadow-rgb: 84, 0, 0;
+}
+
+.login-modal #linkLogin {
+    color: var(--pou-corporativo, #540000);
+}
+
+/* El aviso informativo de solicitud de acceso mantiene la misma paleta. */
+.login-modal .alert-info {
+    color: var(--pou-corporativo, #540000);
+    background: #fbf3f4;
+    border-color: #edd2d4;
+}

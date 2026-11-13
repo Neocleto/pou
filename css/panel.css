@@ -1,0 +1,776 @@
+/* --------------------------------------
+   Panel General (FIX: NO meter la card bajo el footer)
+----------------------------------------- */
+
+:root {
+  --footer-h: 72px;
+  --header-h: 78px;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #fbf6f6;
+  overflow: hidden; /* ✅ nunca scroll de página */
+}
+
+/* El panel reutiliza la misma cabecera y el mismo pie que la página de acceso. */
+body.pou-panel-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #4d262a;
+  background: #fbf6f6;
+  font-family: "Roboto Condensed", Arial, sans-serif;
+}
+
+body.pou-panel-page > .access-topbar,
+body.pou-panel-page > .access-footer {
+  flex: 0 0 auto;
+}
+
+body.pou-panel-page > .access-footer {
+  height: var(--footer-h);
+}
+
+/* ✅ Área útil sin header/footer */
+main {
+  height: calc(100vh - var(--header-h) - var(--footer-h));
+  overflow: hidden; /* ✅ el scroll SOLO será de la tabla */
+}
+
+body.pou-panel-page > main {
+  height: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+body.pou-panel-page .access-footer__inner {
+  min-height: 72px;
+}
+
+/* Selectores footer */
+footer { height: var(--footer-h); }
+.site-footer { height: var(--footer-h); }
+#footer { height: var(--footer-h); }
+
+/* -------------------------------------------------------
+   CONTENEDOR DEL PANEL (AHORA A ANCHO COMPLETO)
+-------------------------------------------------------- */
+
+.panel-contenido {
+  width: 100%;
+            /* ✅ ya no limitamos a 1600px */
+  margin: 0;
+  padding: 2.05rem 5rem; /* ✅ respira un poco a los lados */
+
+  border-radius: 16px;
+  background: transparent;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  height: 100%;
+  min-height: 0;
+}
+
+/* Tarjeta cabecera */
+.panel-header {
+  flex: 0 0 auto;
+  margin-bottom: 0 !important;
+}
+
+.panel-header .card-body {
+  padding: 14px 16px;
+}
+
+.panel-header h2 {
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin-bottom: 2px;
+}
+
+.panel-header .btn {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+.btn-editar { color: white; }
+.btn-editar:hover { color: white; }
+
+/* -------------------------------------------------------
+   ✅ CLAVE: el contenedor de la tabla DEBE ser flex
+   para que la card “encaje” y el scroll sea interno.
+-------------------------------------------------------- */
+
+#contenedorTablaMunicipios {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* spinner / empty state no deben romper el layout */
+#spinnerTablaMunicipios,
+#mensajeSinMunicipios {
+  flex: 0 0 auto;
+}
+
+/* ✅ La CARD de municipios ocupa el resto del alto */
+.table-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.table-card .card-body {
+  padding: 16px;
+  border-radius: 16px;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ✅ DataTables wrapper como columna flexible */
+.table-card .dataTables_wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* --------------------------------------
+   Spinner carga global
+----------------------------------------- */
+
+#loaderOverlayPanel {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.95);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+#loaderOverlayPanel.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Evita saltos raros al abrir SweetAlert2 */
+body.swal2-shown {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+html.swal2-shown,
+body.swal2-shown {
+  height: 100% !important;
+}
+
+/* =========================================================
+   MODAL AYUDA (PREMIUM) - intacta
+========================================================= */
+
+.modal-ayuda .modal-content {
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(42, 15, 17, 0.18);
+}
+
+.modal-ayuda .modal-header {
+  border: 0;
+  padding: 18px 20px 14px 20px;
+  background: #540000;
+  color: #fff;
+  position: relative;
+}
+
+.modal-ayuda .modal-title {
+  font-weight: 600;
+  letter-spacing: -0.35px;
+}
+
+.modal-ayuda .modal-header .btn-close {
+  filter: invert(1) grayscale(1);
+  opacity: 0.95;
+}
+
+.modal-ayuda .modal-body {
+  padding: 16px 20px 10px 20px;
+  background: #fff;
+}
+
+.modal-ayuda .modal-footer {
+  border: 0;
+  padding: 14px 20px 18px 20px;
+  background: #fff;
+}
+
+.ayuda-pill-header {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.22);
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.ayuda-illustration {
+  margin-top: 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 10px 12px;
+}
+
+.modal-ayuda .accordion-item {
+  border: 1px solid #f3eeee;
+  border-radius: 16px !important;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.modal-ayuda .accordion-button {
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  padding: 14px 14px;
+  border-radius: 0 !important;
+  background: #fff;
+}
+
+.modal-ayuda .accordion-button:not(.collapsed) {
+  color: #fd0d23;
+  background: #fff3f4;
+  box-shadow: none;
+}
+
+.modal-ayuda .accordion-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(253, 13, 35, 0.12);
+  border-color: #fdb6bc;
+}
+
+.modal-ayuda .accordion-body {
+  padding: 14px;
+  background: #fff;
+}
+
+.ayuda-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 991.98px) {
+  .ayuda-actions-grid { grid-template-columns: 1fr; }
+}
+
+.ayuda-action-card {
+  border: 1px solid #f3eeee;
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 22px rgba(42, 15, 17, 0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.ayuda-action-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(42, 15, 17, 0.08);
+}
+
+.ayuda-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+}
+.ayuda-btn-editar { background: #ffc107; color: #271113; }
+.ayuda-btn-previsualizar { background: #fff; border: 1px solid #fd0d23; color: #fd0d23; }
+.ayuda-btn-publicar { background: #198754; color: #fff; }
+.ayuda-btn-eliminar { background: #fff; border: 1px solid #dc3545; color: #dc3545; }
+
+.modal-ayuda .modal-dialog {
+  margin: 0.75rem auto;
+  max-width: 900px;
+}
+.modal-ayuda .modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 1.5rem);
+}
+.modal-ayuda .modal-header,
+.modal-ayuda .modal-footer { flex: 0 0 auto; }
+.modal-ayuda .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* === FIX MINIMO PANEL DOCUMENTOS V2 === */
+
+/*
+   Pantalla completa: php/gestion/formularios/panel_documentos.php
+   Objetivo: que el footer no tape la tabla y que el scroll sea interno
+   en el cuerpo de la tabla, manteniendo visible la card y el paginado.
+*/
+body.page-panel-documentos {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  background-color: #fbf6f6;
+}
+
+body.page-panel-documentos .header-main,
+body.page-panel-documentos .footer-dpm {
+  flex: 0 0 auto;
+}
+
+body.page-panel-documentos .footer-dpm {
+  margin-top: 0 !important;
+}
+
+body.page-panel-documentos main {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+}
+
+body.page-panel-documentos .panel-contenido {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  width: 100%;
+  max-width: none;
+  margin: 0 !important;
+  padding: 1.75rem clamp(1rem, 3vw, 4rem) 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+body.page-panel-documentos .documentos-panel-header {
+  flex: 0 0 auto;
+  margin-bottom: 0 !important;
+}
+
+body.page-panel-documentos .documentos-panel-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0 !important;
+}
+
+body.page-panel-documentos .documentos-panel-main-col,
+body.page-panel-documentos .documentos-panel-side-col {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.page-panel-documentos .documentos-panel-card,
+body.page-panel-documentos .documentos-panel-side-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0 !important;
+}
+
+body.page-panel-documentos .documentos-panel-card > .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.page-panel-documentos #controlesTablaDocumentos {
+  flex: 0 0 auto;
+}
+
+body.page-panel-documentos .documentos-table-region {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_wrapper > .row {
+  flex: 0 0 auto;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_scrollHead {
+  flex: 0 0 auto;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_scrollBody {
+  flex: 1 1 auto;
+  min-height: 140px;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_scrollBody table {
+  margin-bottom: 0 !important;
+}
+
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_info,
+body.page-panel-documentos #tablaDocumentosWrapper .dataTables_paginate {
+  padding-top: .65rem;
+}
+
+@media (max-width: 991.98px) {
+  body.page-panel-documentos {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: auto !important;
+  }
+
+  body.page-panel-documentos main,
+  body.page-panel-documentos .panel-contenido,
+  body.page-panel-documentos .documentos-panel-grid,
+  body.page-panel-documentos .documentos-panel-card > .card-body,
+  body.page-panel-documentos #tablaDocumentosWrapper {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+/* Ajuste tipográfico general del rediseño POU */
+body {
+  font-weight: 400;
+}
+
+.panel-header h2 {
+  font-weight: 600 !important;
+}
+
+.panel-header .small,
+.text-muted {
+  font-weight: 400;
+}
+
+.btn {
+  font-weight: 500;
+}
+
+.table th {
+  font-weight: 600;
+}
+
+.table td {
+  font-weight: 400;
+}
+
+.fw-bold {
+  font-weight: 600 !important;
+}
+
+.fw-semibold {
+  font-weight: 500 !important;
+}
+
+.panel-contenido {
+  width: min(1760px, calc(100% - 48px));
+  max-width: none;
+  margin-inline: auto;
+}
+
+.panel-header {
+  border-radius: 14px !important;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+/* ========================================================================== */
+/* DISEÑO DEL PANEL DE GESTIÓN                                                 */
+/* Mantiene la estructura actual y elimina saltos visuales durante la carga.  */
+/* ========================================================================== */
+
+:root {
+  --panel-corporativo: #540000;
+  --panel-acento: #930f1b;
+  --panel-fondo: #faf4f5;
+  --panel-borde: #eddcde;
+  --panel-texto: #4a2427;
+  --panel-texto-suave: #86696c;
+}
+
+body.page-panel-gestion {
+  min-height: 100vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: var(--panel-texto);
+  background: var(--panel-fondo);
+  font-weight: 400;
+}
+
+body.page-panel-gestion main {
+  flex: 1 0 auto;
+  height: auto;
+  min-height: calc(100vh - 150px);
+  overflow: visible;
+}
+
+body.page-panel-gestion.panel-loading main {
+  visibility: hidden;
+}
+
+body.page-panel-gestion.panel-ready main {
+  visibility: visible;
+}
+
+body.page-panel-gestion .panel-contenido {
+  width: min(1760px, calc(100% - 48px));
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 28px 0 24px;
+  gap: 16px;
+}
+
+body.page-panel-gestion .panel-header {
+  border: 1px solid #eee1e2 !important;
+  border-radius: 13px !important;
+  box-shadow: 0 4px 12px rgba(73, 27, 31, 0.055) !important;
+}
+
+body.page-panel-gestion .panel-header .card-body {
+  padding: 20px 22px;
+}
+
+body.page-panel-gestion .panel-header h2 {
+  color: #33181a;
+  font-size: clamp(1.7rem, 2.15vw, 2.35rem);
+  font-weight: 600 !important;
+  letter-spacing: -0.025em;
+}
+
+body.page-panel-gestion .panel-header .small {
+  color: var(--panel-texto-suave) !important;
+  font-size: 1rem;
+}
+
+body.page-panel-gestion .panel-header .btn {
+  min-height: 45px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font-weight: 500;
+}
+
+body.page-panel-gestion .btn-panel-create {
+  background: #16864d;
+  border-color: #16864d;
+}
+
+body.page-panel-gestion .btn-panel-create:hover {
+  background: #11713f;
+  border-color: #11713f;
+}
+
+/* Resumen visual de los siete pasos. */
+.panel-wizard-guide {
+  padding: 22px 26px 20px;
+  background: #fff7f8;
+  border: 1px solid #f4cbcf;
+  border-radius: 13px;
+  box-shadow: 0 4px 12px rgba(73, 27, 31, 0.035);
+}
+
+.panel-wizard-guide__intro {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.panel-wizard-guide__icon {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  display: grid;
+  place-items: center;
+  color: #d21425;
+  background: #ffe4e6;
+  border-radius: 50%;
+  font-size: 1.9rem;
+}
+
+.panel-wizard-guide__intro h3 {
+  margin: 0 0 4px;
+  color: #82131d;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.panel-wizard-guide__intro p {
+  margin: 0;
+  color: var(--panel-texto-suave);
+  font-size: 1rem;
+}
+
+.panel-wizard-guide__steps {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(105px, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.panel-wizard-guide__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: #764f53;
+  text-align: center;
+}
+
+.panel-wizard-guide__step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: calc(50% + 25px);
+  right: calc(-50% + 25px);
+  border-top: 1px dashed #d8aeb2;
+}
+
+.panel-wizard-guide__step span {
+  width: 42px;
+  height: 42px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #d21425;
+  background: #ffffff;
+  border: 1px solid #efabb1;
+  border-radius: 50%;
+  font-size: 1.12rem;
+}
+
+.panel-wizard-guide__step small {
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* Contenedor de la tabla. */
+body.page-panel-gestion #contenedorTablaMunicipios {
+  display: block;
+  min-height: 0;
+}
+
+body.page-panel-gestion .table-card {
+  min-height: 0;
+  border: 1px solid #eee1e2 !important;
+  border-radius: 13px !important;
+  box-shadow: 0 4px 12px rgba(73, 27, 31, 0.055) !important;
+}
+
+body.page-panel-gestion .table-card .card-body {
+  min-height: 0;
+  padding: 19px 20px 16px;
+  border-radius: 13px;
+}
+
+.panel-table-loading {
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--panel-texto-suave);
+  background: #ffffff;
+  border: 1px solid var(--panel-borde);
+  border-radius: 13px;
+}
+
+/* El overlay permanece opaco hasta que la tabla está preparada. */
+body.page-panel-gestion #loaderOverlayPanel {
+  background: #faf4f5;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+body.page-panel-gestion #loaderOverlayPanel::after {
+  content: "Cargando panel de gestión...";
+  margin-left: 12px;
+  color: #785356;
+}
+
+@media (max-width: 1100px) {
+  .panel-wizard-guide__steps {
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 18px;
+  }
+
+  .panel-wizard-guide__step::after {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  body.page-panel-gestion .panel-contenido {
+    width: min(100% - 24px, 1760px);
+  }
+
+  .panel-wizard-guide {
+    padding: 18px;
+  }
+
+  .panel-wizard-guide__intro {
+    align-items: flex-start;
+  }
+
+  .panel-wizard-guide__steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

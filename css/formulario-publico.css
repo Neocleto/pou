@@ -1,0 +1,492 @@
+@import url("iconos-portal.css?v=pou-iconos-20261112-2");
+/* ========================================================================== */
+/* FORMULARIO PÚBLICO POU                                                    */
+/* ========================================================================== */
+
+@font-face {
+    font-family: "Roboto Condensed";
+    src: url("../fonts/RobotoCondensed-Regular.ttf");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Roboto Condensed";
+    src: url("../fonts/RobotoCondensed-Medium.ttf");
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: "Roboto Condensed";
+    src: url("../fonts/RobotoCondensed-SemiBold.ttf");
+    font-weight: 600;
+}
+
+:root {
+    --form-primary: #540000;
+    --form-blue: #930f1b;
+    --form-text: #502d30;
+    --form-muted: #6d788a;
+    --form-border: #ecdcdd;
+    --form-background: #fbf5f6;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body.form-public-page {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--form-text);
+    background: var(--form-background);
+    font-family: "Roboto Condensed", Arial, sans-serif;
+    font-weight: 400;
+}
+
+.form-public-shell {
+    width: min(1640px, calc(100% - 56px));
+    margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Carga inicial y prevención de flickering                                   */
+/* -------------------------------------------------------------------------- */
+
+.form-public-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    color: var(--form-blue);
+    background: #ffffff;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+.form-public-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.form-public-loading .form-public-header,
+.form-public-loading .form-public-main,
+.form-public-loading .form-public-footer {
+    visibility: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cabecera                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.form-public-header {
+    background: #ffffff;
+    border-top: 5px solid var(--form-primary);
+    border-bottom: 1px solid #eee2e3;
+}
+
+.form-public-header__inner {
+    min-height: 86px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+}
+
+.form-public-logo-idemap {
+    width: 330px;
+    max-width: 42vw;
+}
+
+.form-public-logo-diputacion {
+    width: 230px;
+    max-width: 30vw;
+    justify-self: end;
+}
+
+.form-public-back {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 13px;
+    color: var(--form-blue);
+    background: #ffffff;
+    border: 1px solid #dcb7ba;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-public-back:hover {
+    color: #ffffff;
+    background: var(--form-blue);
+    border-color: var(--form-blue);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Presentación                                                               */
+/* -------------------------------------------------------------------------- */
+
+.form-public-main {
+    flex: 1 0 auto;
+    padding: 28px 0 48px;
+}
+
+.form-public-intro {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 25px 27px;
+    color: #ffffff;
+    background: var(--form-color);
+    border-radius: 14px;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--form-color) 18%, transparent);
+}
+
+.form-public-icon {
+    width: 60px;
+    height: 60px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 13px;
+    font-size: 1.65rem;
+}
+
+.form-public-intro__content > p {
+    margin: 0 0 2px;
+    opacity: 0.78;
+    font-size: 0.88rem;
+}
+
+.form-public-intro h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.8rem, 2.6vw, 2.45rem);
+    font-weight: 600;
+}
+
+.form-public-intro__description {
+    max-width: 920px;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.form-public-pdf {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.form-public-pdf:hover {
+    color: var(--form-color);
+    background: #ffffff;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Apartados y preguntas                                                      */
+/* -------------------------------------------------------------------------- */
+
+.form-public-form {
+    margin-top: 18px;
+}
+
+.form-public-section {
+    margin-bottom: 15px;
+    padding: 25px 27px;
+    background: #ffffff;
+    border: 1px solid var(--form-border);
+    border-radius: 13px;
+    box-shadow: 0 5px 16px rgba(74, 30, 34, 0.04);
+}
+
+.form-public-section__heading {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.form-public-section__heading > span {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: var(--form-color);
+    border-radius: 50%;
+    font-weight: 600;
+}
+
+.form-public-section h2 {
+    margin: 0;
+    color: #66272d;
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.form-public-section__heading p {
+    margin: 4px 0 0;
+    color: var(--form-muted);
+}
+
+.form-public-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.form-public-field {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 7px;
+}
+
+.form-public-field--half {
+    grid-column: auto;
+}
+
+.form-public-field__label {
+    color: #5b3538;
+    font-weight: 500;
+}
+
+.form-public-field__label span {
+    color: #ba3041;
+}
+
+.form-public-field small {
+    color: #97797c;
+}
+
+.form-public-field input[type="text"],
+.form-public-field input[type="number"],
+.form-public-field input[type="date"],
+.form-public-field textarea,
+.form-public-field select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    color: #4e2f32;
+    background: #ffffff;
+    border: 1px solid #e8d3d5;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 400;
+    outline: none;
+}
+
+.form-public-field textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-public-field input:focus,
+.form-public-field textarea:focus,
+.form-public-field select:focus {
+    border-color: var(--form-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--form-color) 11%, transparent);
+}
+
+.form-public-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.form-public-options--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-public-options label {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    color: #613f42;
+    background: #ffffff;
+    border: 1px solid #e9d9da;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.form-public-options label:hover {
+    border-color: color-mix(in srgb, var(--form-color) 55%, #ffffff);
+    background: color-mix(in srgb, var(--form-color) 3%, #ffffff);
+}
+
+.form-public-field__error {
+    min-height: 0;
+    color: #b6293d;
+    font-size: 0.82rem;
+}
+
+.form-public-field.has-error .form-public-options {
+    padding: 4px;
+    border: 1px solid #d65b69;
+    border-radius: 9px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Acciones                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.form-public-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 19px 23px;
+    background: #ffffff;
+    border: 1px solid var(--form-border);
+    border-radius: 12px;
+}
+
+.form-public-actions p {
+    margin: 0;
+    color: #957376;
+}
+
+.form-public-actions button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
+    color: #ffffff;
+    background: var(--form-color);
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 500;
+}
+
+.form-public-actions button:hover:not(:disabled) {
+    filter: brightness(0.92);
+}
+
+.form-public-actions button:disabled {
+    opacity: 0.68;
+    cursor: wait;
+}
+
+.form-public-actions button.is-loading i {
+    animation: formSendPulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes formSendPulse {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(4px);
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Pie                                                                        */
+/* -------------------------------------------------------------------------- */
+
+.form-public-footer {
+    color: #ffffff;
+    background: #540000;
+}
+
+.form-public-footer__inner {
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.form-public-footer img {
+    width: 185px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .form-public-header__inner {
+        grid-template-columns: 1fr auto;
+    }
+
+    .form-public-back {
+        order: 3;
+        grid-column: 1 / -1;
+        justify-self: center;
+        margin-bottom: 12px;
+    }
+
+    .form-public-intro {
+        grid-template-columns: 54px minmax(0, 1fr);
+    }
+
+    .form-public-pdf {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+}
+
+@media (max-width: 680px) {
+    .form-public-shell {
+        width: calc(100% - 22px);
+    }
+
+    .form-public-logo-idemap {
+        width: 230px;
+        max-width: 65vw;
+    }
+
+    .form-public-logo-diputacion {
+        display: none;
+    }
+
+    .form-public-main {
+        padding-top: 14px;
+    }
+
+    .form-public-intro,
+    .form-public-section {
+        padding: 18px;
+    }
+
+    .form-public-fields,
+    .form-public-options--grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-public-field--half {
+        grid-column: 1 / -1;
+    }
+
+    .form-public-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .form-public-actions button {
+        justify-content: center;
+    }
+
+    .form-public-footer__inner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px 0;
+    }
+}

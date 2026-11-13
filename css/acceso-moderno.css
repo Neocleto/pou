@@ -1,0 +1,257 @@
+@import url("pie-institucional.css?v=1.31");
+/* ============================================================================
+   ACCESO POU
+   Una única hoja para estructura, identidad, listado y adaptación a pantalla.
+   El login conserva su hoja propia. No se alteran los IDs que utiliza index.js.
+============================================================================ */
+@font-face { font-family: "Roboto Condensed"; src: url("../fonts/RobotoCondensed-Regular.ttf"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Roboto Condensed"; src: url("../fonts/RobotoCondensed-Medium.ttf"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Roboto Condensed"; src: url("../fonts/RobotoCondensed-SemiBold.ttf"); font-weight: 600; font-display: swap; }
+:root {
+    --pou-corporativo: #540000;
+    --pou-corporativo-hover: #740f18;
+    --pou-borde: #ece1e2;
+    --pou-texto: #57373a;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body.pou-access-page {
+    min-height: 100vh; margin: 0; display: flex; flex-direction: column;
+    font-family: "Roboto Condensed", Arial, sans-serif; font-weight: 400;
+    color: var(--pou-texto); background: white;
+}
+body.pou-access-page > main { flex: 1 0 auto; display: flex; flex-direction: column; }
+.access-shell { width: min(1800px, calc(100% - 96px)); margin-inline: auto; }
+body.pou-access-page .text-primary { color: var(--pou-corporativo) !important; }
+
+/* 1. Identidad institucional y sesión. Esta cabecera también se usa en gestión. */
+.access-topbar { background: white; border-bottom: 1px solid var(--pou-borde); }
+.access-topbar__inner { min-height: 88px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.access-logo--idemap { width: 355px; max-width: 46vw; }
+.access-logo--dip { width: 235px; max-width: 30vw; }
+.access-topbar__right { display: flex; align-items: center; justify-content: flex-end; gap: 24px; }
+.access-session-menu { padding-left: 22px; border-left: 1px solid var(--pou-borde); }
+.access-user-menu {
+    min-height: 42px; display: inline-flex; align-items: center; gap: 8px;
+    padding: 0 12px 0 7px; color: var(--pou-corporativo); background: #fbf7f7;
+    border: 1px solid var(--pou-borde); border-radius: 22px; font: inherit; font-size: .9rem;
+}
+.access-user-menu:hover, .access-user-menu:focus, .access-user-menu.show { color: var(--pou-corporativo); background: #faf1f2; }
+.access-user-avatar { width: 30px; height: 30px; display: inline-grid; place-items: center; border-radius: 50%; color: white; background: var(--pou-corporativo); }
+.access-user-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.access-user-dropdown { min-width: 260px; padding: 8px; border: 1px solid var(--pou-borde); border-radius: 11px; box-shadow: 0 12px 30px #411a1e24; }
+.access-user-dropdown .dropdown-item { padding: 9px 11px; border-radius: 7px; font-weight: 400; }
+.access-user-dropdown .dropdown-item:hover { background: #fbf2f3; }
+
+/* 2. La imagen forma el fondo continuo; el fundido deja limpia la zona de lectura. */
+.access-hero-modern { position: relative; isolation: isolate; overflow: hidden; background: #fdfafa; border-bottom: 1px solid #f3edee; }
+.access-hero-modern__visual { position: absolute; inset: 0 0 0 34%; z-index: -1; pointer-events: none; mask-image: linear-gradient(90deg, transparent, #000 25%); }
+.access-hero-modern__visual img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center 56%; }
+.access-hero-modern__inner { position: relative; display: flex; align-items: center; min-height: 430px; padding-block: 38px; }
+.access-hero-modern__copy { width: 53%; max-width: 820px; }
+.access-hero-modern__eyebrow { display: block; margin-bottom: 12px; color: var(--pou-corporativo); font-size: .83rem; font-weight: 500; letter-spacing: .17em; text-transform: uppercase; }
+.access-hero-modern__copy h1 { margin: 0; color: var(--pou-corporativo); font-size: clamp(4.8rem, 6.4vw, 7.3rem); line-height: .95; font-weight: 600; letter-spacing: -.045em; }
+.access-hero-modern__copy h2 { max-width: 750px; margin: 15px 0 13px; color: var(--pou-corporativo); font-size: clamp(1.55rem, 2.1vw, 2.15rem); font-weight: 500; line-height: 1.18; }
+.access-hero-modern__copy p { max-width: 690px; margin: 0; color: #755356; font-size: 1.06rem; line-height: 1.55; }
+.access-hero-modern__buttons { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 23px; }
+.btn-access { min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 11px; padding: 10px 21px; border: 1px solid transparent; border-radius: 7px; font: inherit; font-weight: 500; text-decoration: none; cursor: pointer; transition: background .16s, box-shadow .16s; }
+.btn-access--primary { color: white; background: var(--pou-corporativo); box-shadow: 0 7px 18px #54000020; }
+.btn-access--primary:hover { color: white; background: var(--pou-corporativo-hover); }
+.btn-access--secondary { color: var(--pou-corporativo); background: #ffffffd9; border-color: #d1b6b8; }
+.btn-access--secondary:hover { color: var(--pou-corporativo); background: #f9f1f2; border-color: var(--pou-corporativo); }
+.btn-access:focus-visible, .access-municipality-card a:focus-visible { outline: 3px solid #e5a4aa; outline-offset: 3px; }
+
+/* 3. Listado AJAX: tarjetas más visuales y proporcionadas para destacar cada municipio. */
+.access-municipalities { flex: 1 0 auto; padding: 30px 0 38px; background: white; }
+.access-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 19px; }
+.access-section-heading span { color: var(--pou-corporativo); font-size: .8rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.access-section-heading h2 { margin: 4px 0 0; color: var(--pou-corporativo); font-size: 1.65rem; font-weight: 500; }
+.access-section-heading p { margin: 0; color: #8b6d70; font-size: .94rem; }
+.access-toolbar-modern { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; margin-bottom: 20px; }
+.access-search-wrap, .access-filter-wrap { position: relative; }
+.access-search-wrap > i, .access-filter-wrap > i { position: absolute; left: 17px; top: 50%; color: var(--pou-corporativo); transform: translateY(-50%); pointer-events: none; }
+.access-search, .access-filter { width: 100%; min-width: 0; height: 53px; padding: 0 17px 0 47px; border: 1px solid var(--pou-borde); border-radius: 8px; background: white; color: var(--pou-texto); font: inherit; }
+.access-search:focus, .access-filter:focus { outline: 2px solid #54000028; border-color: var(--pou-corporativo); }
+/* Municipios: tarjetas proporcionadas, alineadas a la izquierda y sin huecos interiores. */
+.access-municipality-grid {
+    display: grid;
+    width: 100%;
+    max-width: 1520px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+    gap: 18px;
+}
+.access-municipality-card {
+    min-width: 0;
+    min-height: 150px;
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--pou-borde);
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 3px 12px #54000008;
+    transition: border-color .15s, box-shadow .15s;
+}
+.access-municipality-card:hover {
+    border-color: #cfb1b4;
+    box-shadow: 0 6px 18px #54000012;
+}
+.access-municipality-card__escudo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 12px;
+    background: #fdf9f9;
+    border-right: 1px solid #f5eeef;
+}
+.access-municipality-card img {
+    width: 76px;
+    height: 98px;
+    object-fit: contain;
+}
+.access-municipality-card__contenido {
+    min-width: 0;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 9px;
+}
+.access-municipality-card__contenido > div { min-width: 0; }
+.access-municipality-card__etiqueta {
+    display: block;
+    margin-bottom: 5px;
+    color: #6d6882;
+    font-size: .68rem;
+    font-weight: 500;
+    letter-spacing: .08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+.access-municipality-card h3 {
+    margin: 0 0 3px;
+    color: var(--pou-corporativo);
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.16;
+    overflow-wrap: break-word;
+}
+.access-municipality-card p {
+    margin: 0;
+    color: #866669;
+    font-size: .86rem;
+    font-weight: 400;
+    line-height: 1.3;
+}
+.access-municipality-card a {
+    min-height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 6px 14px;
+    color: #ffffff;
+    background: var(--pou-corporativo);
+    border: 1px solid var(--pou-corporativo);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 500;
+}
+.access-municipality-card a:hover {
+    color: white;
+    background: var(--pou-corporativo-hover);
+    border-color: var(--pou-corporativo-hover);
+}
+.access-municipality-grid.is-refreshing { opacity: .58; pointer-events: none; }
+.access-municipality-card img.is-placeholder { padding: 10px; opacity: .72; }
+.access-loading, .access-empty { min-height: 240px; display: grid; place-items: center; align-content: center; color: #8f6f72; text-align: center; }
+.access-empty { gap: 5px; }
+.access-empty i { color: var(--pou-corporativo); font-size: 2.4rem; }
+.access-empty h3, .access-empty p { margin: 0; }
+.access-pagination-modern { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 18px 0 0; }
+.access-pagination-modern:empty { display: none; }
+.access-page-btn { min-width: 36px; height: 36px; padding: 0 10px; color: var(--pou-texto); background: white; border: 1px solid var(--pou-borde); border-radius: 6px; font: inherit; }
+.access-page-btn:hover:not(:disabled), .access-page-btn.active { color: white; background: var(--pou-corporativo); }
+.access-page-btn:disabled { opacity: .45; }
+
+/* 4. Pie institucional. El fondo liso compartido está en pie-institucional.css. */
+.access-footer { color: white; background: var(--pou-corporativo); }
+.access-footer__inner { min-height: 82px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 28px; padding-block: 15px; }
+.access-footer__inner > span { font-size: .9rem; }
+.access-footer nav { display: flex; flex-wrap: wrap; gap: 24px; }
+.access-footer nav a { color: white; text-decoration: none; font-size: .9rem; }
+.access-footer nav a:hover { text-decoration: underline; }
+.access-footer img { width: 210px; justify-self: end; }
+
+/* 5. En pantallas pequeñas la imagen continúa el fondo bajo la presentación. */
+@media (max-width: 1550px) {
+    .access-municipality-grid {
+        max-width: 1050px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 1100px) {
+    .access-municipality-grid { max-width: none; }
+}
+@media (max-width: 1200px) {
+    .access-shell { width: calc(100% - 56px); }
+    .access-user-name { max-width: 130px; }
+    .access-hero-modern__copy { width: 60%; }
+    .access-section-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .access-footer__inner { grid-template-columns: 1fr auto; gap: 16px; }
+    .access-footer nav { order: 3; grid-column: 1 / -1; }
+}
+@media (max-width: 820px) {
+    .access-topbar__right:has(.access-session-menu) .access-logo--dip { display: none; }
+    .access-hero-modern__inner { min-height: 0; padding-block: 32px 195px; }
+    .access-hero-modern__copy { width: 100%; max-width: 640px; }
+    .access-hero-modern__copy h2 { max-width: 610px; font-size: 1.65rem; }
+    .access-hero-modern__visual { inset: auto 0 0 0; height: 260px; mask-image: linear-gradient(180deg, transparent, #000 55%); }
+    .access-hero-modern__visual img { object-position: center 65%; }
+    .access-toolbar-modern { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+}
+
+@media (max-width: 960px) {
+    .access-municipality-grid {
+        max-width: 540px;
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 560px) {
+    .access-shell { width: calc(100% - 32px); }
+    .access-topbar__inner { min-height: 70px; gap: 12px; }
+    .access-logo--idemap { width: 240px; max-width: 61vw; }
+    .access-logo--dip { width: 110px; max-width: 26vw; }
+    .access-topbar__right { gap: 8px; }
+    .access-session-menu { border: 0; padding: 0; }
+    .access-user-name { display: none; }
+    .access-hero-modern__eyebrow { font-size: .7rem; letter-spacing: .1em; }
+    .access-hero-modern__copy h1 { font-size: 4.8rem; }
+    .access-hero-modern__copy h2 { font-size: 1.6rem; }
+    .access-hero-modern__copy p { font-size: 1rem; }
+    .access-hero-modern__buttons { gap: 10px; }
+    .btn-access { min-height: 46px; padding-inline: 15px; font-size: .94rem; }
+    .access-municipality-grid { gap: 12px; }
+    .access-municipality-card { min-height: 145px; grid-template-columns: 86px minmax(0, 1fr); }
+    .access-municipality-card__escudo { padding: 10px; }
+    .access-municipality-card img { width: 62px; height: 82px; }
+    .access-municipality-card__contenido { padding: 13px 12px; gap: 8px; }
+    .access-municipality-card__etiqueta { font-size: .62rem; }
+    .access-municipality-card h3 { font-size: 1.2rem; }
+    .access-municipality-card p { font-size: .79rem; }
+    .access-municipality-card a { min-height: 34px; padding: 5px 12px; }
+    .access-section-heading h2 { font-size: 1.45rem; }
+    .access-footer__inner { grid-template-columns: minmax(0, 1fr); gap: 18px; padding-block: 23px; }
+    .access-footer nav { order: 0; grid-column: auto; gap: 18px; }
+    .access-footer img { justify-self: start; width: 190px; }
+}
+@media (max-width: 360px) {
+    .access-municipality-card { grid-template-columns: 76px minmax(0, 1fr); }
+    .access-municipality-card img { width: 56px; height: 76px; }
+    .access-municipality-card__contenido { padding: 12px 12px 12px 0; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn-access { transition: none; } }

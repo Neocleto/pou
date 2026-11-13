@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="#540000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mano y propuesta en el buzón. Sin rellenos ni trazos reforzados. -->
+  <path d="M90 8H74l-17 6-9 11c-2 3 2 6 5 3l7-7-2 13c-1 4 5 5 6 1l4-15M79 8l2 17h9M68 25l10 3 12-2"/>
+  <path d="m39 30 19 13-15 22-19-13Z"/>
+  <path d="M14 43h17M59 43h23v45H14V43M49 57h15"/>
+  <path d="M8 82h9l8-7h18c6 0 6 6 0 6H29M8 88h13l7-3h21c5 0 5-5 0-5M32 71h19"/>
+</svg>

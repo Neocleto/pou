@@ -1,0 +1,40 @@
+/* Identidad POU compartida por acceso, gestión, configurador y portal público.
+   Los colores de éxito, aviso y error conservan su significado. */
+:root {
+    --bs-primary: #540000;
+    --bs-primary-rgb: 84, 0, 0;
+    --bs-primary-text-emphasis: #540000;
+    --bs-primary-bg-subtle: #f8eeee;
+    --bs-primary-border-subtle: #d6b3b3;
+    --bs-link-color: #540000;
+    --bs-link-color-rgb: 84, 0, 0;
+    --bs-link-hover-color: #740f18;
+    --bs-link-hover-color-rgb: 116, 15, 24;
+    --bs-focus-ring-color: rgba(84, 0, 0, .25);
+}
+.btn-primary, .btn-outline-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #540000;
+    --bs-btn-border-color: #540000;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #740f18;
+    --bs-btn-hover-border-color: #740f18;
+    --bs-btn-focus-shadow-rgb: 84, 0, 0;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #400000;
+    --bs-btn-active-border-color: #400000;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #540000;
+    --bs-btn-disabled-border-color: #540000;
+}
+.btn-outline-primary { --bs-btn-color: #540000; --bs-btn-bg: transparent; --bs-btn-disabled-color: #540000; --bs-btn-disabled-bg: transparent; }
+.form-check-input:checked { background-color: #540000; border-color: #540000; }
+.form-control:focus, .form-select:focus, .form-check-input:focus { border-color: #b68080; box-shadow: 0 0 0 .25rem rgba(84,0,0,.18); }
+.form-range::-webkit-slider-thumb { background: #540000; }
+.form-range::-moz-range-thumb { background: #540000; }
+.pagination { --bs-pagination-color: #540000; --bs-pagination-hover-color: #740f18; --bs-pagination-active-bg: #540000; --bs-pagination-active-border-color: #540000; --bs-pagination-focus-color: #540000; --bs-pagination-focus-box-shadow: 0 0 0 .25rem rgba(84,0,0,.18); }
+.nav-pills { --bs-nav-pills-link-active-bg: #540000; }
+.accordion { --bs-accordion-active-color: #540000; --bs-accordion-active-bg: #f8eeee; --bs-accordion-btn-focus-box-shadow: 0 0 0 .25rem rgba(84,0,0,.18); }
+.dropdown-menu { --bs-dropdown-link-active-bg: #540000; }
+.progress { --bs-progress-bar-bg: #540000; }
+.swal2-styled.swal2-confirm { background-color: #540000; }
