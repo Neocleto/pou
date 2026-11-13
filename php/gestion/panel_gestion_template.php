@@ -18,7 +18,7 @@
     <!-- bootstrap-select para Bootstrap 5 -->
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-select.min.css">
 
-    <link rel="stylesheet" href="css/acceso-moderno.css">
+    <link rel="stylesheet" href="css/acceso-moderno.css?v=pou-v6-20261113">
     <link rel="stylesheet" href="css/panel.css?v=pou-burdeos-20261113">
     <link rel="stylesheet" href="css/tabla-municipio.css?v=pou-20261112-2">
     <link rel="stylesheet" href="css/wizard.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/wizard.css') ?>">

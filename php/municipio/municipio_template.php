@@ -9,8 +9,8 @@
 
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap@5.3.0.min.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/portal.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/portal.css') ?>">
-    <link rel="stylesheet" href="css/documentos.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/documentos.css') ?>">
+    <link rel="stylesheet" href="css/portal.css?v=pou-v9-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/portal.css') ?>">
+    <link rel="stylesheet" href="css/documentos.css?v=pou-v7-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/documentos.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
 <?php
@@ -471,15 +471,15 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                         </div>
                     </div>
 
-                    <div class="portal-current-phase">
-                        <span data-content="fases.etiqueta_fase"><?= htmlspecialchars(normalizarTextoPortal($contenido['fases']['etiqueta_fase'])) ?></span>
-                        <strong data-db-content="fase_actual.titulo">
-                            <?= htmlspecialchars($faseNumero ?: 'Sin fase asignada') ?>
-                            <?= $faseDescripcion ? '. ' . htmlspecialchars(normalizarTextoPortal($faseDescripcion, true)) : '' ?>
-                        </strong>
-                    </div>
-
                     <div class="portal-phases__body">
+                        <div class="portal-current-phase">
+                            <span data-content="fases.etiqueta_fase"><?= htmlspecialchars($contenido['fases']['etiqueta_fase']) ?></span>
+                            <strong data-db-content="fase_actual.titulo">
+                                <?= htmlspecialchars($faseNumero ?: 'Sin fase asignada') ?>
+                                <?= $faseDescripcion ? '. ' . htmlspecialchars(normalizarTextoPortal($faseDescripcion, true)) : '' ?>
+                            </strong>
+                        </div>
+
                         <?php if (!empty($faseActual['imagen_url']) || $modoEditorPortal): ?>
                             <div class="portal-phases__visual" <?= empty($faseActual['imagen_url']) ? 'hidden' : '' ?>>
                                 <img
@@ -647,13 +647,16 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                     </div>
                     <div class="portal-document-stages" aria-label="Fases de documentación">
                         <?php foreach ($documentosPublicos['botones'] as $paso => $boton): ?>
-                            <?php $activo = $paso === $documentosPublicos['botonActivo']; ?>
-                            <button type="button" class="portal-document-stage<?= $activo ? ' is-active' : '' ?>"
+                            <?php
+                            $activo = $paso === $documentosPublicos['botonActivo'];
+                            $completado = ($boton['estado'] ?? '') === 'completada';
+                            ?>
+                            <button type="button" class="portal-document-stage<?= $activo ? ' is-active' : ($completado ? ' is-completed' : '') ?>"
                                 <?= $activo ? 'data-bs-toggle="modal" data-bs-target="#modalDocumentosPortal"' : 'disabled' ?>
                                 aria-describedby="estadoDocumentosPortal" <?= $activo ? 'aria-haspopup="dialog"' : '' ?>>
                                 <span class="portal-document-stage__number"><?= (int)$paso ?></span>
                                 <span><strong data-document-stage-title="<?= (int)$paso ?>"><?= htmlspecialchars($boton['titulo']) ?></strong>
-                                <small><?= $activo ? 'Consultar documentos' : 'No disponible' ?></small></span>
+                                <small><?= $activo ? 'Consultar documentos' : ($completado ? 'Completada · No disponible' : 'No disponible') ?></small></span>
                                 <i class="bi bi-<?= $activo ? 'arrow-up-right' : 'lock' ?>" aria-hidden="true"></i>
                             </button>
                         <?php endforeach; ?>
@@ -897,7 +900,7 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
     <?php endif; ?>
 
     <script src="lib/bootstrap.bundle.min.js"></script>
-    <script src="js/documentos/documentos.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/documentos/documentos.js') ?>"></script>
+    <script src="js/documentos/documentos.js?v=pou-v7-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/documentos/documentos.js') ?>"></script>
     <script src="js/municipios/municipio.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/municipios/municipio.js') ?>"></script>
 </body>
 </html>

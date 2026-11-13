@@ -297,18 +297,25 @@
     color: #b99a9d;
 }
 
-.documents-phases__nav .nav-link:hover {
+.documents-phases__nav .nav-link:not(:disabled):hover {
     background: #fbf4f5;
 }
 
+/* Solo la fase activa permite consultar documentos; las anteriores quedan apagadas. */
 .documents-phases__nav .nav-link.active {
-    color: var(--pou-documents);
-    background: color-mix(in srgb, var(--pou-documents) 8%, #fff);
+    color: white;
+    background: var(--pou-documents);
 }
-
-.documents-phases__nav .nav-link.active .documents-phases__copy strong,
-.documents-phases__nav .nav-link.active > i {
-    color: var(--pou-documents);
+.documents-phases__nav .nav-link.is-completed {
+    color: white;
+    background: color-mix(in srgb, var(--pou-documents) 70%, white);
+}
+.documents-phases__nav .nav-link:is(.active, .is-completed) :is(strong, small, i) {
+    color: white;
+}
+.documents-phases__nav .nav-link:disabled {
+    opacity: 1;
+    cursor: default;
 }
 
 .documents-panel {

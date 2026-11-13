@@ -46,7 +46,7 @@ if ($cod_mun !== '') {
     <!-- bootstrap-select para Bootstrap 5 -->
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-select.min.css">
 
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/index.css?v=pou-v6-20261113">
     <link rel="stylesheet" href="css/panel.css">
     <link rel="stylesheet" href="css/tabla-municipio.css">
     <link rel="stylesheet" href="css/wizard.css">

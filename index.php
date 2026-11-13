@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <link href="lib/bootstrap/css/bootstrap@5.3.0.min.css" rel="stylesheet">
     <link href="lib/bootstrap/css/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/acceso-moderno.css?v=pou-v5-20261113-<?= (int)@filemtime(__DIR__ . '/css/acceso-moderno.css') ?>">
+    <link rel="stylesheet" href="css/acceso-moderno.css?v=pou-v6-20261113-<?= (int)@filemtime(__DIR__ . '/css/acceso-moderno.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
 <body class="pou-access-page">

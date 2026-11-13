@@ -553,14 +553,14 @@ function renderContenidoBuzon() {
     `;
 }
 
-/** El pie conserva los logotipos oficiales y permite adaptar su color y rótulos. */
+/** El pie conserva el fondo gris y los logotipos oficiales; permite editar los rótulos. */
 function renderPanelPie() {
     asegurarContenidoCompleto();
     const pie = estadoPortal.contenido.pie;
     establecerCabeceraPanel('Pie de página', 'Identidad y textos del ayuntamiento.');
     document.getElementById('contenidoPanelConfigurador').innerHTML = crearTarjetaConfiguracion(
         'Pie institucional',
-        'Fondo liso con el color corporativo del portal. Los logotipos oficiales se conservan.',
+        'Fondo gris institucional (#4D4D4D). Los logotipos oficiales se conservan.',
         `<div class="portal-config-grid">
             ${crearCampoTexto('Texto principal', 'contenido.pie.texto_principal', pie.texto_principal || '')}
             ${crearCampoTexto('Texto secundario', 'contenido.pie.texto_secundario', pie.texto_secundario || '')}

@@ -8,7 +8,7 @@
 
 <?php
 $piePortal = $contenido['pie'] ?? $configuracion['contenido_portal']['pie'] ?? [];
-// El pie sigue siempre el color corporativo y no tiene ilustraciones.
+// El fondo gris institucional se define en pie-institucional.css.
 ?>
 <footer class="portal-footer">
     <div class="portal-shell portal-footer__inner">

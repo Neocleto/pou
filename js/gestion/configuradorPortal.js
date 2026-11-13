@@ -263,7 +263,7 @@ function renderMenuConfigurador() {
         ${bloquesFijos}
         <div class="portal-builder-menu__group">Bloques públicos</div>
         ${botonesSecciones}
-        ${crearBotonMenu('pie', 'Pie de página', 'Fondo corporativo y textos', 'layout-text-window-reverse', estadoPortal.configuracion.color_primario)}
+        ${crearBotonMenu('pie', 'Pie de página', 'Fondo gris y textos', 'layout-text-window-reverse', estadoPortal.configuracion.color_primario)}
     `;
 
     if (!menu || menu.querySelector('[data-add-custom-section]')) {

@@ -1,4 +1,4 @@
-@import url("pie-institucional.css?v=1.31");
+@import url("pie-institucional.css?v=pou-v6-20261113");
 @import url("iconos-portal.css?v=pou-v3-color-configurable-20261113");
 /* ============================================================================
    PORTAL MUNICIPAL · única hoja de estructura y diseño público
@@ -213,7 +213,7 @@ body.portal-page {
     width: 100%;
     height: 225px;
     pointer-events: none;
-    background: url("../images/diseno/cabecera_ondas.svg?v=1.43") center bottom / 100% 100% no-repeat;
+    background: url("../images/diseno/cabecera_ondas.svg?v=pou-v8-20261113") center bottom / 100% 100% no-repeat;
 }
 .portal-page .portal-hero-layout__grid {
     position: relative;
@@ -391,22 +391,26 @@ body.portal-page {
 .portal-page .section-icon {
     display: grid;
     place-items: center;
-    width: 46px;
-    height: 46px;
-    flex: 0 0 46px;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
 
     background: transparent;
 
     border: 0;
 
-    font-size: 1.35rem;
+    font-size: 64px;
 }
 
-/* Los títulos comparten los dibujos de los accesos, sin fondo ni borde. */
-.portal-page .section-icon :is(.bi-pou-fases, .bi-pou-manos, .bi-pou-documentos, .bi-pou-noticias, .bi-pou-buzon) {
+/* El icono abarca la altura del antetítulo y del título, sin fondo ni borde. */
+/* Los iconos de librería se reducen; los dibujos propios mantienen su tamaño. */
+.portal-page .section-icon > .bi {
     display: block;
-    font-size: 36px;
+    font-size: .75em;
     line-height: 1;
+}
+.portal-page .section-icon > .bi[class*="bi-pou-"] {
+    font-size: inherit;
 }
 .portal-page .section-icon :is(.bi-pou-fases, .bi-pou-manos, .bi-pou-documentos, .bi-pou-noticias, .bi-pou-buzon)::before {
     display: block;
@@ -469,37 +473,42 @@ body.portal-page {
 
 /* 6. Información: lectura continua, con la misma cabecera que los demás bloques.
    No se divide el contenido: un párrafo con intros ocupa el mismo ancho que varios. */
-.portal-page .portal-info__body { min-width: 0; margin-left: 60px; }
+.portal-page .portal-info__body { min-width: 0; margin-left: 78px; }
 .portal-page .portal-info__text { font-size: 1rem; line-height: 1.75; color: #755356; overflow-wrap: anywhere; }
 .portal-page .portal-info__text p { margin: 0 0 1em; }
 .portal-page .portal-info__text p:last-child { margin-bottom: 0; }
 
-/* 7. Fases: la fase actual comparte el margen del icono del encabezado.
+/* 7. Fases: el rótulo se ajusta al texto y comparte el centro con la imagen.
    El esquema conserva su tamaño; el estado mantiene su ancho de lectura. */
 .portal-page .portal-phases__body {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
-    margin-left: 60px;
+    margin-left: 78px;
 }
 .portal-page .portal-phases:not(:has([data-section-icon]:not([hidden]))) .portal-phases__body {
     margin-left: 0;
 }
 .portal-page .portal-current-phase {
-    width: 100%;
-    margin-bottom: 16px;
+    align-self: center;
+    width: fit-content;
+    max-width: 100%;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px 16px;
+    justify-content: center;
+    gap: 8px 12px;
+    text-align: center;
     padding: 13px 18px;
     border: 1px solid var(--portal-border);
     border-radius: 9px;
     background: #faf5f5;
 }
 .portal-page .portal-current-phase > span {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     padding: 2px 9px;
     color: white;
     background: var(--section-color);
@@ -507,7 +516,8 @@ body.portal-page {
     font-size: .8rem;
 }
 .portal-page .portal-current-phase strong {
-    flex: 1 1 260px;
+    flex: 0 1 auto;
+    max-width: 100%;
     min-width: 0;
     font-weight: 500;
     color: var(--section-color);
@@ -624,16 +634,7 @@ body.portal-page {
 }
 
 .portal-page .portal-participation .section-icon {
-    display: grid;
-    place-items: center;
-    flex: 0 0 46px;
-    width: 46px;
-    height: 46px;
     color: var(--section-color);
-
-    background: transparent;
-
-    font-size: 1.5rem;
 }
 
 /* La introducción se justifica y las palabras completas pasan a la línea siguiente. */
@@ -855,13 +856,7 @@ body.portal-page {
         margin-bottom: 18px;
     }
 
-    .portal-page .portal-participation .section-icon {
-        width: 48px;
-        height: 48px;
-        flex-basis: 48px;
 
-        font-size: 1.4rem;
-    }
 
     .portal-page .portal-participation .participation-resources {
         gap: 11px;
@@ -941,6 +936,16 @@ body.portal-page {
 }
 
 .portal-page .portal-document-stage.is-active .portal-document-stage__number {
+    background: #ffffff24;
+}
+
+/* Las fases superadas mantienen el burdeos, más apagado y sin acción. */
+.portal-page .portal-document-stage.is-completed {
+    color: white;
+    background: color-mix(in srgb, var(--section-color) 70%, white);
+    border-color: color-mix(in srgb, var(--section-color) 70%, white);
+}
+.portal-page .portal-document-stage.is-completed .portal-document-stage__number {
     background: #ffffff24;
 }
 
@@ -1143,7 +1148,7 @@ body.portal-page {
 }
 .portal-page .portal-mailbox__intro { position: relative; min-width: 0; }
 .portal-page .portal-mailbox__intro .portal-section__heading { margin-bottom: 12px; }
-.portal-page .portal-mailbox__intro > .portal-rich-text { margin-left: 60px; }
+.portal-page .portal-mailbox__intro > .portal-rich-text { margin-left: 78px; }
 .portal-page .portal-mailbox__form {
     position: relative;
     display: grid;
@@ -1288,7 +1293,6 @@ body.portal-page {
 
 .portal-page .portal-footer {
     color: white;
-    background: var(--pou-primary);
 }
 
 .portal-page .portal-footer__inner {
@@ -1539,10 +1543,10 @@ body.portal-page {
     }
 
     .portal-page .section-icon {
-        width: 40px;
-        height: 40px;
-        flex-basis: 40px;
-        font-size: 1.15rem;
+        width: 56px;
+        height: 56px;
+        flex-basis: 56px;
+        font-size: 56px;
     }
 
     .portal-page .portal-section__heading {

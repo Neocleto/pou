@@ -39,7 +39,7 @@ window.addEventListener('load', function () {
  * En pantallas estrechas acerca el panel al elegir otra fase.
  */
 function inicializarNavegacionFases() {
-    const enlacesFase = document.querySelectorAll('#fases-tab .nav-link');
+    const enlacesFase = document.querySelectorAll('#fases-tab .nav-link:not(:disabled)');
     const panelDocumentos = document.querySelector('.documents-panel');
 
     enlacesFase.forEach(function (enlace) {

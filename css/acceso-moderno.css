@@ -1,4 +1,4 @@
-@import url("pie-institucional.css?v=1.31");
+@import url("pie-institucional.css?v=pou-v6-20261113");
 /* ============================================================================
    ACCESO POU
    Una única hoja para estructura, identidad, listado y adaptación a pantalla.
@@ -179,7 +179,7 @@ body.pou-access-page .text-primary { color: var(--pou-corporativo) !important; }
 .access-page-btn:disabled { opacity: .45; }
 
 /* 4. Pie institucional. El fondo liso compartido está en pie-institucional.css. */
-.access-footer { color: white; background: var(--pou-corporativo); }
+.access-footer { color: white; }
 .access-footer__inner { min-height: 82px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 28px; padding-block: 15px; }
 .access-footer__inner > span { font-size: .9rem; }
 .access-footer nav { display: flex; flex-wrap: wrap; gap: 24px; }

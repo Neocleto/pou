@@ -25,6 +25,7 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
     }
 
     $faseActiva = 0;
+    $codigoFaseActiva = '';
     $botonActivo = 0;
     $menu = [];
     foreach ($catalogo as $fase) {
@@ -45,6 +46,7 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
         $botones[$paso]['fases'][] = $numero;
         if (!empty($hayDocumentos[$numero])) {
             $faseActiva = $numero;
+            $codigoFaseActiva = (string)$fase['codigo'];
             $botonActivo = $paso;
         }
         $esIntermedia = in_array($fase['es_fase_21'] ?? false, [true, 1, '1', 't', 'true'], true);
@@ -55,6 +57,19 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
             $grupos[$numero] = [];
         }
     }
+    // El estado se calcula por el orden del catálogo, nunca por el ID interno.
+    foreach ($botones as $paso => &$boton) {
+        $boton['estado'] = $paso === $botonActivo ? 'activa'
+            : ($botonActivo > 0 && $paso < $botonActivo ? 'completada' : 'pendiente');
+    }
+    unset($boton);
+    foreach ($menu as $numero => &$fase) {
+        $fase['estado'] = $numero === $faseActiva ? 'activa'
+            : ($faseActiva > 0 && version_compare((string)$fase['codigo'], $codigoFaseActiva, '<') ? 'completada' : 'pendiente');
+    }
+    unset($fase);
+    // Las vistas públicas no reciben títulos ni enlaces de fases cerradas.
+    $grupos = $faseActiva > 0 ? [$faseActiva => $grupos[$faseActiva] ?? []] : [];
     // Memoria y cartografía primero. La búsqueda conserva este mismo orden.
     foreach ($grupos as &$categorias) {
         uksort($categorias, function ($a, $b) {
