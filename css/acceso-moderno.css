@@ -43,10 +43,10 @@ body.pou-access-page .text-primary { color: var(--pou-corporativo) !important; }
 .access-user-dropdown .dropdown-item { padding: 9px 11px; border-radius: 7px; font-weight: 400; }
 .access-user-dropdown .dropdown-item:hover { background: #fbf2f3; }
 
-/* 2. La imagen forma el fondo continuo; el fundido deja limpia la zona de lectura. */
+/* 2. La imagen original se muestra completa y proporcionada; el fundido protege el texto. */
 .access-hero-modern { position: relative; isolation: isolate; overflow: hidden; background: #fdfafa; border-bottom: 1px solid #f3edee; }
 .access-hero-modern__visual { position: absolute; inset: 0; z-index: -1; pointer-events: none; mask-image: linear-gradient(90deg, transparent 30%, #0003 50%, #000 72%); }
-.access-hero-modern__visual img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center 56%; }
+.access-hero-modern__visual img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: right center; }
 .access-hero-modern__inner { position: relative; display: flex; align-items: center; min-height: 430px; padding-block: 38px; }
 .access-hero-modern__copy { width: 53%; max-width: 820px; }
 .access-hero-modern__eyebrow { display: block; margin-bottom: 12px; color: var(--pou-corporativo); font-size: .83rem; font-weight: 500; letter-spacing: .17em; text-transform: uppercase; }
@@ -208,11 +208,10 @@ body.pou-access-page .text-primary { color: var(--pou-corporativo) !important; }
 }
 @media (max-width: 820px) {
     .access-topbar__right:has(.access-session-menu) .access-logo--dip { display: none; }
-    .access-hero-modern__inner { min-height: 0; padding-block: 32px 195px; }
+    .access-hero-modern__inner { min-height: 0; padding-block: 32px calc(100vw * 682 / 2048 + 24px); }
     .access-hero-modern__copy { width: 100%; max-width: 640px; }
     .access-hero-modern__copy h2 { max-width: 610px; font-size: 1.65rem; }
-    .access-hero-modern__visual { inset: auto 0 0 0; height: 260px; mask-image: linear-gradient(180deg, transparent, #000 55%); }
-    .access-hero-modern__visual img { object-position: center 65%; }
+    .access-hero-modern__visual { inset: auto 0 0 0; height: calc(100vw * 682 / 2048); mask-image: none; }
     .access-toolbar-modern { grid-template-columns: minmax(0, 1fr); gap: 11px; }
 }
 
