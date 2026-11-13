@@ -1,4 +1,4 @@
-/* Los iconos de las guías conservan sus dibujos originales con tinta burdeos.
+/* Los iconos conservan sus dibujos originales y heredan el color del botón o bloque.
    Esta hoja se comparte entre el portal y el configurador. */
 .bi.bi-pou-fases::before,
 .bi.bi-pou-encuesta-infantil::before,
@@ -12,7 +12,11 @@
     width: 1em;
     height: 1em;
     vertical-align: -.125em;
-    background: var(--pou-icono-original) center / contain no-repeat;
+    /* Se usa la transparencia del dibujo: el color procede de su contenedor. */
+    background-color: currentColor;
+    -webkit-mask: var(--pou-icono-original) center / contain no-repeat;
+    mask: var(--pou-icono-original) center / contain no-repeat;
+    mask-mode: alpha;
 }
 .bi.bi-pou-manos { --pou-icono-original: url("../images/iconos/participacion.png?v=pou-iconos-20261112-2"); }
 .bi.bi-pou-documentos { --pou-icono-original: url("../images/iconos/documentos.png?v=pou-iconos-20261112-2"); }

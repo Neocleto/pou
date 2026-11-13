@@ -1446,13 +1446,8 @@ function normalizarBotonParticipacion(boton) {
         return item.id === 'participacion';
     });
     const colorSeccion = seccion?.color || estadoPortal.configuracion.color_primario || '#540000';
-    const colorGuardado = String(boton.color || '').toLowerCase();
-
-    // Los registros antiguos guardaban estos tonos fijos sin personalizar.
-    // Al abrir el editor pasan a utilizar el color actual de la sección.
-    const colorRecurso = !colorGuardado || ['#267249', '#ef6c24'].includes(colorGuardado)
-        ? colorSeccion
-        : boton.color;
+    // Se respeta cualquier color elegido; solo la ausencia usa el del bloque.
+    const colorRecurso = String(boton.color || '').trim() || colorSeccion;
 
     return {
         id: Number(boton.id || 0),

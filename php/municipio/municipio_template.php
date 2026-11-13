@@ -539,10 +539,9 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                                     $iconoBoton = obtenerIconoBotonParticipacionPortal($boton);
                                     $colorBoton = trim((string)($boton['color'] ?? ''));
 
-                                    // Los recursos antiguos tenian verde/naranja por defecto.
-                                    // Utilizamos el color de la seccion salvo que se haya
-                                    // configurado expresamente otro tono para el recurso.
-                                    if ($colorBoton === '' || in_array(strtolower($colorBoton), ['#267249', '#ef6c24'], true)) {
+                                    // Un color guardado se respeta también al volver a abrir el portal.
+                                    // Solo se hereda el del bloque cuando el recurso no tiene color.
+                                    if ($colorBoton === '') {
                                         $colorBoton = $coloresSecciones['participacion'];
                                     }
 

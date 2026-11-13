@@ -660,7 +660,7 @@ function crearEditorRecursoParticipacion(recurso) {
     const pdfFormulario = formularioSeleccionado?.pdf_url || recurso.formulario_pdf_url || '';
 
     return `
-        <div class="portal-content-editor">
+        <div class="portal-content-editor" style="--icon-choice-color:${escaparHtml(recurso.color || estadoPortal.configuracion.color_primario || '#540000')}">
             <div class="portal-content-editor__heading">
                 <strong>${recurso.id ? 'Editar botón de participación' : 'Nuevo botón de participación'}</strong>
                 <button type="button" data-action="content-cancel-resource" title="Cerrar"><i class="bi bi-x-lg"></i></button>
@@ -684,7 +684,7 @@ function crearEditorRecursoParticipacion(recurso) {
 
                 ${crearCampoIcono('Icono del botón', 'resource-icon', icono, 'data-content-local')}
 
-                ${crearCampoColorLocal('Color del botón', 'resource-color', recurso.color || estadoPortal.configuracion.color_primario || '#540000')}
+                ${crearCampoColorLocal('Color del botón y del icono', 'resource-color', recurso.color || estadoPortal.configuracion.color_primario || '#540000')}
 
                 <div class="portal-config-field" style="grid-column:1/-1">
                     <div class="form-check form-switch">
@@ -981,7 +981,9 @@ document.addEventListener('input', function (evento) {
     }
 
     if (campo === 'resource-color') {
-        vista.style.setProperty('--item-color', evento.target.value || estadoPortal.configuracion.color_primario || '#540000');
+        const color = evento.target.value || estadoPortal.configuracion.color_primario || '#540000';
+        vista.style.setProperty('--item-color', color);
+        vista.closest('.portal-content-editor')?.style.setProperty('--icon-choice-color', color);
     }
 });
 

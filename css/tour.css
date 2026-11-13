@@ -50,7 +50,7 @@
   font-weight: 700;
   transition: color .2s ease;
 }
-.introjs-tooltip .btn-cerrar-tour:hover { color: #dc3545; }
+.introjs-tooltip .btn-cerrar-tour:hover { color: #540000; }
 
 /* =========================================================
    2) BOTONES y BULLETS (look Bootstrap)
@@ -70,8 +70,8 @@
 .introjs-nextbutton,
 .introjs-donebutton {
   color: #fff !important;
-  background-color: #fd0d23 !important;
-  border: 1px solid #fd0d23 !important;
+  background-color: #540000 !important;
+  border: 1px solid #540000 !important;
 }
 .introjs-prevbutton {
   color: #6c757d !important;
@@ -79,7 +79,7 @@
   border: 1px solid #e6dcdd !important;
 }
 .introjs-skipbutton {
-  color: #fd0d23 !important;
+  color: #540000 !important;
   background: none !important;
   border: none !important;
   font-weight: 400 !important;

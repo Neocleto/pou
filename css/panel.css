@@ -257,14 +257,14 @@ body.swal2-shown {
 }
 
 .modal-ayuda .accordion-button:not(.collapsed) {
-  color: #fd0d23;
+  color: #540000;
   background: #fff3f4;
   box-shadow: none;
 }
 
 .modal-ayuda .accordion-button:focus {
-  box-shadow: 0 0 0 0.2rem rgba(253, 13, 35, 0.12);
-  border-color: #fdb6bc;
+  box-shadow: 0 0 0 0.2rem rgba(84, 0, 0, 0.12);
+  border-color: #d6b3b3;
 }
 
 .modal-ayuda .accordion-body {
@@ -307,7 +307,7 @@ body.swal2-shown {
   pointer-events: none;
 }
 .ayuda-btn-editar { background: #ffc107; color: #271113; }
-.ayuda-btn-previsualizar { background: #fff; border: 1px solid #fd0d23; color: #fd0d23; }
+.ayuda-btn-previsualizar { background: #fff; border: 1px solid #540000; color: #540000; }
 .ayuda-btn-publicar { background: #198754; color: #fff; }
 .ayuda-btn-eliminar { background: #fff; border: 1px solid #dc3545; color: #dc3545; }
 
@@ -537,7 +537,7 @@ body {
 
 :root {
   --panel-corporativo: #540000;
-  --panel-acento: #930f1b;
+  --panel-acento: #540000;
   --panel-fondo: #faf4f5;
   --panel-borde: #eddcde;
   --panel-texto: #4a2427;
@@ -622,8 +622,8 @@ body.page-panel-gestion .btn-panel-create:hover {
 /* Resumen visual de los siete pasos. */
 .panel-wizard-guide {
   padding: 22px 26px 20px;
-  background: #fff7f8;
-  border: 1px solid #f4cbcf;
+  background: #f8eeee;
+  border: 1px solid #d6b3b3;
   border-radius: 13px;
   box-shadow: 0 4px 12px rgba(73, 27, 31, 0.035);
 }
@@ -640,15 +640,15 @@ body.page-panel-gestion .btn-panel-create:hover {
   flex: 0 0 64px;
   display: grid;
   place-items: center;
-  color: #d21425;
-  background: #ffe4e6;
+  color: #540000;
+  background: #f0dede;
   border-radius: 50%;
   font-size: 1.9rem;
 }
 
 .panel-wizard-guide__intro h3 {
   margin: 0 0 4px;
-  color: #82131d;
+  color: #540000;
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -682,7 +682,7 @@ body.page-panel-gestion .btn-panel-create:hover {
   top: 20px;
   left: calc(50% + 25px);
   right: calc(-50% + 25px);
-  border-top: 1px dashed #d8aeb2;
+  border-top: 1px dashed #d6b3b3;
 }
 
 .panel-wizard-guide__step span {
@@ -691,9 +691,9 @@ body.page-panel-gestion .btn-panel-create:hover {
   z-index: 1;
   display: grid;
   place-items: center;
-  color: #d21425;
+  color: #540000;
   background: #ffffff;
-  border: 1px solid #efabb1;
+  border: 1px solid #d6b3b3;
   border-radius: 50%;
   font-size: 1.12rem;
 }

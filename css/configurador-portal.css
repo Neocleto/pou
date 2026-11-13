@@ -1,4 +1,4 @@
-@import url("iconos-portal.css?v=pou-iconos-20261112-2");
+@import url("iconos-portal.css?v=pou-v3-color-configurable-20261113");
 /* ========================================================================== */
 /* CONFIGURADOR VISUAL DEL PORTAL POU                                        */
 /*                                                                            */
@@ -1846,7 +1846,7 @@ body.portal-builder-page {
 
 .portal-form-list__icon,
 .portal-icon-field__preview {
-    color: var(--pou-editor-primary);
+    color: var(--form-color, var(--icon-choice-color, var(--pou-editor-primary)));
     background: color-mix(in srgb, var(--pou-editor-primary) 10%, #fff);
 }
 
@@ -1927,7 +1927,7 @@ body.portal-builder-page {
     border: 0;
     border-radius: 6px;
 }
-.portal-builder-page .portal-icon-picker__option > i { font-size: 1.35rem; text-align: center; }
+.portal-builder-page .portal-icon-picker__option > i { font-size: 1.35rem; text-align: center; color: var(--icon-choice-color, var(--pou-editor-primary)); }
 .portal-builder-page .portal-icon-picker__option:hover,
 .portal-builder-page .portal-icon-picker__option:focus-visible,
 .portal-builder-page .portal-icon-picker__option[aria-selected="true"] {
