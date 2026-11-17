@@ -6,41 +6,52 @@
 // editar y eliminar municipios, obtener fases e info adicional)
 // ===========================================================
 
-// 0. FUNCIONES DE APOYO
+// 1. SESIÓN Y PARÁMETROS
 // -----------------------------------------------------------
-// Helpers de slug, curl y búsqueda de política de privacidad
-require_once __DIR__ . '/helpers_politica.php';
-require_once __DIR__ . '/permisos_municipio.php';
-
-// 1. DEPENDENCIAS Y PREPARACIÓN
-require_once(__DIR__ . '/../../db/conexion.php');
-require_once(__DIR__ . '/../../controlador/PanelGestionController.php');
-require_once(__DIR__ . '/../../modelo/MunicipioModel.php');
-require_once(__DIR__ . '/../../modelo/ConfiguracionVisualModel.php');
-
 session_start();
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
-// Verificar si existe sesion
-if (!isset($_SESSION["usuario_id"])) {
-    http_response_code(401); // Código HTTP 401 - No autorizado
-    echo json_encode(["error" => "Sesión no válida"]);
-    exit;
-}
-
-// 2. AUTENTICACIÓN
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_correo = $_SESSION['usuario_correo'] ?? '';
 if (!$usuario_id) {
-    echo json_encode(['success' => false, 'message' => 'Usuario no autenticado.']);
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Sesión no válida.']);
+    exit;
+}
+$modo = $_POST['modo'] ?? $_GET['modo'] ?? null;
+$accion = $_POST['action'] ?? $_GET['action'] ?? null;
+
+// 2. BUSCAR POLÍTICA: NO NECESITA CONEXIÓN A LA BASE DE DATOS
+// -----------------------------------------------------------
+if ($accion === 'buscarPoliticaPrivacidad') {
+    $nombreMunicipio = $_POST['municipio'] ?? $_GET['municipio'] ?? '';
+    if (!is_string($nombreMunicipio) || trim($nombreMunicipio) === '' || mb_strlen($nombreMunicipio) > 150) {
+        echo json_encode(['success' => false, 'message' => 'Selecciona un municipio válido.']);
+        exit;
+    }
+
+    // Liberar la sesión permite seguir usando el panel durante la búsqueda.
+    session_write_close();
+    require_once __DIR__ . '/helpers_politica.php';
+    try {
+        $resultado = buscarPoliticaPrivacidad(trim($nombreMunicipio));
+        echo json_encode($resultado);
+    } catch (Throwable $error) {
+        error_log('Error al buscar política de privacidad: ' . $error->getMessage());
+        echo json_encode(['success' => false, 'message' => 'No se pudo completar la búsqueda. Puedes escribir la URL manualmente.']);
+    }
     exit;
 }
 
-// 3. CONTROLADOR Y PARÁMETROS
+// 3. RESTO DE ACCIONES: MODELOS Y CONEXIÓN A POSTGRESQL
+// -----------------------------------------------------------
+require_once __DIR__ . '/permisos_municipio.php';
+require_once __DIR__ . '/../../db/conexion.php';
+require_once __DIR__ . '/../../controlador/PanelGestionController.php';
+require_once __DIR__ . '/../../modelo/MunicipioModel.php';
+require_once __DIR__ . '/../../modelo/ConfiguracionVisualModel.php';
 $controller = new PanelGestionController($conn);
 $municipioModel = new MunicipioModel($conn);
-$modo    = $_POST['modo']   ?? $_GET['modo']   ?? null;
-$accion  = $_POST['action'] ?? $_GET['action'] ?? null;
 
 /**
  * Genera el diseño general y el índice común cuando el usuario aplica la plantilla.
@@ -85,64 +96,6 @@ try {
         echo json_encode(['success' => true, 'data' => $rows]);
         exit;
     }
-
-    // ==============================================
-    // BUSCAR URL DE POLÍTICA DE PRIVACIDAD (INTELIGENTE)
-    // ==============================================
-    if ($accion === 'buscarPoliticaPrivacidad') {
-        $nombreMunicipio = $_GET['municipio'] ?? $_POST['municipio'] ?? null;
-
-        if (!$nombreMunicipio) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Falta el nombre del municipio.'
-            ]);
-            exit;
-        }
-
-        $inicioBusqueda = microtime(true);
-        $MAX_SEGUNDOS   = 7.0; // límite global por municipio
-
-        $url = null;
-
-        // 1) PRIMERO: escanear la home del ayuntamiento
-        //    Esto suele devolver la URL “buena” enlazada desde la web,
-        //    como /es/5300/aviso-legal-y-politica-de-privacidad
-        if (!tiempoAgotado($inicioBusqueda, $MAX_SEGUNDOS)) {
-            $url = buscarPoliticaPorHtml($nombreMunicipio);
-        }
-
-        // 2) Si no hay suerte, probar dominios + rutas típicas
-        //    (ej. /politica-de-privacidad, /aviso-legal, etc.)
-        if (!$url && !tiempoAgotado($inicioBusqueda, $MAX_SEGUNDOS)) {
-            $url = buscarPoliticaPorDominios($nombreMunicipio);
-        }
-
-        // 3) Último intento con Google si tu servidor puede salir a Internet
-        if (!$url && !tiempoAgotado($inicioBusqueda, $MAX_SEGUNDOS)) {
-            $url = buscarPoliticaPorGoogle($nombreMunicipio);
-        }
-
-        if ($url) {
-            echo json_encode([
-                'success' => true,
-                'url'     => $url,
-                'message' => 'Se ha encontrado una URL probable de política de privacidad. Revísala antes de guardar.'
-            ]);
-        } else {
-            $msgTiempo = tiempoAgotado($inicioBusqueda, $MAX_SEGUNDOS)
-                ? 'La búsqueda ha tardado demasiado o la web del ayuntamiento no responde.'
-                : 'No se ha podido localizar automáticamente la URL de la política de privacidad. Introdúcela manualmente.';
-
-            echo json_encode([
-                'success' => false,
-                'url'     => null,
-                'message' => $msgTiempo
-            ]);
-        }
-        exit;
-    }
-
 
     // ==============================================
     // LISTAR MUNICIPIOS CREADOS POR EL USUARIO

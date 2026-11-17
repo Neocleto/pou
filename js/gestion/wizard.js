@@ -1558,87 +1558,97 @@ function inicializarSelectMunicipiosPaso1() {
  * usando el nombre del municipio.
  */
 function inicializarBotonBuscarPolitica() {
-    const btn      = document.getElementById('btnBuscarPolitica');
+    const btn = document.getElementById('btnBuscarPolitica');
     const inputUrl = document.getElementById('politica_privacidad_url');
-    const selNombre = document.getElementById('nombre');
+    if (!btn || !inputUrl) {
+        return;
+    }
 
-    if (!btn || !inputUrl || !selNombre) return;
+    // Evitar eventos duplicados al volver a abrir el asistente.
+    if (btn.dataset.bound === '1') {
+        return;
+    }
+    btn.dataset.bound = '1';
 
-    // evita duplicar el listener al reabrir el wizard
-    if (btn.dataset.bound === "1") return;
-    btn.dataset.bound = "1";
+    btn.addEventListener('click', async () => {
+        if (btn.disabled) {
+            return;
+        }
 
-    btn.addEventListener('click', () => {
-        const selectedOption = selNombre.options[selNombre.selectedIndex];
-        const nombreMun = selectedOption ? selectedOption.text.trim() : '';
-
-        if (!nombreMun) {
+        // 1. Leer el nombre actual. En edición es un input; en creación, un select.
+        const campoNombre = document.getElementById('nombre');
+        let nombreMunicipio = '';
+        if (campoNombre && campoNombre.tagName === 'SELECT' && campoNombre.value) {
+            nombreMunicipio = campoNombre.selectedOptions[0].textContent.trim();
+        } else if (campoNombre && campoNombre.tagName === 'INPUT') {
+            nombreMunicipio = campoNombre.value.trim();
+        }
+        if (nombreMunicipio === '') {
             Swal.fire({
-                icon: 'info',
-                title: 'Selecciona un municipio',
-                text: 'Primero debes escoger el municipio en el Paso 1.',
-                confirmButtonText: 'Entendido',
-                customClass: { confirmButton: 'btn btn-primary' },
-                buttonsStyling: false
+                icon: 'info', title: 'Selecciona un municipio',
+                text: 'Primero debes escoger el municipio en el Paso 1.'
             });
             return;
         }
 
+        // 2. Bloquear el botón y enviar una única búsqueda al servidor.
+        const valorMunicipio = campoNombre.value;
+        const contenidoBoton = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Buscando…';
+        const parametros = new URLSearchParams();
+        parametros.append('action', 'buscarPoliticaPrivacidad');
+        parametros.append('municipio', nombreMunicipio);
+        const controlBusqueda = new AbortController();
+        const temporizador = setTimeout(() => controlBusqueda.abort(), 28000);
 
-        const params = new URLSearchParams();
-        params.append('action', 'buscarPoliticaPrivacidad');
-        // IMPORTANTE: el backend espera "municipio"
-        params.append('municipio', nombreMun);
+        try {
+            const respuesta = await fetch('php/gestion/acciones/acciones_panel.php', {
+                method: 'POST', body: parametros, signal: controlBusqueda.signal
+            });
+            if (respuesta.status === 401) {
+                throw new Error('La sesión ha caducado. Vuelve a iniciar sesión para buscar.');
+            }
+            if (!respuesta.ok) {
+                throw new Error('El servidor no ha podido completar la búsqueda. Puedes escribir la URL manualmente.');
+            }
+            const datos = await respuesta.json();
 
-        fetch('php/gestion/acciones/acciones_panel.php', {
-            method: 'POST',
-            body: params
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success && data.url) {
-                inputUrl.value = data.url;
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'URL encontrada',
-                    text: 'Hemos rellenado automáticamente la URL de la política de privacidad. Revisa que sea correcta antes de guardar.',
-                    confirmButtonText: 'OK',
-                    customClass: { confirmButton: 'btn btn-success' },
-                    buttonsStyling: false
-                });
-
-                // Sincronizar con el wizard (marca el paso como modificado)
+            // No rellenar otro municipio si el usuario cambió de selección o reabrió el asistente.
+            if (!btn.isConnected || document.getElementById('nombre') !== campoNombre || campoNombre.value !== valorMunicipio) {
+                return;
+            }
+            if (datos.success && datos.url) {
+                inputUrl.value = datos.url;
                 guardarDatosPaso(1);
                 actualizarEstadoBotonGuardar();
+                Swal.fire({
+                    icon: 'success', title: 'URL encontrada',
+                    text: 'Se ha encontrado una dirección probable. Ábrela para comprobarla antes de guardar.'
+                });
             } else {
                 Swal.fire({
-                    icon: 'info',
-                    title: 'No se ha encontrado',
-                    text: 'No he podido localizar la URL automáticamente. Escribe la dirección manualmente si la conoces.',
-                    confirmButtonText: 'Entendido',
-                    customClass: { confirmButton: 'btn btn-primary' },
-                    buttonsStyling: false
+                    icon: 'info', title: 'Búsqueda sin resultado',
+                    text: datos.message || 'No se ha localizado el enlace. Puedes escribir la URL manualmente.'
                 });
             }
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al buscar',
-                text: 'Ocurrió un problema al hacer la búsqueda. Inténtalo de nuevo o rellena la URL manualmente.',
-                confirmButtonText: 'OK',
-                customClass: { confirmButton: 'btn btn-primary' },
-                buttonsStyling: false
-            });
-        })
-        .finally(() => {
+        } catch (error) {
+            if (!btn.isConnected || document.getElementById('nombre') !== campoNombre || campoNombre.value !== valorMunicipio) {
+                return;
+            }
+            let mensaje = 'No se pudo completar la búsqueda. Puedes escribir la URL manualmente.';
+            if (error.name === 'AbortError') {
+                mensaje = 'La web del ayuntamiento tarda demasiado en responder. Puedes escribir la URL manualmente.';
+            } else if (error.name !== 'SyntaxError' && error.name !== 'TypeError') {
+                mensaje = error.message;
+            }
+            Swal.fire({icon: 'error', title: 'Error al buscar', text: mensaje});
+        } finally {
+            // 3. Restaurar siempre el botón, tanto si se encuentra la URL como si falla la red.
+            clearTimeout(temporizador);
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-magic"></i><span class="d-none d-md-inline"> Buscar</span>';
-        });
+            btn.innerHTML = contenidoBoton;
+        }
     });
 }
 

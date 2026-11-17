@@ -474,7 +474,17 @@ body.portal-page {
 /* 6. Información: lectura continua, con la misma cabecera que los demás bloques.
    No se divide el contenido: un párrafo con intros ocupa el mismo ancho que varios. */
 .portal-page .portal-info__body { min-width: 0; margin-left: 78px; }
-.portal-page .portal-info__text { font-size: 1rem; line-height: 1.75; color: #755356; overflow-wrap: anywhere; }
+/* Justificar únicamente la descripción de «Para qué sirve el plan». */
+.portal-page .portal-info__text {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #755356;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    text-align: justify;
+    text-align-last: start;
+}
 .portal-page .portal-info__text p { margin: 0 0 1em; }
 .portal-page .portal-info__text p:last-child { margin-bottom: 0; }
 
