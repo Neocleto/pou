@@ -126,7 +126,9 @@ function renderPanelCabecera() {
     asegurarContenidoCompleto();
     establecerCabeceraPanel('Cabecera del municipio', 'Configura la imagen, el escudo y todos los textos de presentación.');
 
-    const rutaBanner = estadoPortal.municipio.imagen_cabecera || 'images/no_pou_data1.png';
+    const rutaGuardada = String(estadoPortal.municipio.imagen_cabecera || '').trim();
+    const esImagenProvisional = /(?:^|\/)(?:no_(?:pbom|pou|pgom)_data|sin_datos_)/i.test(rutaGuardada);
+    const rutaBanner = rutaGuardada !== '' && !esImagenProvisional ? rutaGuardada : 'images/diseno/sin_datos_pou.png';
     const rutaEscudo = estadoPortal.municipio.escudo || 'images/logo_mipou.png';
     const cabecera = estadoPortal.contenido.cabecera;
 
@@ -165,7 +167,7 @@ function renderPanelCabecera() {
                         <i class="bi bi-upload me-1"></i>Seleccionar imagen
                     </button>
                     <input type="file" class="d-none" data-upload-input="banner" accept="image/jpeg,image/png,image/webp">
-                    <div class="portal-config-help">La fotografía se recorta automáticamente para adaptarse a cada pantalla.</div>
+                    <div class="portal-config-help">Fotografía obligatoria para publicar el municipio (JPG, PNG o WEBP, hasta 8 MB). Puedes guardar el municipio como borrador y subirla después. Si todavía no hay fotografía, se muestra una ilustración provisional.</div>
                 </div>
             </div>`
         )}

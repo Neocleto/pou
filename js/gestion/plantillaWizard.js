@@ -8,8 +8,8 @@
  *
  *  Qué hace el botón "Cargar plantilla":
  *    1. Rellena automáticamente campos de los pasos 2, 3 y 5.
- *    2. Añade las FAQs (preguntas frecuentes) del paso 7,
- *        que ya existen en la base de datos (por su ID).
+ *    2. Carga las nueve primeras FAQs del documento del POU
+ *       como preguntas especificas del municipio, sin tocar la biblioteca.
  *    3. Deja todos los pasos listos para guardar en BBDD.
  *******************************************/
 
@@ -21,34 +21,52 @@ const PLANTILLA_WIZARD = {
     buzon_participacion_activo: '1'
   },
   paso2: {
-    titulo: 'Motivos para la elaboración del nuevo POU',
-    descripcion: `La reciente normativa andaluza, conocida como LISTA, se orienta hacia el fomento de la sostenibilidad territorial, introduciendo modificaciones significativas para responder de manera más eficiente a las nuevas exigencias del contexto actual. Esta ley, enfocada en la regulación de la ordenación del territorio y el urbanismo, facilita los procedimientos para la aprobación de planes urbanísticos y trae conceptos innovadores en cuanto a la clasificación del suelo y nuevas estrategias de planificación. Estas últimas buscan reforzar el desarrollo de las áreas urbanas ya existentes, delegando un papel más activo a los Ayuntamientos.
-    Dentro de este marco normativo, y considerando las particularidades de {municipio}, el Ayuntamiento ha emprendido la tarea de revisar y actualizar su planificación general para alinearla con la LISTA. Este esfuerzo se ve apoyado por las iniciativas del Área de Cohesión Territorial de la Diputación Provincial de Málaga, que promueve un nuevo modelo de asistencia técnica en materia de urbanismo a través de ayudas financieras. El objetivo de esta acción es modernizar y adaptar la planificación urbana de {municipio} a las actuales demandas sociales y a las directrices que marca la ley vigente.`
+    titulo: 'Para qué sirve el plan de ordenación urbana',
+    descripcion: `
+      <p>Este municipio no cuenta con planeamiento general, por lo que carece de directrices que planifiquen la ordenación del núcleo urbano y del conjunto del término municipal. Con este Plan de Ordenación Urbana (POU), la ciudadanía tiene la oportunidad de decidir su futuro y reflexionar colectivamente cómo desean que sea su pueblo.</p>
+      <p>Actualmente para desarrollar cualquier actuación en el municipio, es necesario recurrir a las normativas y a la legislación vigente de ámbito autonómico y estatal. Estas normas, sin embargo, no siempre tienen en cuenta la escala, las características ni las necesidades específicas del municipio, lo que dificulta su desarrollo.</p>
+      <p>Nos encontramos en un momento importante, ya que existe la oportunidad de elaborar un POU contando con la participación ciudadana en el marco de la Ley de Impulso para la Sostenibilidad del Territorio de Andalucía (LISTA), que regula la ordenación del territorio y el urbanismo, y que facilita y agiliza los procedimientos para la ejecución de actuaciones urbanísticas.</p>
+      <p>La LISTA introduce un cambio significativo en el concepto de clasificación de suelo y propone nuevas estrategias de planificación. El objetivo ya no es promover nuevos crecimientos que creen expectativas entre las personas propietarias de suelo, sino de conservar y mejorar lo existente, aprovechando todo su potencial y permitiendo un crecimiento justificado cuando resulte necesario.</p>
+      <p>Este POU es un documento urbanístico elaborado por el equipo multidisciplinar de profesionales del Servicio de Arquitectura y Planeamiento de la Diputación Provincial de Málaga, dentro del marco de la asistencia técnica recogida en los Planes Provinciales de Asistencia y Cooperación. Su objetivo es dotar a los municipios de un marco urbanístico legal adecuado a las directrices establecidas por la legislación vigente, que permita desarrollar su ordenación urbana y territorial conforme a las actuales demandas sociales.</p>
+    `.trim()
   },
   paso3: {
     num_fase: '1',
-    subfase_id:'1',
+    codigo_subfase: '1.1',
     estado_tramitacion: 'Esta fase inicia el proceso de elaboración del POU, donde se plantea un plan de participación pública que recoge acciones como encuestas, reuniones vecinales, buzones de sugerencias, sesiones informativas, herramientas digitales y mecanismos de retroalimentación continua.',
-    fecha_inicio: () => new Date().toISOString().split('T')[0]
+    // Se calcula al pulsar Cargar plantilla, respetando el dia local.
+    fecha_inicio: () => {
+      const hoy = new Date();
+      const anio = hoy.getFullYear();
+      const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dia = String(hoy.getDate()).padStart(2, '0');
+      return `${anio}-${mes}-${dia}`;
+    }
   },
   paso5: {
-    // Estos textos se guardan solo para mantener compatibilidad con la tabla antigua.
-    titulo1: 'Participa en el POU',
-    descripcion1: 'El POU se construye también con la participación de la ciudadanía.',
+    // Estos textos se guardan para mantener compatibilidad con la tabla antigua.
+    titulo1: 'Participación ciudadana en el POU',
+    descripcion1: `
+      <p>La implicación de los ciudadanos en la Participación es un pilar esencial en la elaboración del <strong>Plan de Ordenación Urbana (POU)</strong>. Este enfoque se centra en combinar las vivencias y perspectivas de la comunidad, con la experiencia técnica y administrativa del equipo del <strong>Servicio de Arquitectura y Planeamiento de la Diputación de Málaga</strong>, encargado de su redacción.</p>
+      <p>El propósito es lograr que este instrumento de ordenación urbanística se fundamente en un <strong>amplio consenso</strong> y aborde efectivamente las <strong>necesidades concretas del municipio</strong>.</p>
+      <p>A través de este <strong>proceso colaborativo</strong>, se buscan soluciones que no solo sean técnicamente sólidas, sino que también alcancen un alto grado de aceptación entre los habitantes del municipio.</p>
+      <p>Este método de participación garantiza que los planes reflejen una <strong>visión compartida</strong> y sean más efectivos en su <strong>implementación y sostenibilidad</strong>.</p>
+    `.trim(),
     titulo2: 'Encuestas y formularios',
     descripcion2: 'Consulta los formularios y recursos disponibles para participar.'
   },
+  // Las primeras nueve preguntas del documento oficial del POU (13/11/2026).
+  // Son textos municipales y no modifican la biblioteca comun de FAQs.
   paso7: [
-    { id: 1, pregunta: '¿Qué es el POU?', respuesta: 'POU significa Plan de Ordenación Urbana. Este portal permite consultar la información del plan, seguir su tramitación y participar a través de los recursos que publica el Ayuntamiento.' },
-    { id: 2, pregunta: '¿Cuál es el objetivo principal del POU?', respuesta: 'El objetivo es establecer la ordenación urbanística del término municipal, adaptada a las características propias del municipio con la máxima sencillez y simplificación de sus determinaciones en función de su dinámica urbanística, promoviendo un desarrollo urbano sostenible, equilibrado y coherente, garantizando el aprovechamiento racional de los recursos y la protección del patrimonio natural y cultural.' },
-    { id: 3, pregunta: '¿Quién elabora el POU?', respuesta: 'El POU es elaborado por técnicos especializados del Servicio de Arquitectura y Urbanismo de la Diputación de Málaga, con la participación pública de la ciudadanía, la supervisión técnica y jurídica municipal y autonómica, para su posterior aprobación por la corporación municipal.' },
-    { id: 4, pregunta: '¿Cómo afecta el POU a los residentes del municipio?', respuesta: 'La aprobación del POU proporciona un marco normativo urbanístico y territorial que dota de seguridad jurídica a toda la ciudadanía. Del mismo modo, se mejora la calidad de vida de los residentes proponiendo actuaciones urbanísticas y de transformación urbanística, nuevos servicios e infraestructuras, nuevas dotaciones y espacios destinados a la conservación de áreas naturales y culturales.' },
-    { id: 5, pregunta: '¿Dónde puedo consultar el ámbito del POU?', respuesta: 'El ámbito y las determinaciones del plan se recogen en los documentos publicados en este portal. Para conocer cómo afecta a una parcela o zona concreta, consulta la documentación y el servicio municipal de urbanismo.' },
-    { id: 6, pregunta: '¿Cómo puede la ciudadanía participar en el proceso de POU?',  respuesta: 'El propósito de la participación ciudadana es lograr que el modelo de ordenación del POU se fundamente en el consenso y las necesidades concretas del municipio, buscando soluciones técnicamente viables que alcancen un alto grado de aceptación entre los habitantes del municipio.\n\nLa ciudadanía puede participar desde el inicio en el proceso de elaboración del POU, donde se plantea un plan específico de participación pública que recoge acciones como encuestas, reuniones vecinales, buzones de sugerencias, sesiones informativas, herramientas digitales y mecanismos de retroalimentación continua.\n\nEn el Avance de POU, la ciudadanía puede conocer el contenido del documento y presentar sugerencias al modelo de planificación previsto una vez que se haya publicado en la web del Ayuntamiento.\n\nPosteriormente, tras la Aprobación Inicial del POU, se abre otro periodo de exposición pública, no inferior a 45 días, en el que la ciudadanía, colectivos, asociaciones, colegios profesionales y otras administraciones pueden consultar el documento y presentar alegaciones.' },
-    { id: 7, pregunta: '¿El POU incluye consideraciones sobre el medio ambiente y la sostenibilidad?', respuesta: 'Sí, una parte fundamental del POU es la integración de políticas de sostenibilidad y protección ambiental, incluyendo la gestión de recursos naturales y la mitigación de impactos medioambientales.\n\nLa aprobación del POU conlleva una doble tramitación urbanística y ambiental. En el documento de Avance se elabora de manera paralela el Documento Inicial Estratégico, que inicia el procedimiento ambiental, emitiendo el órgano autonómico competente el Documento de Alcance, en el que se recogen una serie de recomendaciones a incorporar en el POU.\n\nMás tarde, tras la aprobación inicial del documento del POU, que incluye un anexo de Evaluación Ambiental Estratégica, el órgano autonómico competente emite una Declaración Ambiental Estratégica, que pone fin a la tramitación.' },
-    { id: 8, pregunta: '¿Qué ocurre mientras se tramita el POU?', respuesta: 'Consulta el estado de la tramitación y la documentación publicada para conocer el avance del plan. El servicio municipal de urbanismo puede informar sobre el planeamiento vigente y su aplicación en cada caso.' },
-    { id: 9, pregunta: '¿Dónde puedo obtener más información sobre el POU de mi municipio?', respuesta: 'La información detallada sobre el POU de un municipio específico generalmente está disponible en la página web del ayuntamiento o en la oficina de urbanismo municipal.\n\nUna vez aprobado definitivamente el POU, se publica su normativa en el Boletín Oficial de la Junta de Andalucía (BOJA) y el documento completo se podrá visualizar en la web de la Diputación de Málaga, así como en la web de consulta de planeamiento urbanístico y territorial de la Junta de Andalucía.' },
-    { id: 10, pregunta: '¿El POU de mi municipio incorpora la perspectiva de género?', respuesta: 'El POU en su fase de análisis y diagnóstico incorpora cuestiones desde la perspectiva de género, creando propuestas de ordenación que mejoren la calidad de vida de toda la ciudadanía independientemente del género, edad, condición física, social, psicológica…materializado en aspectos referentes a la accesibilidad, la seguridad, el transporte público o la vivienda protegida.' }
+    { pregunta: "¿Qué es un PLAN BÁSICO DE ORDENACIÓN MUNICIPAL – POU?", respuesta: "El Plan de Ordenación Urbana (POU) es un instrumento de ordenación urbanística detallada para establecer las directrices y los objetivos de la planificación del suelo urbano, es decir, el suelo transformado por la edificación o la urbanización." },
+    { pregunta: "¿Cuál es el objetivo del POU?", respuesta: "El objetivo es revisar o redactar la normativa de edificación y de urbanización adaptada a las necesidades del núcleo. Es el momento de revisar los criterios a la hora de intervenir en el suelo urbano, promoviendo un desarrollo urbano sostenible, primando la revitalización y la regeneración de la ciudad existente." },
+    { pregunta: "¿De qué manera pueden las personas del municipio implicarse en la participación del POU?", respuesta: "La ciudadanía puede participar desde el inicio en el proceso de elaboración del POU, donde se plantea un plan específico de participación pública que recoge acciones como encuestas, reuniones vecinales, buzones de sugerencias, sesiones informativas, herramientas digitales y mecanismos de retroalimentación continua.\n\nAdemás, tras la aprobación de los distintos documentos, se abrirán los periodos marcados por la normativa para la presentación de sugerencias sobre el contenido del documento de Avance que se publique, y alegaciones sobre el documento de Aprobación Inicial." },
+    { pregunta: "¿Cómo influye el POU en la ciudadanía?", respuesta: "La aprobación del POU proporciona un marco normativo urbanístico que dota de seguridad jurídica a toda la ciudadanía. Establece qué es lo que se va a poder construir en las nuestras parcelas, cómo va a ser el diseño de nuestro espacio público. Del mismo modo, identifica las actuaciones a acometer para mejorar la calidad de vida de los residentes proponiendo actuaciones urbanísticas y de transformación urbanística, nuevos servicios e infraestructuras, nuevas dotaciones y espacios destinados a la conservación de áreas naturales y culturales." },
+    { pregunta: "¿Tiene en cuenta el POU el entorno natural del núcleo y su desarrollo sostenible?", respuesta: "Sí, una parte fundamental del POU es la integración de políticas de sostenibilidad y protección ambiental, incluyendo la gestión de recursos naturales y la mitigación de impactos medioambientales.\n\nLa aprobación del POU conlleva una doble tramitación: urbanística y ambiental. Los documentos ambientales también se podrán consultar en las diferentes fases de exposición pública:\n\n- En el documento de Avance se elabora de manera paralela el Documento Inicial Estratégico (DIE), que inicia el procedimiento ambiental, emitiendo el órgano autonómico competente el Documento de Alcance, en el que se recogen una serie de recomendaciones a incorporar en el POU.\n\n- Tras la Aprobación Inicial del documento del POU, que incluye un anexo de Evaluación Ambiental Estratégica (EAE), el órgano autonómico competente emite una Declaración Ambiental Estratégica, que pone fin a la tramitación ambiental." },
+    { pregunta: "¿Qué ámbito territorial regula el POU?", respuesta: "El POU regula el suelo urbano, que es el escenario de nuestra vida diaria. Comprende el núcleo de nuestro pueblo —con sus casas, parques, plazas y equipamientos— además de los solares y espacios vacíos colindantes." },
+    { pregunta: "¿El POU de mi municipio incorpora la perspectiva de género?", respuesta: "El POU incorpora la perspectiva de género, lo que significa que se incorporan propuestas de ordenación que mejoran la calidad de vida de toda la ciudadanía independientemente del género, edad, condición física, social, psicológica… materializado en aspectos referentes a la accesibilidad, la seguridad, el transporte público o la vivienda protegida." },
+    { pregunta: "¿Quién es el equipo encargado de realizar el POU?", respuesta: "El POU es elaborado por técnicos especializados del Servicio de Arquitectura y Urbanismo de la Diputación de Málaga, con la participación pública de la ciudadanía y la supervisión técnica y jurídica municipal y autonómica, para su posterior aprobación por la corporación municipal." },
+    { pregunta: "¿Cómo acceder a la información sobre el POU en mi municipio?", respuesta: "La información detallada sobre el POU de un núcleo específico generalmente está disponible en la página web del ayuntamiento o en la oficina de urbanismo municipal.\n\nUna vez aprobado definitivamente el POU, se publica su normativa en el Boletín Oficial de la Junta de Andalucía (BOJA) y el documento completo se podrá visualizar en la web de la Diputación de Málaga, así como en la web de consulta de planeamiento urbanístico y territorial de la Junta de Andalucía." }
   ]
 };
 
@@ -63,7 +81,13 @@ function escribirCampoTexto(inputEl, valor, modo) {
   const nuevo = (typeof valor === 'function') ? valor() : valor;
   if (modo === 'sobrescribir' || (modo === 'soloVacios' && actual === '')) {
     const valorFinal = String(nuevo ?? '').replaceAll('{municipio}', obtenerNombreMunicipioPlantilla());
-    actualizarEditorEnriquecido(inputEl.id, valorFinal);
+    // Solo los textareas enriquecidos necesitan CKEditor. Los selects,
+    // fechas e inputs normales requieren su valor literal, sin etiquetas <p>.
+    if (inputEl.tagName === 'TEXTAREA' && inputEl.dataset.richEditor === '1') {
+      actualizarEditorEnriquecido(inputEl.id, valorFinal);
+    } else {
+      inputEl.value = valorFinal;
+    }
   }
 }
 
@@ -150,45 +174,46 @@ function mostrarAvisoPaso1Incompleto(camposFaltantes = '') {
  * 3) FUNCIÓN ESPECÍFICA: aplicarPlantillaPaso7()
  *    Encargada de rellenar el Paso 7 con las FAQs del sistema
  * ========================================================== */
-function aplicarPlantillaPaso7() {
-  /* 1. Nos aseguramos que existe una lista local de preguntas */
+function aplicarPlantillaPaso7(modo = 'soloVacios') {
   if (!Array.isArray(preguntasAsignadasLocal)) {
-    // Si el módulo de FAQs aún no inicializó su array, lo creamos vacío.
-    // Esto evita que el render repinte “sin datos” justo después de la plantilla.
     preguntasAsignadasLocal = [];
   }
 
-  /* 2. Añadimos las preguntas de la plantilla (si no estaban ya) */
-  (PLANTILLA_WIZARD.paso7 || []).forEach(p => {
-    const yaExiste = preguntasAsignadasLocal.some(x => String(x.id) === String(p.id));
-    if (!yaExiste) {
-      preguntasAsignadasLocal.push({
-        id: p.id,
-        pregunta: p.pregunta,
-        respuesta: p.respuesta,
-        existente: true
-      });
-    }
+  // Rellenar huecos no sustituye preguntas existentes del municipio.
+  if (modo === 'soloVacios' && preguntasAsignadasLocal.length > 0) {
+    return;
+  }
+
+  // La plantilla carga exactamente nueve preguntas del documento recibido.
+  // Sin IDs de biblioteca: el modelo las guarda como preguntas exclusivas
+  // del municipio y conserva intacta la biblioteca comun pou.faqs.
+  preguntasAsignadasLocal = PLANTILLA_WIZARD.paso7.map(function (faq, indice) {
+    return {
+      id: 'plantilla_pou_' + (indice + 1),
+      asignacion_id: null,
+      pregunta_id: null,
+      pregunta: faq.pregunta,
+      respuesta: faq.respuesta,
+      pregunta_base: '',
+      respuesta_base: '',
+      personalizada: true,
+      es_exclusiva: true,
+      nueva: true
+    };
   });
 
-  /* 3. Mostramos la tabla con las preguntas cargadas */
   if (typeof renderizarTablaFaqs === 'function') {
-    // Pintamos usando la fuente de verdad local (preguntasAsignadasLocal)
     renderizarTablaFaqs(preguntasAsignadasLocal);
   }
 
-  /* 4. Preparamos datosWizard[7] con SOLO los IDs de las FAQs */
-  if (typeof datosWizard !== 'object' || !datosWizard) {
-    // Si por alguna razón aún no existe, lo iniciamos
-    datosWizard = {};
-  }
-  datosWizard[7] = {
-    faqs: preguntasAsignadasLocal.map(p => ({ id: p.id }))
-  };
-
-  /* 5. Marcamos el paso como listo */
+  // Usar el serializador del Paso 7, que incluye los textos y los indicadores
+  // de pregunta exclusiva. Enviar solo los IDs perderia las respuestas nuevas.
   if (typeof guardarDatosPaso === 'function') {
     guardarDatosPaso(7);
+  }
+
+  if (typeof actualizarEstadoBotonGuardar === 'function') {
+    actualizarEstadoBotonGuardar();
   }
 }
 
@@ -210,16 +235,46 @@ async function aplicarPlantilla(modo = 'soloVacios') {
   escribirCampoTexto(document.getElementById('descripcion'), PLANTILLA_WIZARD.paso2.descripcion, modo);
   if (typeof guardarDatosPaso === 'function') guardarDatosPaso(2);
 
-  // Paso 3 (fase actual)
-  escribirCampoTexto(document.getElementById('fase_padre'), PLANTILLA_WIZARD.paso3.num_fase, modo);
+  // Paso 3 (fase actual): fase 1, subfase 1.1.
+  // Seleccionamos por codigo y no por ID de base de datos, que puede cambiar.
+  const selectorFase = document.getElementById('fase_padre');
+  const selectorSubfase = document.getElementById('subfase_id');
+  const rellenarFase = modo === 'sobrescribir' || !selectorFase?.value;
 
-  // Cargamos las subfases antes de seleccionar una. De esta forma el estado
-  // propuesto y el selector siempre quedan sincronizados.
-  if (window.FasesWizard && typeof window.FasesWizard.cargarSubfases === 'function') {
-    await window.FasesWizard.cargarSubfases(
-      PLANTILLA_WIZARD.paso3.num_fase,
-      PLANTILLA_WIZARD.paso3.subfase_id
-    );
+  if (rellenarFase) {
+    // En el wizard las fases se cargan por AJAX. Si aún están cargando,
+    // esperamos a que exista la opción antes de seleccionar la fase 1.
+    const faseInicial = PLANTILLA_WIZARD.paso3.num_fase;
+    const tieneFase = selectorFase && Array.from(selectorFase.options).some(function (opcion) {
+      return opcion.value === faseInicial;
+    });
+    if (!tieneFase && window.FasesWizard && typeof window.FasesWizard.cargarFasesPadre === 'function') {
+      await window.FasesWizard.cargarFasesPadre(faseInicial);
+    }
+    escribirCampoTexto(selectorFase, faseInicial, 'sobrescribir');
+    if (!selectorFase || selectorFase.value !== faseInicial) {
+      Swal.fire('No se pudo cargar la fase 1', 'Comprueba que el listado de fases esté disponible y vuelve a cargar la plantilla.', 'error');
+      return;
+    }
+    if (window.FasesWizard && typeof window.FasesWizard.cargarSubfases === 'function') {
+      await window.FasesWizard.cargarSubfases(PLANTILLA_WIZARD.paso3.num_fase);
+    }
+    if (selectorSubfase) {
+      const subfaseInicial = Array.from(selectorSubfase.options).find(function (opcion) {
+        return opcion.textContent.trim().startsWith(PLANTILLA_WIZARD.paso3.codigo_subfase + ' ')
+          || opcion.textContent.trim() === PLANTILLA_WIZARD.paso3.codigo_subfase;
+      });
+      if (subfaseInicial) {
+        selectorSubfase.value = subfaseInicial.value;
+      }
+      if (!selectorSubfase.value) {
+        Swal.fire('No se pudo cargar la subfase 1.1', 'Comprueba que esta subfase exista para la fase 1 y vuelve a aplicar la plantilla.', 'error');
+        return;
+      }
+    }
+  } else if (!selectorSubfase?.value && window.FasesWizard) {
+    // Conservar una fase ya existente cuando se elige rellenar solo vacios.
+    await window.FasesWizard.cargarSubfases(selectorFase.value);
   }
 
   escribirCampoTexto(document.getElementById('estado_tramitacion'), PLANTILLA_WIZARD.paso3.estado_tramitacion, modo);
@@ -234,7 +289,7 @@ async function aplicarPlantilla(modo = 'soloVacios') {
   if (typeof guardarDatosPaso === 'function') guardarDatosPaso(5);
 
   // Paso 7 (FAQs reutilizables)
-  aplicarPlantillaPaso7();
+  aplicarPlantillaPaso7(modo);
 
   // La misma plantilla preparará también la configuración visual y los accesos.
   window.plantillaPortalAplicada = true;

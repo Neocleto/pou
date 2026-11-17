@@ -68,24 +68,9 @@ foreach ($etiquetasAntiguas as $etiquetaAntigua) {
 // ============================================================================
 // 3. IMAGENES DEL MUNICIPIO
 // ============================================================================
-$bannerMunicipio = trim((string)($municipio['imagen_cabecera'] ?? ''));
-$candidatosBanner = [
-    "images/municipios/{$codMun}/{$codMun}_banner.jpg",
-    "images/municipios/{$codMun}/{$codMun}_banner.jpeg",
-    "images/municipios/{$codMun}/{$codMun}_banner.png",
-    "images/municipios/{$codMun}/{$codMun}_banner.webp",
-    "images/municipios/{$codMun}/banner.jpg",
-    "images/municipios/{$codMun}/banner.png"
-];
-
-if ($bannerMunicipio === '') {
-    foreach ($candidatosBanner as $rutaBanner) {
-        if (file_exists(dirname(__DIR__, 2) . '/' . $rutaBanner)) {
-            $bannerMunicipio = $rutaBanner;
-            break;
-        }
-    }
-}
+$bannerMunicipio = obtenerBannerMunicipio($codMun, $municipio['imagen_cabecera'] ?? '');
+$sinFotografiaCabecera = $bannerMunicipio === '';
+$imagenCabeceraVisible = $sinFotografiaCabecera ? 'images/diseno/sin_datos_pou.png' : $bannerMunicipio;
 
 $escudoMunicipio = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '');
 
@@ -307,10 +292,10 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
         <section class="portal-hero">
             <div class="portal-hero__scene">
                 <div
-                    class="portal-hero__image"
+                    class="portal-hero__image<?= $sinFotografiaCabecera ? ' portal-hero__image--sin-foto' : '' ?>"
                     role="img"
-                    aria-label="Imagen representativa de <?= htmlspecialchars($nombreMunicipio) ?>"
-                    style="background-image:url('<?= htmlspecialchars($bannerMunicipio ?: 'images/no_pou_data1.png', ENT_QUOTES, 'UTF-8') ?>')">
+                    aria-label="<?= $sinFotografiaCabecera ? 'Ilustración de planeamiento municipal' : 'Fotografía de ' . htmlspecialchars($nombreMunicipio) ?>"
+                    style="background-image:url('<?= htmlspecialchars($imagenCabeceraVisible, ENT_QUOTES, 'UTF-8') ?>')">
                 </div>
 
             </div>
@@ -452,6 +437,10 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                 <?php
                 $faseNumero = $faseActual['num_fase_padre'] ?? $faseActual['num_fase'] ?? '';
                 $faseDescripcion = $faseActual['titulo_subfase'] ?? '';
+                $tieneDiagramaFases = !empty($faseActual['imagen_url']);
+                $imagenFases = $tieneDiagramaFases
+                    ? $faseActual['imagen_url']
+                    : 'images/diseno/sin_datos_pou.png';
                 ?>
                 <section
                     id="fases"
@@ -480,17 +469,15 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                             </strong>
                         </div>
 
-                        <?php if (!empty($faseActual['imagen_url']) || $modoEditorPortal): ?>
-                            <div class="portal-phases__visual" <?= empty($faseActual['imagen_url']) ? 'hidden' : '' ?>>
-                                <img
-                                    <?= !empty($faseActual['imagen_url']) ? 'src="' . htmlspecialchars($faseActual['imagen_url'], ENT_QUOTES, 'UTF-8') . '"' : '' ?>
-                                    class="portal-phase-image"
-                                    alt="Fases de tramitación del plan">
-                                <button type="button" class="portal-phase-zoom" data-bs-toggle="modal" data-bs-target="#modalImagenFases" aria-label="Ampliar imagen de las fases" title="Ampliar imagen">
-                                    <i class="bi bi-zoom-in"></i>
-                                </button>
-                            </div>
-                        <?php endif; ?>
+                        <div class="portal-phases__visual<?= $tieneDiagramaFases ? '' : ' portal-phases__visual--sin-datos' ?>">
+                            <img
+                                src="<?= htmlspecialchars($imagenFases, ENT_QUOTES, 'UTF-8') ?>"
+                                class="portal-phase-image"
+                                alt="<?= $tieneDiagramaFases ? 'Fases de tramitación del plan' : 'Documentación de planeamiento aún no disponible' ?>">
+                            <button type="button" class="portal-phase-zoom" data-bs-toggle="modal" data-bs-target="#modalImagenFases" aria-label="Ampliar imagen de las fases" title="Ampliar imagen" <?= $tieneDiagramaFases ? '' : 'hidden' ?>>
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                        </div>
 
                         <!-- El editor conserva el bloque aunque el estado esté vacío. -->
                         <div class="portal-phase-note" <?= empty($faseActual['estado_tramitacion']) ? 'hidden' : '' ?>>

@@ -33,6 +33,7 @@ class MunicipioModel
 
         $municipio = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($municipio) {
+            $municipio['imagen_cabecera'] = obtenerBannerMunicipio($codMun, $municipio['imagen_cabecera'] ?? '');
             $municipio['escudo_automatico'] = obtenerEscudoAutomaticoMunicipio($codMun);
             $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '');
         }
@@ -55,6 +56,7 @@ class MunicipioModel
 
         $municipio = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($municipio) {
+            $municipio['imagen_cabecera'] = obtenerBannerMunicipio($codMun, $municipio['imagen_cabecera'] ?? '');
             $municipio['escudo_automatico'] = obtenerEscudoAutomaticoMunicipio($codMun);
             $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '');
         }
@@ -191,8 +193,8 @@ class MunicipioModel
 
         $sql = "UPDATE pou.municipios
                 SET nombre = :nombre,
-                    imagen_cabecera = :imagen_cabecera,
-                    escudo = :url_escudo,
+                    imagen_cabecera = COALESCE(NULLIF(:imagen_cabecera, ''), imagen_cabecera),
+                    escudo = COALESCE(NULLIF(:url_escudo, ''), escudo),
                     correo_contacto = :correo_contacto,
                     correo_contacto_gestor = :correo_contacto_gestor,
                     politica_privacidad_url = :politica_privacidad_url,

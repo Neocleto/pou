@@ -11,7 +11,7 @@ require_once __DIR__ . '/iconos_portal.php';
 function obtenerSeccionesInicialesPortal()
 {
     return [
-        ['id' => 'informacion', 'titulo' => 'Para qué sirve el POU', 'icono' => 'info-circle', 'color' => '#540000', 'visible' => true],
+        ['id' => 'informacion', 'titulo' => 'Para qué sirve el plan de ordenación urbana', 'icono' => 'info-circle', 'color' => '#540000', 'visible' => true],
         ['id' => 'fases', 'titulo' => 'Fases en la tramitación del POU', 'icono' => 'pou-fases', 'color' => '#540000', 'visible' => true],
         ['id' => 'participacion', 'titulo' => 'Participación ciudadana en el POU', 'icono' => 'pou-manos', 'color' => '#540000', 'visible' => true],
         ['id' => 'documentos', 'titulo' => 'Documentos del POU', 'icono' => 'pou-documentos', 'color' => '#540000', 'visible' => true],
@@ -34,12 +34,15 @@ function obtenerContenidoInicialPortal()
         ],
         'fases' => [
             'kicker' => 'Estado del expediente',
-            'etiqueta_fase' => 'Fase actual',
+            'etiqueta_fase' => 'FASE ACTUAL',
             'etiqueta_estado' => 'Estado de la tramitación'
         ],
         'participacion' => [
             'kicker' => 'Participación ciudadana',
-            'introduccion' => 'El POU se construye con la participación de la ciudadanía. Consulta los materiales disponibles, responde las encuestas y comparte tu visión sobre el futuro del municipio.',
+            'introduccion' => '<p>La implicación de los ciudadanos en la Participación es un pilar esencial en la elaboración del <strong>Plan de Ordenación Urbana (POU)</strong>. Este enfoque se centra en combinar las vivencias y perspectivas de la comunidad, con la experiencia técnica y administrativa del equipo del <strong>Servicio de Arquitectura y Planeamiento de la Diputación de Málaga</strong>, encargado de su redacción.</p>'
+                . '<p>El propósito es lograr que este instrumento de ordenación urbanística se fundamente en un <strong>amplio consenso</strong> y aborde efectivamente las <strong>necesidades concretas del municipio</strong>.</p>'
+                . '<p>A través de este <strong>proceso colaborativo</strong>, se buscan soluciones que no solo sean técnicamente sólidas, sino que también alcancen un alto grado de aceptación entre los habitantes del municipio.</p>'
+                . '<p>Este método de participación garantiza que los planes reflejen una <strong>visión compartida</strong> y sean más efectivos en su <strong>implementación y sostenibilidad</strong>.</p>',
             'formularios_titulo' => 'Encuestas y formularios',
             'formularios_descripcion' => 'Elige un formulario para responder online o descargar su versión imprimible.'
         ],
@@ -98,7 +101,6 @@ function obtenerConfiguracionInicialPortal($codMun = '')
 function obtenerAccesosInicialesPortal()
 {
     $accesos = [
-        ['titulo' => 'Información del plan', 'descripcion' => 'Conoce el plan', 'icono' => 'layers', 'color' => '#540000', 'destino' => '#informacion'],
         ['titulo' => 'Fases de tramitación', 'descripcion' => 'Consulta el estado del expediente', 'icono' => 'pou-fases', 'color' => '#540000', 'destino' => '#fases'],
         ['titulo' => 'Participación', 'descripcion' => 'Aporta tu opinión', 'icono' => 'pou-manos', 'color' => '#540000', 'destino' => '#participacion'],
         ['titulo' => 'Documentos', 'descripcion' => 'Consulta y descarga', 'icono' => 'pou-documentos', 'color' => '#540000', 'destino' => '#documentos'],

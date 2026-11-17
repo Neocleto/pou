@@ -101,10 +101,18 @@ function actualizarContenidoVistaPrevia(documento) {
     // La imagen informativa se actualiza con la subfase seleccionada.
     const visualFases = documento.querySelector('.portal-phases__visual');
     const imagenFases = estadoPortal.datosContenido.fase_actual?.imagen_url || '';
-    if (visualFases) visualFases.hidden = !imagenFases;
+    if (visualFases) {
+        // Sin diagrama mostramos la ilustracion discreta de datos pendientes.
+        visualFases.hidden = false;
+        visualFases.classList.toggle('portal-phases__visual--sin-datos', !imagenFases);
+        const botonAmpliar = visualFases.querySelector('.portal-phase-zoom');
+        if (botonAmpliar) botonAmpliar.hidden = !imagenFases;
+    }
     documento.querySelectorAll('.portal-phase-image, #modalImagenFases img').forEach(function (imagen) {
         if (imagenFases) imagen.src = obtenerRutaProyecto(imagenFases);
-        else imagen.removeAttribute('src');
+        else if (imagen.classList.contains('portal-phase-image')) {
+            imagen.src = obtenerRutaProyecto('images/diseno/sin_datos_pou.png');
+        } else imagen.removeAttribute('src');
     });
 
     // Mostrar o quitar el estado al editarlo, incluso si el municipio no tenía texto.
@@ -172,8 +180,17 @@ function actualizarCabeceraVistaPrevia(documento) {
     const hero = documento.querySelector('.portal-hero__image');
     const escudos = documento.querySelectorAll('.portal-hero-layout__crest img, .portal-footer__crest img');
 
-    if (hero && estadoPortal.municipio.imagen_cabecera) {
-        hero.style.backgroundImage = `url('${obtenerRutaProyecto(estadoPortal.municipio.imagen_cabecera)}')`;
+    if (hero) {
+        const imagenMunicipio = String(estadoPortal.municipio.imagen_cabecera || '').trim();
+        const esImagenProvisional = /(?:^|\/)(?:no_(?:pbom|pou|pgom)_data|sin_datos_)/i.test(imagenMunicipio);
+        const tieneFoto = imagenMunicipio !== '' && !esImagenProvisional;
+        // La vista previa aplica el mismo fallback que la página pública.
+        hero.classList.toggle('portal-hero__image--sin-foto', !tieneFoto);
+        const imagenVisible = tieneFoto ? imagenMunicipio : 'images/diseno/sin_datos_pou.png';
+        hero.style.backgroundImage = `url('${obtenerRutaProyecto(imagenVisible)}')`;
+        hero.setAttribute('aria-label', tieneFoto
+            ? 'Fotografía del municipio'
+            : 'Ilustración de planeamiento municipal');
     }
 
     escudos.forEach(function (escudo) {

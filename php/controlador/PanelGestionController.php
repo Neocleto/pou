@@ -154,6 +154,12 @@ class PanelGestionController {
             $pasosIncompletos[] = "Paso 1 - Datos generales del municipio";
         }
 
+        // La fotografía panorámica se exige antes de publicar, no al crear.
+        // Una imagen ilustrativa de reserva no cuenta como fotografía municipal.
+        if ($mun && trim((string)($mun['imagen_cabecera'] ?? '')) === '') {
+            $pasosIncompletos[] = "Paso 1 - Debes subir una fotografía panorámica desde el configurador de la cabecera";
+        }
+
         // ======================================================
         // PASO 2 - INFORMACIÓN (formInformacion)
         // ======================================================
