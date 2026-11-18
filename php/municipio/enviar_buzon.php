@@ -60,7 +60,6 @@ try {
 
     // 3. Preparamos y enviamos el correo.
     $mail = crearCorreoParticipacionPOU();
-    agregarDestinatariosParticipacion($mail, $municipio);
 
     if ($adjunto) {
         $mail->addAttachment($adjunto, $nombreAdjunto);
@@ -77,9 +76,15 @@ try {
         . '<p><strong>Mensaje:</strong><br>' . $mensajeSeguro . '</p>'
         . '</div>';
     $mail->AltBody = 'Asunto: ' . $asunto . "\n\nMensaje: " . $mensaje;
-    $mail->send();
+    $resultadoCorreo = enviarCorreoParticipacion($mail, $municipio);
 
-    echo json_encode(['status' => 'ok']);
+    echo json_encode([
+        'status' => 'ok',
+        'message' => 'El mensaje se ha enviado correctamente al gestor.',
+        'correo_enviado' => $resultadoCorreo['gestor'],
+        'copia_arquitecto_enviada' => $resultadoCorreo['arquitecto'],
+        'advertencia' => $resultadoCorreo['advertencia']
+    ]);
 } catch (Throwable $error) {
     echo json_encode([
         'status' => 'error',

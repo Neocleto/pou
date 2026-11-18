@@ -63,15 +63,17 @@ try {
 
     // 4. Avisamos al gestor y, si está configurado, también al arquitecto.
     //    La respuesta ya está guardada. Si el correo falla, no se pierde.
-    $correoEnviado = true;
+    $correoEnviado = false;
+    $resultadoCorreo = ['gestor' => false, 'arquitecto' => null, 'advertencia' => ''];
 
     try {
-        enviarCorreoRespuestaFormulario(
+        $resultadoCorreo = enviarCorreoRespuestaFormulario(
             $conn,
             $formulario,
             $respuestas,
             $referencia
         );
+        $correoEnviado = $resultadoCorreo['gestor'];
     } catch (Throwable $errorCorreo) {
         $correoEnviado = false;
         error_log(
@@ -90,10 +92,16 @@ try {
         $mensaje .= ' La respuesta se ha guardado, aunque el aviso por correo no se ha podido enviar.';
     }
 
+    if ($resultadoCorreo['advertencia'] !== '') {
+        $mensaje .= ' ' . $resultadoCorreo['advertencia'];
+    }
+
     echo json_encode([
         'ok' => true,
         'mensaje' => $mensaje . ' Referencia: ' . $referencia,
-        'correo_enviado' => $correoEnviado
+        'correo_enviado' => $correoEnviado,
+        'copia_arquitecto_enviada' => $resultadoCorreo['arquitecto'],
+        'advertencia_correo' => $resultadoCorreo['advertencia']
     ]);
 } catch (Throwable $error) {
     http_response_code(400);

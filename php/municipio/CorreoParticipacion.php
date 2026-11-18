@@ -35,6 +35,7 @@ function booleanoCorreoParticipacion($valor)
 function obtenerDatosCorreoParticipacion($conn, $codMun)
 {
     $sql = "SELECT
+                cod_mun,
                 nombre,
                 correo_contacto_gestor,
                 correo_contacto,
@@ -78,7 +79,7 @@ function crearCorreoParticipacionPOU()
     $mail->SMTPDebug = 0;
     $mail->isSMTP();
 
-    $mail->Host     = '172.28.1.144';
+    $mail->Host       = 'goterayotilio.malaga.es';
     $mail->SMTPAuth = false;
     $mail->SMTPSecure = '';
     $mail->SMTPAutoTLS = false;
@@ -89,25 +90,60 @@ function crearCorreoParticipacionPOU()
 }
 
 /**
- * Añade siempre al gestor y, cuando corresponde, tambien al arquitecto.
+ * Envía primero al gestor y después una copia independiente al arquitecto.
+ * Si el gestor falla no se envía la copia. Una copia fallida no invalida el
+ * envío ya aceptado del gestor ni obliga a repetir el mensaje completo.
  */
-function agregarDestinatariosParticipacion($mail, array $municipio)
+function enviarCorreoParticipacion($mail, array $municipio)
 {
-    $correoGestor = trim((string)$municipio['correo_contacto_gestor']);
+    $correoGestor = trim((string)($municipio['correo_contacto_gestor'] ?? ''));
     $correoArquitecto = trim((string)($municipio['correo_contacto'] ?? ''));
-    $incluirArquitecto = booleanoCorreoParticipacion(
-        $municipio['enviar_docs_a_arquitecto'] ?? false
-    );
+    $contexto = $mail->FromName . ' - Correo de participación ' . ($municipio['cod_mun'] ?? '');
 
-    $mail->addAddress($correoGestor);
-
-    if (
-        $incluirArquitecto
-        && filter_var($correoArquitecto, FILTER_VALIDATE_EMAIL)
-        && strcasecmp($correoArquitecto, $correoGestor) !== 0
-    ) {
-        $mail->addAddress($correoArquitecto);
+    // 1. El gestor es obligatorio y se comprueba en su propio envío SMTP.
+    if (!filter_var($correoGestor, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('El municipio no tiene un correo de gestor válido.');
     }
+    try {
+        $mail->clearAllRecipients();
+        $mail->addAddress($correoGestor);
+        if (!$mail->send()) {
+            throw new Exception($mail->ErrorInfo);
+        }
+        error_log($contexto . ' - SMTP aceptó gestor ' . $correoGestor . ' - ' . $mail->getLastMessageID());
+    } catch (Throwable $error) {
+        error_log($contexto . ' - Falló gestor ' . $correoGestor . ': ' . $error->getMessage());
+        throw new Exception('No se ha podido enviar el mensaje al gestor. Inténtalo de nuevo más tarde.');
+    }
+
+    $resultado = ['gestor' => true, 'arquitecto' => null, 'advertencia' => ''];
+    if (!booleanoCorreoParticipacion($municipio['enviar_docs_a_arquitecto'] ?? false)) {
+        return $resultado;
+    }
+    if (strcasecmp($correoArquitecto, $correoGestor) === 0) {
+        // Una misma dirección cumple ambos papeles sin recibir dos mensajes.
+        $resultado['arquitecto'] = true;
+        return $resultado;
+    }
+
+    // 2. Conservamos el contenido y los adjuntos; cambiamos solo el destinatario.
+    try {
+        if (!filter_var($correoArquitecto, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('Correo de arquitecto no válido.');
+        }
+        $mail->clearAllRecipients();
+        $mail->addAddress($correoArquitecto);
+        if (!$mail->send()) {
+            throw new Exception($mail->ErrorInfo);
+        }
+        $resultado['arquitecto'] = true;
+        error_log($contexto . ' - SMTP aceptó arquitecto ' . $correoArquitecto . ' - ' . $mail->getLastMessageID());
+    } catch (Throwable $error) {
+        $resultado['arquitecto'] = false;
+        $resultado['advertencia'] = 'El mensaje se ha enviado al gestor, pero no se ha podido enviar la copia al arquitecto.';
+        error_log($contexto . ' - Falló copia al arquitecto ' . $correoArquitecto . ': ' . $error->getMessage());
+    }
+    return $resultado;
 }
 
 /**
@@ -125,7 +161,6 @@ function enviarCorreoRespuestaFormulario(
     );
 
     $mail = crearCorreoParticipacionPOU();
-    agregarDestinatariosParticipacion($mail, $municipio);
 
     $filas = '';
 
@@ -183,5 +218,5 @@ function enviarCorreoRespuestaFormulario(
         . '. Referencia: '
         . $referencia;
 
-    $mail->send();
+    return enviarCorreoParticipacion($mail, $municipio);
 }

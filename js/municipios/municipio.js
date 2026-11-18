@@ -131,8 +131,8 @@ function inicializarBuzonParticipacion() {
 
                 mostrarResultadoBuzon(
                     resultado,
-                    "success",
-                    "El mensaje se ha enviado correctamente."
+                    respuesta.contenido.advertencia ? "warning" : "success",
+                    respuesta.contenido.advertencia || respuesta.contenido.message || "El mensaje se ha enviado correctamente."
                 );
 
                 formulario.reset();
@@ -156,7 +156,9 @@ function inicializarBuzonParticipacion() {
  * Muestra una respuesta clara debajo del formulario del buzón.
  */
 function mostrarResultadoBuzon(contenedor, tipo, mensaje) {
-    const clase = tipo === "success" ? "alert-success" : "alert-danger";
+    let clase = "alert-danger";
+    if (tipo === "success") clase = "alert-success";
+    if (tipo === "warning") clase = "alert-warning";
 
     contenedor.innerHTML = `
         <div class="alert ${clase} mb-0" role="alert">
