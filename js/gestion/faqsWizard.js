@@ -28,13 +28,11 @@ function inicializarFaqsWizard(codMun) {
     configurarBotonesFaqs();
     cargarPreguntasDisponibles();
 
-    if (codMun) {
-        cargarPreguntasAsignadas(codMun);
-    } else {
-        preguntasAsignadasLocal = [];
-        preguntasAsignadasInicial = [];
-        renderizarTablaFaqs([]);
-    }
+    if (codMun) return cargarPreguntasAsignadas(codMun);
+
+    preguntasAsignadasLocal = [];
+    preguntasAsignadasInicial = [];
+    renderizarTablaFaqs([]);
 }
 
 /** Conecta los botones usando onclick para evitar eventos repetidos. */
@@ -160,7 +158,7 @@ function cargarPreguntasDisponibles() {
 
 /** Carga la lista guardada del municipio. */
 function cargarPreguntasAsignadas(codMun) {
-    fetch(`php/gestion/acciones/acciones_faqs.php?action=listarPreguntasMunicipio&cod_mun=${encodeURIComponent(codMun)}`)
+    return fetch(`php/gestion/acciones/acciones_faqs.php?action=listarPreguntasMunicipio&cod_mun=${encodeURIComponent(codMun)}`)
         .then(function (respuesta) { return respuesta.json(); })
         .then(function (datos) {
             preguntasAsignadasLocal = (datos.data || []).map(normalizarFaqMunicipio);
@@ -412,16 +410,9 @@ function refrescarFaqsTrasCambio() {
 
 /** Prepara un elemento para enviarlo al servidor. */
 function serializarFaqWizard(faq) {
-    let preguntaId = Number(faq.pregunta_id || 0) || null;
-
-    // Las plantillas antiguas guardan el id de la biblioteca en faq.id.
-    if (!preguntaId && !faq.asignacion_id && /^\d+$/.test(String(faq.id || ''))) {
-        preguntaId = Number(faq.id);
-    }
-
     return {
         asignacion_id: Number(faq.asignacion_id || 0) || null,
-        pregunta_id: preguntaId,
+        pregunta_id: Number(faq.pregunta_id) || null,
         pregunta: faq.pregunta || '',
         respuesta: faq.respuesta || '',
         personalizada: Boolean(faq.personalizada),

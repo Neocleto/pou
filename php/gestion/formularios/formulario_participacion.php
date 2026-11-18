@@ -3,7 +3,6 @@
 require_once __DIR__ . '/../../login/permisos_proyecto.php';
 exigirAccesoProyecto(false, false);
 require_once __DIR__ . '/../../includes/valores_portal.php';
-$contenidoInicialParticipacion = obtenerContenidoInicialPortal()['participacion'];
 $tituloInicialParticipacion = '';
 foreach (obtenerSeccionesInicialesPortal() as $seccionInicialParticipacion) {
     if ($seccionInicialParticipacion['id'] === 'participacion') {
@@ -36,7 +35,7 @@ usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]);
     </div>
     <div class="mb-3">
       <label for="descripcion1" class="form-label fw-bold">Texto de participación</label>
-      <textarea class="form-control" id="descripcion1" name="descripcion1" rows="6" data-rich-editor="1"><?= htmlspecialchars($contenidoInicialParticipacion['introduccion'], ENT_QUOTES, 'UTF-8') ?></textarea>
+      <textarea class="form-control" id="descripcion1" name="descripcion1" rows="6" data-rich-editor="1"></textarea>
       <div class="form-text">Máximo 6000 caracteres. Pulsa Guardar para aplicar los cambios al portal y al configurador.</div>
     </div>
   </form>

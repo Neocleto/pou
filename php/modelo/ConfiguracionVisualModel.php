@@ -8,7 +8,6 @@
 // ============================================================================
 
 require_once __DIR__ . '/../includes/valores_portal.php';
-require_once __DIR__ . '/../includes/cabecera_portal.php';
 require_once __DIR__ . '/../includes/html_portal.php';
 
 class ConfiguracionVisualModel
@@ -131,49 +130,6 @@ class ConfiguracionVisualModel
                 JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
             )
         ]);
-    }
-
-    /**
-     * Genera el diseño general y el índice común cuando el usuario aplica la plantilla.
-     * No crea botones, documentos ni noticias porque son propios de cada municipio.
-     */
-    public function aplicarPlantillaInicial($codMun, $modo = 'sobrescribir', $participacion = [])
-    {
-        $soloVacios = $modo === 'soloVacios';
-
-        // 1. En modo "rellenar vacíos" conservamos un diseño ya guardado.
-        $stmtConfig = $this->conn->prepare(
-            "SELECT COUNT(*) FROM pou.configuracion_visual WHERE cod_mun = :cod_mun"
-        );
-        $stmtConfig->execute([':cod_mun' => $codMun]);
-        $tieneConfiguracion = (int)$stmtConfig->fetchColumn() > 0;
-
-        if (!$soloVacios || !$tieneConfiguracion) {
-            $configuracion = obtenerConfiguracionInicialPortal($codMun);
-            if (isset($participacion['titulo1'], $participacion['descripcion1'])) {
-                // El paso 5 ya contiene la plantilla aplicada y las correcciones del usuario.
-                foreach ($configuracion['secciones_portal'] as &$seccion) {
-                    if ($seccion['id'] === 'participacion') {
-                        $seccion['titulo'] = $participacion['titulo1'];
-                        break;
-                    }
-                }
-                unset($seccion);
-                $configuracion['contenido_portal']['participacion']['introduccion'] = $participacion['descripcion1'];
-            }
-            $this->guardar($configuracion);
-        }
-
-        // 2. Los accesos se crean si faltan o se sustituyen al sobrescribir.
-        $stmtAccesos = $this->conn->prepare(
-            "SELECT COUNT(*) FROM pou.accesos_publicos WHERE cod_mun = :cod_mun"
-        );
-        $stmtAccesos->execute([':cod_mun' => $codMun]);
-        $tieneAccesos = (int)$stmtAccesos->fetchColumn() > 0;
-
-        if (!$soloVacios || !$tieneAccesos) {
-            $this->guardarAccesos($codMun, obtenerAccesosInicialesPortal());
-        }
     }
 
     /**
@@ -421,8 +377,7 @@ class ConfiguracionVisualModel
             $contenido
         );
 
-        $contenido['cabecera'] = actualizarTextosCabeceraPortal($contenido['cabecera']);
-
+        
         // Eliminamos el texto del antiguo distintivo de la cabecera.
         unset($contenido['cabecera']['mensaje_destacado'], $contenido['cabecera']['subtitulo'], $contenido['documentos']['boton_texto']);
 
@@ -562,16 +517,7 @@ class ConfiguracionVisualModel
 
     private function normalizarIcono($icono)
     {
-        $icono = normalizarNombreIconoPortal($icono);
-
-        // El valor vacío es válido: permite mostrar el bloque sin icono.
-        if ($icono === '') {
-            return '';
-        }
-
-        return preg_match('/^[a-zA-Z0-9-]+$/', $icono)
-            ? $icono
-            : 'link-45deg';
+        return normalizarIconoPortal($icono);
     }
 
     /**

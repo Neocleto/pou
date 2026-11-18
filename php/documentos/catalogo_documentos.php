@@ -6,9 +6,17 @@
 // Las fases de documentos NO son las ocho fases del expediente urbanístico.
 // ============================================================================
 
-/** Agrupa archivos y prepara los cuatro accesos públicos sin cambiar sus IDs. */
+/**
+ * Calcula la última fase con documentos, sus accesos y los estados del catálogo.
+ * Devuelve solo los archivos de esa fase para las vistas públicas; no escribe
+ * en la base de datos ni modifica las listas recibidas.
+ */
 function prepararCatalogoDocumentos(array $documentos, array $catalogo)
 {
+    // El código documental determina el orden, nunca el ID interno (por ejemplo 21).
+    usort($catalogo, function ($a, $b) {
+        return version_compare((string)$a['codigo'], (string)$b['codigo']);
+    });
     $botones = [
         1 => ['titulo' => 'Avance y documento inicial', 'fases' => []],
         2 => ['titulo' => 'Aprobación inicial', 'fases' => []],
@@ -25,7 +33,6 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
     }
 
     $faseActiva = 0;
-    $codigoFaseActiva = '';
     $botonActivo = 0;
     $menu = [];
     foreach ($catalogo as $fase) {
@@ -46,7 +53,6 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
         $botones[$paso]['fases'][] = $numero;
         if (!empty($hayDocumentos[$numero])) {
             $faseActiva = $numero;
-            $codigoFaseActiva = (string)$fase['codigo'];
             $botonActivo = $paso;
         }
         $esIntermedia = in_array($fase['es_fase_21'] ?? false, [true, 1, '1', 't', 'true'], true);
@@ -57,19 +63,34 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
             $grupos[$numero] = [];
         }
     }
-    // El estado se calcula por el orden del catálogo, nunca por el ID interno.
+    // Las fases anteriores se muestran como completadas, pero sus documentos
+    // no se entregan a las vistas públicas. Los datos originales se conservan.
+    $estadosFases = [];
+    $superadaFaseActiva = false;
+    foreach ($catalogo as $fase) {
+        $numero = (int)$fase['num_fase'];
+        $estado = 'pendiente';
+        if ($faseActiva !== 0) {
+            if ($numero === $faseActiva) {
+                $estado = 'activa';
+                $superadaFaseActiva = true;
+            } else {
+                $estado = $superadaFaseActiva ? 'pendiente' : 'completada';
+            }
+        }
+        $estadosFases[$numero] = $estado;
+        if (isset($menu[$numero])) {
+            $menu[$numero]['estado'] = $estado;
+        }
+    }
     foreach ($botones as $paso => &$boton) {
-        $boton['estado'] = $paso === $botonActivo ? 'activa'
-            : ($botonActivo > 0 && $paso < $botonActivo ? 'completada' : 'pendiente');
+        $boton['estado'] = 'pendiente';
+        if ($botonActivo !== 0) {
+            $boton['estado'] = $paso === $botonActivo ? 'activa'
+                : ($paso < $botonActivo ? 'completada' : 'pendiente');
+        }
     }
     unset($boton);
-    foreach ($menu as $numero => &$fase) {
-        $fase['estado'] = $numero === $faseActiva ? 'activa'
-            : ($faseActiva > 0 && version_compare((string)$fase['codigo'], $codigoFaseActiva, '<') ? 'completada' : 'pendiente');
-    }
-    unset($fase);
-    // Las vistas públicas no reciben títulos ni enlaces de fases cerradas.
-    $grupos = $faseActiva > 0 ? [$faseActiva => $grupos[$faseActiva] ?? []] : [];
     // Memoria y cartografía primero. La búsqueda conserva este mismo orden.
     foreach ($grupos as &$categorias) {
         uksort($categorias, function ($a, $b) {
@@ -88,7 +109,8 @@ function prepararCatalogoDocumentos(array $documentos, array $catalogo)
         'faseActualNum' => $faseActiva,
         'faseActual' => ['num_fase' => $faseActiva],
         'fasesMenu' => $menu,
-        'documentosPorFase' => $grupos,
+        'documentosPorFase' => $faseActiva ? [$faseActiva => $grupos[$faseActiva]] : [],
+        'estadosFases' => $estadosFases,
         'botones' => $botones,
         'botonActivo' => $botonActivo
     ];

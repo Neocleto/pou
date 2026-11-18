@@ -1,4 +1,9 @@
 <?php
+/** Datos recibidos de la página que incluye esta vista.
+ * @var array $documentosPublicos
+ * @var array $coloresSecciones
+ * @var string $nombreMunicipio
+ */
 // Modal del portal. Usa los datos ya cargados: abrir/cerrar no hace peticiones.
 // Se muestra solamente la fase documental activa y se reutiliza su listado.
 $numeroDocumental = $documentosPublicos['faseActualNum'];
@@ -19,7 +24,7 @@ $tituloDocumental = $documentosPublicos['fasesMenu'][$numeroDocumental]['titulo'
             <div class="modal-header">
                 <div>
                     <span class="portal-modal-kicker">Documentación pública · <?= htmlspecialchars($nombreMunicipio) ?></span>
-                    <h2 class="modal-title" id="tituloDocumentosPortal"><?= htmlspecialchars(normalizarTextoPortal($tituloDocumental)) ?></h2>
+                    <h2 class="modal-title" id="tituloDocumentosPortal"><?= htmlspecialchars($tituloDocumental) ?></h2>
                     <p>Fase activa · <?= $totalDocumentosFase ?> <?= $totalDocumentosFase === 1 ? 'documento publicado' : 'documentos publicados' ?>.</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar documentación"></button>

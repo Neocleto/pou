@@ -16,8 +16,8 @@ async function fetchJSON(url) {
   return await res.json();
 }
 
-async function cargarFasesPadre(selectedNumFase = null) {
-  const selPadre = document.getElementById('fase_padre');
+// También admite un selector temporal al preparar la plantilla.
+async function cargarFasesPadre(selectedNumFase = null, selPadre = document.getElementById('fase_padre')) {
   if (!selPadre) return;
 
   selPadre.innerHTML = '<option value="" disabled selected>Cargando fases…</option>';
@@ -57,8 +57,7 @@ async function cargarFasesPadre(selectedNumFase = null) {
   }
 }
 
-async function cargarSubfases(numFase, selectedSubfaseId = null) {
-  const selSub = document.getElementById('subfase_id');
+async function cargarSubfases(numFase, selectedSubfaseId = null, selSub = document.getElementById('subfase_id')) {
   if (!selSub) return;
 
   selSub.innerHTML = '<option value="" disabled selected>Cargando…</option>';
@@ -210,11 +209,3 @@ async function inicializarFasesWizardModoEdicion(faseActual) {
     delete estado.dataset.userEdited; // queda como "no tocado" tras cargar
   }
 }
-
-window.FasesWizard = {
-  bindEventosFasesWizard,
-  cargarFasesPadre,
-  cargarSubfases,
-  inicializarFasesWizardModoCreacion,
-  inicializarFasesWizardModoEdicion
-};

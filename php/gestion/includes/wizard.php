@@ -99,7 +99,7 @@ exigirAccesoProyecto(false, false);
 
         <!-- DERECHA: acciones principales -->
         <div class="d-flex gap-2">
-          <button id="btnCargarPlantilla" class="btn btn-outline-primary">Cargar plantilla</button>
+          <button type="button" id="btnCargarPlantilla" class="btn btn-outline-primary">Cargar plantilla</button>
           <button id="btnGuardar" class="btn btn-success">Guardar</button>
           <button id="btnCancelar" class="btn btn-outline-primary">Cancelar</button>
         </div>

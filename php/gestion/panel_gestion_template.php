@@ -338,13 +338,13 @@ exigirAccesoProyecto(false, false);
     <script src="js/gestion/editorEnriquecido.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/editorEnriquecido.js') ?>"></script>
     <script src="js/gestion/wizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/wizard.js') ?>"></script>
     <script src="js/gestion/configuracionVisualWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuracionVisualWizard.js') ?>"></script>
-    <script src="js/gestion/plantillaWizard.js?v=1"></script>
+    <script src="js/gestion/plantillaWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/plantillaWizard.js') ?>"></script>
     <script src="js/gestion/tablaMunicipios.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/tablaMunicipios.js') ?>"></script>
-    <script src="js/gestion/fasesWizard.js"></script>
+    <script src="js/gestion/fasesWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/fasesWizard.js') ?>"></script>
     <script src="js/gestion/documentosWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/documentosWizard.js') ?>"></script>
     <script src="js/gestion/participacionWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/participacionWizard.js') ?>"></script>
     <script src="js/gestion/noticiasWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/noticiasWizard.js') ?>"></script>
-    <script src="js/gestion/faqsWizard.js"></script>
+    <script src="js/gestion/faqsWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/faqsWizard.js') ?>"></script>
     <script src="js/gestion/tour.js"></script>
 
     <script>

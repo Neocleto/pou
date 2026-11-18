@@ -139,9 +139,7 @@ async function cargarDatosConfigurador() {
             throw new Error('Los formularios recibidos pertenecen a otro municipio. Recarga el configurador.');
         }
 
-        estadoPortal.formularios = (datosFormularios.formularios || []).map(function (formulario) {
-            return { ...formulario, icono: normalizarNombreIconoPortal(formulario.icono) };
-        });
+        estadoPortal.formularios = normalizarIconosDatosPortal(datosFormularios.formularios || []);
         prepararConfiguracionVisual(datosVisuales);
 
         renderMenuConfigurador();
@@ -159,6 +157,7 @@ async function cargarDatosConfigurador() {
  * Convierte la respuesta del servidor en un estado seguro para el editor.
  */
 function prepararConfiguracionVisual(datos) {
+    datos = normalizarIconosDatosPortal(datos);
     const configuracion = { ...datosInicialesPortal.valores_iniciales, ...(datos.configuracion || {}) };
 
     estadoPortal.configuracion = {
@@ -1193,10 +1192,6 @@ function recargarIframePortal() {
     iframe.src = url.toString();
 }
 
-/**
- * Ajusta el ancho del iframe para simular distintos dispositivos.
- */
-
 // ============================================================================
 // 8. AYUDANTES DE HTML Y DATOS
 // ============================================================================
@@ -1397,15 +1392,30 @@ function crearAccesoVacio() {
 /**
  * Mantiene los dibujos de las guías y fases igual que el PHP del portal.
  */
-/** Adapta los identificadores propios de una copia sin cambiar iconos de Bootstrap. */
-function normalizarNombreIconoPortal(icono) {
-    const nombre = String(icono ?? '').trim();
-    const propio = nombre.match(/^[a-z0-9]+-(fases|manos|documentos|noticias|buzon|encuesta-infantil|encuesta-participacion)$/i);
-    return propio ? 'pou-' + propio[1].toLowerCase() : nombre;
+function obtenerIconoAccesoPortal(acceso) {
+    return acceso.icono === null || acceso.icono === undefined ? 'link-45deg' : normalizarIconoPortal(acceso.icono);
 }
 
-function obtenerIconoAccesoPortal(acceso) {
-    return acceso.icono === null || acceso.icono === undefined ? 'link-45deg' : normalizarNombreIconoPortal(acceso.icono);
+/** Los nombres antiguos de los dibujos propios usan ahora el catálogo POU. */
+function normalizarIconoPortal(icono) {
+    const nombre = String(icono ?? '').trim().replace(/^(?:bi\s+)?bi-/, '');
+    if (!nombre) return '';
+    const propio = nombre.match(/^(?:[a-z0-9]+-)?(fases|manos|documentos|noticias|buzon|encuesta-infantil|encuesta-participacion)$/i);
+    if (propio) return 'pou-' + propio[1].toLowerCase();
+    return /^[a-zA-Z0-9-]+$/.test(nombre) ? nombre : 'link-45deg';
+}
+
+/** Adapta los campos de icono de respuestas JSON; conserva los demás valores. */
+function normalizarIconosDatosPortal(datos) {
+    if (Array.isArray(datos)) return datos.map(normalizarIconosDatosPortal);
+    if (!datos || typeof datos !== 'object') return datos;
+    const resultado = {};
+    Object.keys(datos).forEach(function (clave) {
+        resultado[clave] = clave === 'icono' || clave.endsWith('_icono')
+            ? normalizarIconoPortal(datos[clave])
+            : normalizarIconosDatosPortal(datos[clave]);
+    });
+    return resultado;
 }
 
 /**
@@ -1435,7 +1445,7 @@ function normalizarAcceso(acceso) {
  * Usa las mismas imágenes de las dos encuestas que la plantilla PHP.
  */
 function obtenerIconoBotonParticipacionPortal(boton) {
-    return boton.icono === null || boton.icono === undefined ? 'file-earmark-arrow-down' : normalizarNombreIconoPortal(boton.icono);
+    return boton.icono === null || boton.icono === undefined ? 'file-earmark-arrow-down' : normalizarIconoPortal(boton.icono);
 }
 
 /**
@@ -1446,7 +1456,7 @@ function normalizarBotonParticipacion(boton) {
         return item.id === 'participacion';
     });
     const colorSeccion = seccion?.color || estadoPortal.configuracion.color_primario || '#540000';
-    // Se respeta cualquier color elegido; solo la ausencia usa el del bloque.
+    // Se respeta cualquier color elegido; solo el vacío hereda el del bloque.
     const colorRecurso = String(boton.color || '').trim() || colorSeccion;
 
     return {

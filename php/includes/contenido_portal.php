@@ -23,121 +23,6 @@ function combinarContenidoPortal(array $base, array $personalizado)
 }
 
 /**
- * Convierte texto UTF-8 a minúsculas aunque la instalación no tenga mbstring.
- */
-function minusculasPortal($texto)
-{
-    if (function_exists('mb_strtolower')) {
-        return mb_strtolower($texto, 'UTF-8');
-    }
-
-    return strtolower(strtr($texto, [
-        'Á' => 'á', 'É' => 'é', 'Í' => 'í', 'Ó' => 'ó', 'Ú' => 'ú',
-        'Ü' => 'ü', 'Ñ' => 'ñ'
-    ]));
-}
-
-/**
- * Pone en mayúscula únicamente la primera letra de una palabra UTF-8.
- */
-function mayusculaInicialPortal($texto)
-{
-    if ($texto === '') {
-        return '';
-    }
-
-    if (function_exists('mb_substr')) {
-        return mb_strtoupper(mb_substr($texto, 0, 1, 'UTF-8'), 'UTF-8')
-            . mb_substr($texto, 1, null, 'UTF-8');
-    }
-
-    if (!preg_match('/^(.)(.*)$/us', $texto, $partes)) {
-        return ucfirst($texto);
-    }
-
-    $primera = strtr(strtoupper($partes[1]), [
-        'á' => 'Á', 'é' => 'É', 'í' => 'Í', 'ó' => 'Ó', 'ú' => 'Ú',
-        'ü' => 'Ü', 'ñ' => 'Ñ'
-    ]);
-
-    return $primera . $partes[2];
-}
-
-/**
- * Aplica un título legible en español evitando mayúsculas innecesarias.
- */
-function tituloNormalizadoPortal($texto)
-{
-    $palabrasPequenas = [
-        'a', 'al', 'con', 'de', 'del', 'e', 'el', 'en', 'la', 'las',
-        'los', 'o', 'para', 'por', 'sin', 'u', 'un', 'una', 'y'
-    ];
-
-    $partes = preg_split('/(\s+)/u', minusculasPortal($texto), -1, PREG_SPLIT_DELIM_CAPTURE);
-    $indicePalabra = 0;
-
-    foreach ($partes as $indice => $parte) {
-        if (trim($parte) === '') {
-            continue;
-        }
-
-        $esPequena = in_array($parte, $palabrasPequenas, true);
-        $partes[$indice] = ($indicePalabra > 0 && $esPequena)
-            ? $parte
-            : mayusculaInicialPortal($parte);
-        $indicePalabra++;
-    }
-
-    return implode('', $partes);
-}
-
-/**
- * Normaliza textos escritos completamente en mayúsculas.
- * Los acrónimos POU, PDF y FAQ se conservan correctamente.
- */
-function normalizarTextoPortal($texto, $modoTitulo = false)
-{
-    $texto = trim((string)$texto);
-
-    if ($texto === '') {
-        return '';
-    }
-
-    $soloLetras = preg_replace('/[^\p{L}]+/u', '', $texto);
-
-    if (function_exists('mb_strtoupper')) {
-        $estaEnMayusculas = $soloLetras !== ''
-            && $soloLetras === mb_strtoupper($soloLetras, 'UTF-8');
-    } else {
-        $mayusculas = strtoupper(strtr($soloLetras, [
-            'á' => 'Á', 'é' => 'É', 'í' => 'Í', 'ó' => 'Ó', 'ú' => 'Ú',
-            'ü' => 'Ü', 'ñ' => 'Ñ'
-        ]));
-        $estaEnMayusculas = $soloLetras !== '' && $soloLetras === $mayusculas;
-    }
-
-    if ($estaEnMayusculas) {
-        $texto = $modoTitulo
-            ? tituloNormalizadoPortal($texto)
-            : mayusculaInicialPortal(minusculasPortal($texto));
-    }
-
-    return str_ireplace(
-        ['Pou', 'Pdf', 'Faq'],
-        ['POU', 'PDF', 'FAQ'],
-        $texto
-    );
-}
-
-/**
- * Sustituye el marcador {municipio} dentro de los textos configurables.
- */
-function textoMunicipioPortal($texto, $nombreMunicipio)
-{
-    return str_replace('{municipio}', $nombreMunicipio, (string)$texto);
-}
-
-/**
  * Convierte los booleanos de PostgreSQL en verdadero o falso.
  */
 function booleanoPortal($valor)
@@ -265,6 +150,6 @@ function htmlEnriquecidoPortal($texto)
 /** Devuelve el icono guardado; una cadena vacía permite retirarlo. */
 function obtenerIconoBotonParticipacionPortal($boton)
 {
-    return array_key_exists('icono', $boton) ? normalizarNombreIconoPortal($boton['icono']) : 'file-earmark-arrow-down';
+    return array_key_exists('icono', $boton) ? normalizarIconoPortal($boton['icono']) : 'file-earmark-arrow-down';
 }
 

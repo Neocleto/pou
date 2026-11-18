@@ -117,7 +117,14 @@ try {
 function respuestaVacia($valor)
 {
     if (is_array($valor)) {
-        return count(array_filter($valor, 'strlen')) === 0;
+        $hayRespuesta = false;
+        foreach ($valor as $elemento) {
+            if (!is_scalar($elemento) && $elemento !== null) {
+                throw new Exception('La respuesta contiene valores no válidos.');
+            }
+            if (trim((string)$elemento) !== '') $hayRespuesta = true;
+        }
+        return !$hayRespuesta;
     }
 
     return $valor === null || trim((string)$valor) === '';

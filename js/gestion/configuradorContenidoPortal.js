@@ -26,7 +26,7 @@ const estadoEditorContenido = {
 const contenidoPortalInicial = datosInicialesPortal.valores_iniciales.contenido_portal;
 
 /**
- * Completa los textos y datos que puedan faltar en instalaciones anteriores.
+ * Completa solo los campos ausentes con los valores de la plantilla.
  */
 function prepararContenidoCompleto() {
     estadoPortal.contenido = combinarObjetosContenido(
@@ -38,15 +38,6 @@ function prepararContenidoCompleto() {
     delete estadoPortal.contenido.cabecera.mensaje_destacado;
     delete estadoPortal.contenido.cabecera.subtitulo;
     delete estadoPortal.contenido.documentos.boton_texto;
-
-    const tituloGuardado = String(estadoPortal.contenido.cabecera.titulo || '').trim();
-    const tituloAntiguo = `POU de ${estadoPortal.municipio.nombre || ''}`.trim();
-    if (
-        tituloGuardado === 'POU de {municipio}'
-        || tituloGuardado.toLocaleLowerCase('es') === tituloAntiguo.toLocaleLowerCase('es')
-    ) {
-        estadoPortal.contenido.cabecera.titulo = 'Plan de Ordenación Urbana';
-    }
 
     estadoPortal.datosContenido = combinarObjetosContenido({
         informacion: { titulo: '', descripcion: '' },
@@ -74,11 +65,6 @@ function prepararContenidoCompleto() {
         else estadoPortal.datosContenido.informacion.titulo = seccionInformacion.titulo;
     }
 
-    const etiqueta = String(estadoPortal.contenido?.cabecera?.etiqueta || '').trim();
-
-    if (!etiqueta || etiqueta === 'POU · Portal municipal de planeamiento') {
-        estadoPortal.contenido.cabecera.etiqueta = 'Portal municipal de planeamiento';
-    }
 
 }
 

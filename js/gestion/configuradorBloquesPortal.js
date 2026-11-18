@@ -36,7 +36,7 @@ function normalizarSecciones(secciones) {
         });
 
         if (defecto) {
-            const icono = normalizarNombreIconoPortal(seccion.icono ?? defecto.icono);
+            const icono = normalizarIconoPortal(seccion.icono ?? defecto.icono);
             resultado.push({
                 id: id,
                 tipo: 'sistema',
@@ -59,7 +59,7 @@ function normalizarSecciones(secciones) {
             titulo: seccion.titulo || 'Nuevo bloque',
             icono: seccion.icono === null || seccion.icono === undefined
                 ? 'layout-text-window'
-                : normalizarNombreIconoPortal(seccion.icono),
+                : normalizarIconoPortal(seccion.icono),
             color: seccion.color || estadoPortal.configuracion.color_primario || '#540000',
             visible: convertirBooleano(seccion.visible, true),
             diseno: ['texto', 'destacado', 'llamada', 'columnas'].includes(seccion.diseno)

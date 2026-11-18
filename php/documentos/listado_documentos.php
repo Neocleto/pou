@@ -1,4 +1,10 @@
 <?php
+/** Datos recibidos de la página que incluye esta vista.
+ * @var array $categoriasFase
+ * @var int $totalDocumentosFase
+ * @var int $columnasCategorias
+ * @var bool $esActiva
+ */
 // Listado compartido por la página de documentos y la modal del municipio.
 // Recibe $categoriasFase, $totalDocumentosFase, $columnasCategorias y $esActiva.
 // No consulta ni modifica datos. documentos.js conecta el mismo buscador.

@@ -7,7 +7,7 @@
 
 /** Genera el mismo selector para campos generales, encuestas y recursos locales. */
 function crearCampoIcono(etiqueta, ruta, valor, atributo = 'data-field') {
-    const actual = normalizarNombreIconoPortal(valor);
+    const actual = normalizarIconoPortal(valor);
     const opciones = [['', 'Sin icono'], ...iconosPortal];
     if (actual && !opciones.some(function (opcion) { return opcion[0] === actual; })) {
         opciones.push([actual, 'Icono guardado (' + actual + ')']);

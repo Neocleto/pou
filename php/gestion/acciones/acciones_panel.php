@@ -186,14 +186,8 @@ try {
         exit;
     }
 
-    // La plantilla es opcional y solo se acepta en los dos modos del asistente.
-    $modoPlantilla = null;
-    if (in_array($modo, ['crear', 'editar'], true) && !empty($_POST['aplicar_plantilla_portal'])) {
-        $modoPlantilla = $_POST['plantilla_portal_modo'] ?? 'sobrescribir';
-        if (!in_array($modoPlantilla, ['soloVacios', 'sobrescribir'], true)) {
-            throw new Exception('El modo de plantilla no es válido.');
-        }
-    }
+    // La misma marca solicita sustituir el diseño y los accesos de la plantilla.
+    $aplicarPlantilla = ($_POST['aplicar_plantilla_portal'] ?? '') === '1';
 
     // ==============================================
     // CREAR MUNICIPIO COMPLETO (TODOS LOS PASOS)
@@ -210,7 +204,7 @@ try {
         }
 
         $datos['paso1']['usuario_id'] = $usuario_id;
-        $resultado = $controller->crearMunicipioCompleto($datos, $modoPlantilla);
+        $resultado = $controller->crearMunicipioCompleto($datos, $aplicarPlantilla);
 
         if ($resultado === true) {
             echo json_encode(['success' => true, 'message' => 'Municipio creado con éxito']);
@@ -247,12 +241,12 @@ try {
             }
         }
 
-        if (empty($pasosModificados) && $modoPlantilla === null) {
+        if (empty($pasosModificados) && !$aplicarPlantilla) {
             echo json_encode(['success' => false, 'message' => 'No hay pasos modificados.']);
             exit;
         }
 
-        $exito = $controller->editarMunicipio($pasosModificados, $datos, $cod_mun, $modoPlantilla);
+        $exito = $controller->editarMunicipio($pasosModificados, $datos, $cod_mun, $aplicarPlantilla);
 
         echo json_encode([
             'success' => $exito,

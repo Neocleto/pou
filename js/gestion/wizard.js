@@ -17,6 +17,7 @@ let datosWizard = {};                        // Objeto que guarda los datos de c
 let promesaPaso1 = null;                     // Promesa para controlar carga del paso 1
 let municipioGuardado = false;               // Controla si el municipio ya ha sido guardado o no
 let cargandoEdicion = false;
+let plantillaPendiente = false; // Se confirma con el siguiente guardado correcto.
 
 // Aperturas "especiales" cuando venimos de otras pantallas (ej. panel_documentos.php)
 window.pasoPendienteApertura = null;        // Paso que queremos abrir al cargar (ej. 4 - Documentos)
@@ -32,8 +33,7 @@ const modalElement = document.getElementById("modalWizard");      // Modal compl
 const modalWizard = new bootstrap.Modal(modalElement);            // Instancia Bootstrap Modal
 
 modalElement.addEventListener('hidden.bs.modal', () => {
-    window.plantillaPortalAplicada = false;
-    window.plantillaPortalModo = null;
+    plantillaPendiente = false;
     currentStep = 1;
     cargandoEdicion = false;
     estadoInicialWizard = {};
@@ -93,8 +93,6 @@ function updateWizard() {
         // Dejamos los pasos siempre clicables; las validaciones se hacen en intentarNavegarA()
         step.style.pointerEvents = "auto";
     
-        // Solo en modo edición permitimos hacer clic en los pasos para navegar
-        //  step.style.pointerEvents = modoEdicion ? "auto" : "none";
     });
 
     // Muestra solo el formulario correspondiente al paso actual y oculta los demás
@@ -136,7 +134,7 @@ function actualizarEstadoBotonGuardar() {
     }
 
     // Aplicar una plantilla cuenta como cambio aunque los textos coincidan.
-    if (window.plantillaPortalAplicada) {
+    if (plantillaPendiente) {
         document.getElementById("btnGuardar").disabled = false;
         return;
     }
@@ -162,7 +160,7 @@ function actualizarEstadoBotonGuardar() {
  * (ignorando Documentos y Noticias, que van por libre).
  */
 function hayCambiosPendientesEnWizard() {
-    if (window.plantillaPortalAplicada) return true;
+    if (plantillaPendiente) return true;
     // En creación y todavía no se ha guardado nunca -> hay cambios “pendientes” por definición
     if (!modoEdicion && !municipioGuardado) {
         return true;
@@ -198,30 +196,9 @@ function hayCambiosPendientesEnWizard() {
  */
 function guardarDatosPaso(step) {
 
-    //    Si el paso es el 7 (FAQs reutilizables), no se usa un formulario clásico.
-    //    En su lugar, gestionamos localmente un array llamado `preguntasAsignadasLocal`.
-    //    Este array contiene todas las preguntas seleccionadas o creadas por el usuario.
-    //    Aquí no nos interesa el texto completo, solo necesitamos guardar sus IDs
-    //    (para saber qué preguntas están asociadas al municipio actual).
-    //
-    //    Por eso, guardamos en `datosWizard[7]` un objeto con un array `faqs`,
-    //    donde cada entrada es simplemente { id: ... }.
-    //
-    //    Este formato se enviará luego al backend para registrar la relación.
+    // Las preguntas pueden ser propias o estar vinculadas a la biblioteca.
     if (step === 7) {
-        datosWizard[step] = {
-            faqs: preguntasAsignadasLocal.map(function (pregunta) {
-                if (typeof serializarFaqWizard === 'function') {
-                    return serializarFaqWizard(pregunta);
-                }
-
-                return {
-                    pregunta_id: Number(pregunta.id || 0) || null,
-                    pregunta: pregunta.pregunta || '',
-                    respuesta: pregunta.respuesta || ''
-                };
-            })
-        };
+        datosWizard[step] = { faqs: preguntasAsignadasLocal.map(serializarFaqWizard) };
         return;
     }
 
@@ -358,12 +335,14 @@ async function cargarTodosLosPasos(callback) {
                 inicializarEditoresEnriquecidos(div);
             }
 
-            if (pasoNum === 3 && typeof inicializarFasesWizardModoCreacion === 'function') {
-                inicializarFasesWizardModoCreacion();
-            }
-
             if (pasoNum === 5) {
                 inicializarPasoParticipacion();
+
+                // El título inicial de Participación no cuenta como edición del paso.
+                if (!modoEdicion) {
+                    guardarDatosPaso(5);
+                    estadoInicialWizard[5] = { ...datosWizard[5] };
+                }
 
                 if (typeof inicializarBotonConfiguradorPortal === 'function') {
                     inicializarBotonConfiguradorPortal();
@@ -391,6 +370,9 @@ async function cargarTodosLosPasos(callback) {
         // 4. Esperamos al selector del paso 1 antes de rellenar una edición.
         promesaPaso1 = Promise.resolve(inicializarSelectMunicipiosPaso1());
         await promesaPaso1;
+        if (!modoEdicion) {
+            await inicializarFasesWizardModoCreacion();
+        }
 
         inicializarBotonBuscarPolitica();
 
@@ -830,9 +812,8 @@ function generarFormDataDesdeWizard() {
 
     // El botón de plantilla puede preparar también el diseño, los textos
     // generales y los accesos iniciales del portal.
-    if (window.plantillaPortalAplicada) {
+    if (plantillaPendiente) {
         formData.append("aplicar_plantilla_portal", "1");
-        formData.append("plantilla_portal_modo", window.plantillaPortalModo || "sobrescribir");
     }
 
     // En modo edición, también enviamos explícitamente el código del municipio
@@ -849,8 +830,10 @@ function generarFormDataDesdeWizard() {
         const tieneContenido = Object.values(datos || {}).some(val => val?.trim?.() !== '');
         if (!tieneContenido) continue;
 
-        // En modo edición: solo incluimos los pasos que realmente han sido modificados
-        if (modoEdicion && !pasoModificado(paso)) continue;
+        // La plantilla sustituye los textos del diseño y las asignaciones de
+        // preguntas incluso si su contenido visible coincide con el anterior.
+        const formaParteDelReemplazo = plantillaPendiente && (paso === 5 || paso === 7);
+        if (!formaParteDelReemplazo && (modoEdicion || paso === 5) && !pasoModificado(paso)) continue;
 
         // Aseguramos que todos los pasos (excepto 1) tengan `cod_mun` al enviarlos
         if (!datos.cod_mun && paso !== 1) datos.cod_mun = codMun;
@@ -1137,87 +1120,38 @@ async function editarMunicipio(codMun) {
             guardarDatosPaso(1); // Guardamos en datosWizard
             estadoInicialWizard[1] = { ...datosWizard[1] }; // Clonamos como estado inicial
 
-            cargandoEdicion = false;
-            actualizarEstadoBotonGuardar();
+            // Estos pasos comparten los campos de la plantilla. Esperamos su
+            // carga para que una respuesta tardía no pise los cambios del usuario.
+            const urlPanel = 'php/gestion/acciones/acciones_panel.php';
+            const codigo = encodeURIComponent(codMun);
+            const [informacion, fase, participacion] = await Promise.all(
+                ['obtenerInformacion', 'obtenerFaseActual', 'obtenerParticipacion'].map(async function (accion) {
+                    const respuesta = await fetch(`${urlPanel}?action=${accion}&cod_mun=${codigo}`);
+                    const datos = await respuesta.json();
+                    if (!datos.success) throw new Error(datos.message || 'No se pudo completar la carga.');
+                    return datos.data;
+                })
+            );
 
-            updateWizard();          // Muestra visual del paso activo
-            ocultarSpinnerModal();  // Ya podemos ocultar el spinner
+            document.getElementById('cod_mun_informacion').value = codMun;
+            document.getElementById('titulo').value = informacion?.titulo ?? '';
+            actualizarEditorEnriquecido('descripcion', informacion?.descripcion ?? '');
 
-            // ===========================
-            // PASO 2: Información general
-            // ===========================
-            fetch(`php/gestion/acciones/acciones_panel.php?action=obtenerInformacion&cod_mun=${encodeURIComponent(codMun)}`)
-                .then(res => res.json())
-                .then(data2 => {
-                    if (data2.success && data2.data) {
-                        const info = data2.data;
-                        document.getElementById("cod_mun_informacion").value = codMun;
-                        document.getElementById("titulo").value = info.titulo || "";
-                        actualizarEditorEnriquecido("descripcion", info.descripcion || "");
+            await inicializarFasesWizardModoEdicion({ ...fase, cod_mun: codMun });
 
-                        guardarDatosPaso(2);
-                        estadoInicialWizard[2] = { ...datosWizard[2] };
-                        actualizarEstadoBotonGuardar();
-                    }
-                });
+            document.getElementById('titulo1').value = participacion.titulo1 ?? '';
+            actualizarEditorEnriquecido('descripcion1', participacion.descripcion1 ?? '');
 
-            // ===========================
-            // PASO 3: Fase actual
-            // ===========================
-            fetch(`php/gestion/acciones/acciones_panel.php?action=obtenerFaseActual&cod_mun=${encodeURIComponent(codMun)}`)
-                .then(res => res.json())
-                .then(async data3 => {
-                    if (data3.success && data3.data) {
-                        const fase = data3.data;
+            for (const paso of [2, 3, 5]) {
+                guardarDatosPaso(paso);
+                estadoInicialWizard[paso] = { ...datosWizard[paso] };
+            }
+            await inicializarFaqsWizard(codMun);
 
-                        // Aseguramos hidden cod_mun del form
-                        const hidden = document.getElementById("cod_mun_fase");
-                        if (hidden) hidden.value = codMun;
-
-                        if (window.FasesWizard?.inicializarFasesWizardModoEdicion) {
-                            await inicializarFasesWizardModoEdicion({
-                                ...fase,
-                                cod_mun: codMun
-                            });
-                        } else {
-                            // Fallback si no cargó el script
-                            document.getElementById("fase_padre").value = fase.num_fase_padre || fase.num_fase || "";
-                            await cargarSubfases(document.getElementById("fase_padre").value, fase.subfase_id);
-                            document.getElementById("fecha_inicio").value = fase.fecha_inicio || "";
-                            actualizarEditorEnriquecido("estado_tramitacion", fase.estado_tramitacion || "");
-                        }
-
-                        guardarDatosPaso(3);
-                        estadoInicialWizard[3] = { ...datosWizard[3] };
-                        actualizarEstadoBotonGuardar();
-                    }
-                });
-
-            // ===========================
-            // PASO 4: Documentos (carga asíncrona sin esperar)
-            // ===========================
+            // Los listados de recursos se cargan por separado del guardado general.
             cargarCategoriasDocumento();
             cargarFasesDocumento();
             cargarDocumentos(codMun);
-
-            // ===========================
-            // PASO 5: Participación (textos enriquecidos)
-            // ===========================
-            fetch(`php/gestion/acciones/acciones_panel.php?action=obtenerParticipacion&cod_mun=${encodeURIComponent(codMun)}`)
-                .then(res => res.json())
-                .then(data5 => {
-                    if (data5.success && data5.data) {
-                        const part = data5.data;
-
-                        // Son los mismos textos que usa el configurador y el portal público.
-                        document.getElementById("titulo1").value = part.titulo1 ?? "";
-                        actualizarEditorEnriquecido("descripcion1", part.descripcion1 ?? "");
-
-                        guardarDatosPaso(5);
-                        estadoInicialWizard[5] = { ...datosWizard[5] };
-                        actualizarEstadoBotonGuardar();
-                    }
-                });
 
             // ===========================
             // PASO 5.1: Botones de participación
@@ -1229,11 +1163,6 @@ async function editarMunicipio(codMun) {
             // ===========================
              cargarNoticias() //ahora vive en noticiasWizard.js
 
-            // ===========================
-            // PASO 7: FAQS
-            // ===========================
-            inicializarFaqsWizard(codMun);
-
         } catch (err) {
             cargandoEdicion = false;
             console.error(err);
@@ -1243,13 +1172,9 @@ async function editarMunicipio(codMun) {
             return;
         }
 
-        actualizarEstadoBotonGuardar();
-
-        // Si hay un paso pendiente de apertura (ej. 4) nos aseguramos de estar ahí
-        if (window.pasoPendienteApertura) {
-            currentStep = Number(window.pasoPendienteApertura);
-            updateWizard();
-        }
+        cargandoEdicion = false;
+        updateWizard();
+        ocultarSpinnerModal();
     });
 }
 
@@ -1684,8 +1609,7 @@ function inicializarBotonBuscarPolitica() {
 // --- Helper: refresca datosWizard desde el DOM y hace la "foto" inicial ---
 function refrescarFotoInicial() {
   // Solo se llama después de guardar: la plantilla ya no debe volver a aplicarse.
-  window.plantillaPortalAplicada = false;
-  window.plantillaPortalModo = null;
+  plantillaPendiente = false;
   // 1) Regenerar datosWizard de TODOS los pasos desde el DOM
   for (let p = 1; p <= totalSteps; p++) {
     guardarDatosPaso(p);
@@ -1883,10 +1807,3 @@ function formularioNoticiaAbierto() {
   const off = document.getElementById('offcanvasNoticia');
   return off && off.classList.contains('show');
 }
-
-// La plantilla solo se guarda en la operación en la que se ha aplicado.
-document.addEventListener('hidden.bs.modal', function (evento) {
-    if (evento.target && evento.target.id === 'modalWizard') {
-        window.plantillaPortalAplicada = false;
-    }
-});

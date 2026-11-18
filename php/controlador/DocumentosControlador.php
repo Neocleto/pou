@@ -84,6 +84,7 @@ class DocumentosController {
             'faseActualNum'     => $faseActualNum,
             'fasesMenu'         => $fasesMenu,
             'documentosPorFase' => $documentosPorFase,
+            'estadosFases'      => $catalogo['estadosFases'],
             'configuracionVisual' => $configuracionModel->obtenerPorMunicipio($cod_mun),
             'modoPreview'       => $modoPreview
         ];

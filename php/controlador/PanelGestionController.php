@@ -234,7 +234,7 @@ class PanelGestionController {
     // =====================
     // CREAR NUEVO MUNICIPIO
     // =====================
-    public function crearMunicipioCompleto($datos, $modoPlantilla = null) {
+    public function crearMunicipioCompleto($datos, bool $aplicarPlantilla = false) {
         $this->conn->beginTransaction();
 
         try {
@@ -297,9 +297,12 @@ class PanelGestionController {
             // Paso 4: Documentación se gestiona al subir el documento no se controla con el Guardar General.
 
             // Paso 5: Participación
-            if (!empty($datos['paso5'])) {
-                $datos['paso5']['cod_mun'] = $cod_mun;
-                $this->participacionModel->guardarParticipacion($datos['paso5']);
+            if ($aplicarPlantilla || !empty($datos['paso5'])) {
+                // Si se aplica la plantilla, el diseño y el índice se guardan
+                // dentro de la misma transacción que los demás pasos.
+                $participacion = $datos['paso5'] ?? [];
+                $participacion['cod_mun'] = $cod_mun;
+                $this->participacionModel->guardarParticipacion($participacion, $aplicarPlantilla);
             }
 
             // Paso 5.1: Participación Botones al tener subida de documentos se gestiona desde acciones_participacion y participacionWizard.js
@@ -312,12 +315,6 @@ class PanelGestionController {
                     $cod_mun,
                     is_array($datos['paso7']['faqs']) ? $datos['paso7']['faqs'] : []
                 );
-            }
-
-            // Los datos y la plantilla se confirman juntos. Un fallo revierte todo.
-            if ($modoPlantilla !== null) {
-                $configuracionModel = new ConfiguracionVisualModel($this->conn);
-                $configuracionModel->aplicarPlantillaInicial($cod_mun, $modoPlantilla, $datos['paso5'] ?? []);
             }
 
             $this->conn->commit();
@@ -333,7 +330,7 @@ class PanelGestionController {
     // =====================
     // EDITAR MUNICIPIO (solo pasos modificados)
     // =====================
-    public function editarMunicipio($pasosModificados, $datos, $cod_mun, $modoPlantilla = null) {
+    public function editarMunicipio($pasosModificados, $datos, $cod_mun, bool $aplicarPlantilla = false) {
         $this->conn->beginTransaction();
 
         try {
@@ -378,9 +375,12 @@ class PanelGestionController {
             }
 
             // Paso 5: actualizar participación si fue modificada
-            if (in_array(5, $pasosModificados)) {
-                $datos['paso5']['cod_mun'] = $cod_mun;
-                $this->participacionModel->guardarParticipacion($datos['paso5']);
+            if ($aplicarPlantilla || in_array(5, $pasosModificados)) {
+                // Si se aplica la plantilla, el diseño y el índice se guardan
+                // dentro de la misma transacción que los demás pasos.
+                $participacion = $datos['paso5'] ?? [];
+                $participacion['cod_mun'] = $cod_mun;
+                $this->participacionModel->guardarParticipacion($participacion, $aplicarPlantilla);
             }
 
             // Paso 4 (Documentos), Paso 5.1 (Botones), Paso 6 (Noticias) no se gestionan con el GUARDAR generico
@@ -391,12 +391,6 @@ class PanelGestionController {
                     $cod_mun,
                     is_array($datos['paso7']['faqs']) ? $datos['paso7']['faqs'] : []
                 );
-            }
-
-            // Los datos y la plantilla se confirman juntos. Un fallo revierte todo.
-            if ($modoPlantilla !== null) {
-                $configuracionModel = new ConfiguracionVisualModel($this->conn);
-                $configuracionModel->aplicarPlantillaInicial($cod_mun, $modoPlantilla, $datos['paso5'] ?? []);
             }
 
             $this->conn->commit();

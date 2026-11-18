@@ -271,7 +271,6 @@ body.portal-page {
 .portal-page .portal-hero__eyebrow {
     display: block;
     margin-bottom: 15px;
-    text-transform: uppercase;
     letter-spacing: .085em;
     font-size: calc(17px * var(--pou-scale));
     line-height: 22px;
@@ -453,7 +452,6 @@ body.portal-page {
 .portal-page .section-kicker {
     margin: 0 0 4px;
     font-size: .7rem;
-    text-transform: uppercase;
     letter-spacing: .09em;
     color: var(--section-color);
 }
@@ -1422,7 +1420,6 @@ body.portal-page {
     display: block;
     margin-bottom: 3px;
     color: var(--pou-primary);
-    text-transform: uppercase;
     letter-spacing: .08em;
     font-size: .71rem;
 }

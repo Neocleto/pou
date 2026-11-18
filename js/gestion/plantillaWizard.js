@@ -1,21 +1,4 @@
-/*******************************************
- *  PLANTILLA DEL WIZARD (Pasos obligatorios)
- *  Archivo: plantillaWizard.js
- *
- *  Propósito:
- *    Cargar valores por defecto en los pasos 2, 3, 5 y 7
- *    sin tocar Documentos (4) ni Noticias (6).
- *
- *  Qué hace el botón "Cargar plantilla":
- *    1. Rellena automáticamente campos de los pasos 2, 3 y 5.
- *    2. Carga las nueve primeras FAQs del documento del POU
- *       como preguntas especificas del municipio, sin tocar la biblioteca.
- *    3. Deja todos los pasos listos para guardar en BBDD.
- *******************************************/
-
-/* ==========================================================
- * 1) CONTENIDO EDITABLE DE LA PLANTILLA
- * ========================================================== */
+// Contenido de partida del asistente. Se carga solo al aplicar la plantilla.
 const PLANTILLA_WIZARD = {
   paso1: {
     buzon_participacion_activo: '1'
@@ -68,304 +51,127 @@ const PLANTILLA_WIZARD = {
   ]
 };
 
-/* ==========================================================
- * 2) FUNCIONES AUXILIARES
- * ========================================================== */
-
-// Escribe texto en inputs o textareas normales
-function escribirCampoTexto(inputEl, valor, modo) {
-  if (!inputEl) return;
-  const actual = (inputEl.value ?? '').trim();
-  const nuevo = (typeof valor === 'function') ? valor() : valor;
-  if (modo === 'sobrescribir' || (modo === 'soloVacios' && actual === '')) {
-    const valorFinal = String(nuevo ?? '').replaceAll('{municipio}', obtenerNombreMunicipioPlantilla());
-    // Solo los textareas enriquecidos necesitan CKEditor. Los selects,
-    // fechas e inputs normales requieren su valor literal, sin etiquetas <p>.
-    if (inputEl.tagName === 'TEXTAREA' && inputEl.dataset.richEditor === '1') {
-      actualizarEditorEnriquecido(inputEl.id, valorFinal);
-    } else {
-      inputEl.value = valorFinal;
-    }
+/** Sustituye el valor del campo y sincroniza CKEditor cuando corresponde. */
+function escribirCampoPlantilla(id, valor) {
+  const campo = document.getElementById(id);
+  if (campo.dataset.richEditor === '1') {
+    actualizarEditorEnriquecido(campo, valor);
+  } else {
+    campo.value = valor;
   }
 }
 
-/** Devuelve el municipio seleccionado sin depender del plugin visual. */
-function obtenerNombreMunicipioPlantilla() {
-  const selector = document.getElementById('nombre');
-  const valor = selector?.selectedOptions?.[0]?.textContent || selector?.value || '';
-  return String(valor).trim() || 'el municipio';
-}
+/** Prepara las opciones de fase fuera del formulario. Un fallo deja el borrador intacto. */
+async function prepararFasePlantilla(selectorFase, selectorSubfase) {
+  const { num_fase, codigo_subfase } = PLANTILLA_WIZARD.paso3;
+  const fases = selectorFase.cloneNode(true);
+  const subfases = selectorSubfase.cloneNode(false);
 
-// Marca o desmarca un checkbox
-function escribirCheckbox(checkEl, valor, modo) {
-  if (!checkEl) return;
-  const marcar = (valor === '1' || valor === 1 || valor === true);
-  if (modo === 'sobrescribir' || (modo === 'soloVacios' && !checkEl.checked)) {
-    checkEl.checked = marcar;
-    checkEl.dispatchEvent(new Event('change', { bubbles: true }));
+  fases.value = num_fase;
+  if (fases.value !== num_fase) {
+    await cargarFasesPadre(num_fase, fases);
   }
-}
+  if (fases.value !== num_fase) {
+    throw new Error('No se ha podido cargar la fase inicial.');
+  }
 
-
-// ============================================================
-// Comprueba que todos los campos obligatorios del Paso 1 están rellenos
-// ============================================================
-function paso1Completo() {
-  // Campos obligatorios del Paso 1 con sus validaciones
-  const camposObligatorios = [
-    { id: 'cod_mun', nombre: 'Código del Municipio', regex: /^\d{5}$/, descripcion: 'Debe tener exactamente 5 dígitos' },
-    { id: 'nombre', nombre: 'Nombre del Municipio' },
-    { id: 'correo_contacto', nombre: 'Correo del Arquitecto', regex: /^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/, descripcion: 'Introduce un correo válido con dominio (ej. usuario@dominio.com)' },
-    { id: 'correo_contacto_gestor', nombre: 'Correo del Gestor', regex: /^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/, descripcion: 'Introduce un correo válido con dominio (ej. usuario@dominio.com)' },
-    { id: 'politica_privacidad_url', nombre: 'URL de la Política de Privacidad del Ayuntamiento', regex: /^(https?:\/\/[^\s$.?#].[^\s]*)$/, descripcion: 'Introduce una URL válida que empiece por http o https' }
-  ];
-
-
-  // Buscamos si falta alguno
-  const faltantes = camposObligatorios.filter(c => {
-    const el = document.getElementById(c.id);
-    const valor = (el?.value || '').trim();
-    if (!valor) return true; // vacío
-    if (c.regex && !c.regex.test(valor)) return true; // formato incorrecto
-    return false;
+  await cargarSubfases(num_fase, null, subfases);
+  const subfase = Array.from(subfases.options).find(function (opcion) {
+    const etiqueta = opcion.textContent.trim();
+    return etiqueta === codigo_subfase || etiqueta.startsWith(codigo_subfase + ' ');
   });
-
-  // Si falta alguno, devolvemos lista de los que no cumplen
-  if (faltantes.length > 0) {
-    const nombres = faltantes.map(c => `• ${c.nombre}`).join('\n');
-    mostrarAvisoPaso1Incompleto(nombres);
-    return false;
+  if (!subfase || !subfase.value) {
+    throw new Error('No se ha podido cargar la subfase inicial.');
   }
 
-  return true;
+  selectorFase.replaceChildren(...fases.options);
+  selectorFase.disabled = false;
+  selectorFase.value = num_fase;
+  selectorSubfase.replaceChildren(...subfases.options);
+  selectorSubfase.disabled = false;
+  selectorSubfase.value = subfase.value;
 }
 
-// ============================================================
-// Muestra un aviso si el usuario intenta cargar la plantilla
-// sin completar todos los campos del Paso 1
-// ============================================================
-function mostrarAvisoPaso1Incompleto(camposFaltantes = '') {
-  try {
-    if (typeof currentStep !== 'undefined') currentStep = 1;
-    if (typeof updateWizard === 'function') updateWizard();
-  } catch (_) {}
-
-  Swal.fire({
-    title: 'Completa el Paso 1',
-    html: `
-      <p style="text-align:justify; margin:0 0 10px 0;">
-        Antes de cargar la plantilla, asegúrate de haber completado todos los campos obligatorios del <strong>Paso 1</strong>.
-      </p>
-      ${camposFaltantes
-        ? `<pre style="text-align:left; background:#f8f9fa; padding:10px; border-radius:6px; font-size:0.9rem;">${camposFaltantes}</pre>`
-        : ''}
-    `,
-    icon: 'info',
-    confirmButtonText: 'Entendido',
-    customClass: { confirmButton: 'btn btn-primary' },
-    buttonsStyling: false
+/** Sustituye las preguntas asignadas al municipio con las de la plantilla. */
+function aplicarPreguntasPlantilla() {
+  preguntasAsignadasLocal = PLANTILLA_WIZARD.paso7.map(function (faq, indice) {
+    const preguntaId = faq.id || null;
+    // Sin ID de biblioteca, la pregunta pertenece exclusivamente al municipio.
+    return {
+      id: preguntaId || 'plantilla_' + (indice + 1),
+      asignacion_id: null,
+      pregunta_id: preguntaId,
+      pregunta: faq.pregunta,
+      respuesta: faq.respuesta,
+      pregunta_base: faq.pregunta,
+      respuesta_base: faq.respuesta,
+      es_exclusiva: preguntaId === null
+    };
   });
+  renderizarTablaFaqs(preguntasAsignadasLocal);
 }
 
+/** Rellena el asistente. Guardar confirma los datos, el diseño y el índice juntos. */
+async function aplicarPlantilla() {
+  await prepararFasePlantilla(
+    document.getElementById('fase_padre'),
+    document.getElementById('subfase_id')
+  );
 
-/* ==========================================================
- * 3) FUNCIÓN ESPECÍFICA: aplicarPlantillaPaso7()
- *    Encargada de rellenar el Paso 7 con las FAQs del sistema
- * ========================================================== */
-function aplicarPlantillaPaso7(modo = 'soloVacios') {
-  if (!Array.isArray(preguntasAsignadasLocal)) {
-    preguntasAsignadasLocal = [];
+  // Del paso 1 la plantilla solo define el estado del buzón.
+  document.getElementById('buzon_participacion_activo').checked =
+    PLANTILLA_WIZARD.paso1.buzon_participacion_activo === '1';
+
+  escribirCampoPlantilla('titulo', PLANTILLA_WIZARD.paso2.titulo);
+  escribirCampoPlantilla('descripcion', PLANTILLA_WIZARD.paso2.descripcion);
+
+  escribirCampoPlantilla('estado_tramitacion', PLANTILLA_WIZARD.paso3.estado_tramitacion);
+  escribirCampoPlantilla('fecha_inicio', PLANTILLA_WIZARD.paso3.fecha_inicio());
+
+  escribirCampoPlantilla('titulo1', PLANTILLA_WIZARD.paso5.titulo1);
+  escribirCampoPlantilla('descripcion1', PLANTILLA_WIZARD.paso5.descripcion1);
+  aplicarPreguntasPlantilla();
+
+  for (const paso of [1, 2, 3, 5, 7]) {
+    guardarDatosPaso(paso);
   }
+  plantillaPendiente = true;
+  actualizarEstadoBotonGuardar();
+}
 
-  // Rellenar huecos no sustituye preguntas existentes del municipio.
-  if (modo === 'soloVacios' && preguntasAsignadasLocal.length > 0) {
+// Una sola acción aplica la plantilla. El diálogo deja cancelar la sustitución.
+document.getElementById('btnCargarPlantilla')?.addEventListener('click', async function () {
+  const formulario = document.querySelector('.wizard-paso[data-step="1"] form');
+  if (!formulario || cargandoEdicion || !modalWizardLoader.classList.contains('hidden')) return;
+  if (!formulario.checkValidity() || !validarPaso(1)) {
+    currentStep = 1;
+    updateWizard();
+    formulario.reportValidity();
     return;
   }
 
-  // La plantilla carga exactamente nueve preguntas del documento recibido.
-  // Sin IDs de biblioteca: el modelo las guarda como preguntas exclusivas
-  // del municipio y conserva intacta la biblioteca comun pou.faqs.
-  preguntasAsignadasLocal = PLANTILLA_WIZARD.paso7.map(function (faq, indice) {
-    return {
-      id: 'plantilla_pou_' + (indice + 1),
-      asignacion_id: null,
-      pregunta_id: null,
-      pregunta: faq.pregunta,
-      respuesta: faq.respuesta,
-      pregunta_base: '',
-      respuesta_base: '',
-      personalizada: true,
-      es_exclusiva: true,
-      nueva: true
-    };
-  });
-
-  if (typeof renderizarTablaFaqs === 'function') {
-    renderizarTablaFaqs(preguntasAsignadasLocal);
-  }
-
-  // Usar el serializador del Paso 7, que incluye los textos y los indicadores
-  // de pregunta exclusiva. Enviar solo los IDs perderia las respuestas nuevas.
-  if (typeof guardarDatosPaso === 'function') {
-    guardarDatosPaso(7);
-  }
-
-  if (typeof actualizarEstadoBotonGuardar === 'function') {
-    actualizarEstadoBotonGuardar();
-  }
-}
-
-/* ==========================================================
- * 4) FUNCIÓN PRINCIPAL: aplicarPlantilla()
- * ========================================================== */
-async function aplicarPlantilla(modo = 'soloVacios') {
-
-  // Comprobación inicial
-  if (!paso1Completo()) return;
-
-  // Paso 1 (checkboxes)
-  escribirCheckbox(document.getElementById('enviar_docs_a_arquitecto'), PLANTILLA_WIZARD.paso1.enviar_docs_a_arquitecto, modo);
-  escribirCheckbox(document.getElementById('buzon_participacion_activo'), PLANTILLA_WIZARD.paso1.buzon_participacion_activo, modo);
-  if (typeof guardarDatosPaso === 'function') guardarDatosPaso(1);
-
-  // Paso 2 (información general)
-  escribirCampoTexto(document.getElementById('titulo'), PLANTILLA_WIZARD.paso2.titulo, modo);
-  escribirCampoTexto(document.getElementById('descripcion'), PLANTILLA_WIZARD.paso2.descripcion, modo);
-  if (typeof guardarDatosPaso === 'function') guardarDatosPaso(2);
-
-  // Paso 3 (fase actual): fase 1, subfase 1.1.
-  // Seleccionamos por codigo y no por ID de base de datos, que puede cambiar.
-  const selectorFase = document.getElementById('fase_padre');
-  const selectorSubfase = document.getElementById('subfase_id');
-  const rellenarFase = modo === 'sobrescribir' || !selectorFase?.value;
-
-  if (rellenarFase) {
-    // En el wizard las fases se cargan por AJAX. Si aún están cargando,
-    // esperamos a que exista la opción antes de seleccionar la fase 1.
-    const faseInicial = PLANTILLA_WIZARD.paso3.num_fase;
-    const tieneFase = selectorFase && Array.from(selectorFase.options).some(function (opcion) {
-      return opcion.value === faseInicial;
-    });
-    if (!tieneFase && window.FasesWizard && typeof window.FasesWizard.cargarFasesPadre === 'function') {
-      await window.FasesWizard.cargarFasesPadre(faseInicial);
-    }
-    escribirCampoTexto(selectorFase, faseInicial, 'sobrescribir');
-    if (!selectorFase || selectorFase.value !== faseInicial) {
-      Swal.fire('No se pudo cargar la fase 1', 'Comprueba que el listado de fases esté disponible y vuelve a cargar la plantilla.', 'error');
-      return;
-    }
-    if (window.FasesWizard && typeof window.FasesWizard.cargarSubfases === 'function') {
-      await window.FasesWizard.cargarSubfases(PLANTILLA_WIZARD.paso3.num_fase);
-    }
-    if (selectorSubfase) {
-      const subfaseInicial = Array.from(selectorSubfase.options).find(function (opcion) {
-        return opcion.textContent.trim().startsWith(PLANTILLA_WIZARD.paso3.codigo_subfase + ' ')
-          || opcion.textContent.trim() === PLANTILLA_WIZARD.paso3.codigo_subfase;
-      });
-      if (subfaseInicial) {
-        selectorSubfase.value = subfaseInicial.value;
-      }
-      if (!selectorSubfase.value) {
-        Swal.fire('No se pudo cargar la subfase 1.1', 'Comprueba que esta subfase exista para la fase 1 y vuelve a aplicar la plantilla.', 'error');
-        return;
-      }
-    }
-  } else if (!selectorSubfase?.value && window.FasesWizard) {
-    // Conservar una fase ya existente cuando se elige rellenar solo vacios.
-    await window.FasesWizard.cargarSubfases(selectorFase.value);
-  }
-
-  escribirCampoTexto(document.getElementById('estado_tramitacion'), PLANTILLA_WIZARD.paso3.estado_tramitacion, modo);
-  escribirCampoTexto(document.getElementById('fecha_inicio'), PLANTILLA_WIZARD.paso3.fecha_inicio, modo);
-  if (typeof guardarDatosPaso === 'function') guardarDatosPaso(3);
-
-  // Paso 5 (participación)
-  escribirCampoTexto(document.getElementById('titulo1'), PLANTILLA_WIZARD.paso5.titulo1, modo);
-  escribirCampoTexto(document.getElementById('descripcion1'), PLANTILLA_WIZARD.paso5.descripcion1, modo);
-  if (typeof guardarDatosPaso === 'function') guardarDatosPaso(5);
-
-  // Paso 7 (FAQs reutilizables)
-  aplicarPlantillaPaso7(modo);
-
-  // La misma plantilla preparará también la configuración visual y los accesos.
-  window.plantillaPortalAplicada = true;
-  window.plantillaPortalModo = modo;
-
-  // Recalcula estado del botón Guardar (si existe)
-  if (typeof actualizarEstadoBotonGuardar === 'function') {
-    actualizarEstadoBotonGuardar();
-  }
-
-  // Aviso final
-  Swal.fire({
-    title: 'Plantilla aplicada',
-    text: (modo === 'sobrescribir')
-      ? 'Se han aplicado los valores de plantilla en todos los campos obligatorios.'
-      : 'Se han rellenado los huecos vacíos con valores de plantilla.',
-    icon: 'success',
-    confirmButtonText: 'OK',
-    customClass: { confirmButton: 'btn btn-success' },
-    buttonsStyling: false
-  });
-}
-
-/* ==========================================================
- * 5) DIÁLOGO PARA ELEGIR MODO ("solo vacíos" o "sobrescribir")
- * ========================================================== */
-function abrirDialogoPlantilla() {
-  Swal.fire({
-    title: 'Cargar plantilla',
-    width: '760px',
-    html: `
-      <div class="text-start pt-1">
-        <div class="alert alert-info py-2 px-3 mb-2" style="font-size: 0.9rem;">
-          <strong>Antes de cargar la plantilla:</strong> asegúrate de haber completado el <strong>Paso 1</strong>
-          (datos del municipio), ya que son propios de cada municipio.
-        </div>
-
-        <p class="mb-2">Se preparará un <strong>POU completo de partida</strong> con los textos comunes, el diseño y los accesos iniciales.</p>
-
-        <ul class="mb-2">
-          <li><strong>Paso 2:</strong> Título y descripción base.</li>
-          <li><strong>Paso 3:</strong> Fase inicial, estado y fecha de inicio.</li>
-          <li><strong>Paso 5:</strong> Textos institucionales de participación.</li>
-          <li><strong>Paso 7:</strong> Añade preguntas frecuentes por defecto.</li>
-          <li><strong>Página pública:</strong> Aplica el diseño, los bloques y los accesos comunes.</li>
-        </ul>
-
-        <div class="alert alert-warning py-2 px-3 mb-2" style="font-size: 0.9rem;">
-          <strong>Ojo:</strong> Será necesario completar el <strong>Paso 5</strong> con la creación de
-          <strong>botones y formularios de participación</strong>, ya que estos, junto con los
-          <strong>documentos</strong> y las <strong>noticias</strong>, son elementos específicos
-          de cada municipio y no se cargan automáticamente.
-        </div>
-      </div>
-    `,
-    icon: 'question',
-    showConfirmButton: true,
-    showDenyButton: true,
+  const resultado = await Swal.fire({
+    title: 'Aplicar plantilla',
+    text: 'Se sustituirán los textos de información y participación, la fase, el estado del buzón, las preguntas frecuentes, el diseño y los accesos. Pulsa Guardar para confirmar los cambios.',
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'Rellenar campos vacíos',
-    denyButtonText: 'Sobrescribir con plantilla',
+    confirmButtonText: 'Aplicar plantilla',
     cancelButtonText: 'Cancelar',
     customClass: {
       confirmButton: 'btn btn-primary me-2',
-      denyButton: 'btn btn-outline-danger me-2',
       cancelButton: 'btn btn-secondary'
     },
     buttonsStyling: false
-  }).then(res => {
-    if (res.isConfirmed) aplicarPlantilla('soloVacios');
-    else if (res.isDenied) aplicarPlantilla('sobrescribir');
   });
-}
+  if (!resultado.isConfirmed) return;
 
-/* ==========================================================
- * 6) EVENTO CLICK DEL BOTÓN (id="btnCargarPlantilla")
- * ========================================================== */
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('#btnCargarPlantilla');
-  if (!btn) return;
-  e.preventDefault();
-  abrirDialogoPlantilla();
+  mostrarSpinnerModal();
+  try {
+    await aplicarPlantilla();
+  } catch (error) {
+    Swal.fire('No se pudo aplicar la plantilla', error.message, 'error');
+  } finally {
+    ocultarSpinnerModal();
+    actualizarEstadoBotonGuardar();
+  }
 });

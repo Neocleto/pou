@@ -1927,7 +1927,7 @@ body.portal-builder-page {
     border: 0;
     border-radius: 6px;
 }
-.portal-builder-page .portal-icon-picker__option > i { font-size: 1.35rem; text-align: center; color: var(--icon-choice-color, var(--pou-editor-primary)); }
+.portal-builder-page .portal-icon-picker__option > i { font-size: 1.35rem; text-align: center; color: var(--icon-choice-color, currentColor); }
 .portal-builder-page .portal-icon-picker__option:hover,
 .portal-builder-page .portal-icon-picker__option:focus-visible,
 .portal-builder-page .portal-icon-picker__option[aria-selected="true"] {

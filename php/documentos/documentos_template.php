@@ -5,6 +5,17 @@
 // Conserva la lógica de fases y categorías, pero comparte la identidad visual
 // y los márgenes del portal municipal.
 // ============================================================================
+/**
+ * Datos preparados por DocumentosController::mostrarDocumentos() y asignados
+ * en documentos.php antes de incluir esta vista, también cuando no hay archivos.
+ * @var array $municipio
+ * @var array $fasesMenu
+ * @var array $documentosPorFase
+ * @var array $estadosFases
+ * @var int $faseActualNum
+ * @var array $configuracionVisual
+ * @var bool $modoPreview
+ */
 require_once __DIR__ . '/../includes/valores_portal.php';
 require_once __DIR__ . '/../includes/imagenes_municipio.php';
 $configuracion = array_merge(obtenerConfiguracionInicialPortal(), $configuracionVisual ?? []);
@@ -13,6 +24,7 @@ $codMun = (string)($municipio['cod_mun'] ?? '');
 $nombreMunicipio = trim((string)($municipio['nombre'] ?? ''));
 $escudoMunicipio = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '');
 
+// Sin documentos no existe una fase activa: se muestra el mensaje vacío.
 $totalDocumentos = 0;
 
 foreach ($documentosPorFase as $categorias) {
@@ -71,8 +83,8 @@ foreach ($documentosPorFase as $categorias) {
                     <p class="documents-hero__kicker">Documentación pública</p>
                     <h1>Documentos del POU</h1>
                     <p class="documents-hero__description">
-                        Consulta la documentación publicada en cada fase de la tramitación.
-                        Las descargas disponibles corresponden a la fase actualmente abierta.
+                        Consulta la documentación de la fase actualmente activa.
+                        Las fases completadas se muestran deshabilitadas.
                     </p>
                 </div>
 
@@ -113,7 +125,7 @@ foreach ($documentosPorFase as $categorias) {
                         $idFase = 'fase-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)$codigo);
                         $numFase = (int)$fase['num_fase'];
                         $esActiva = $numFase === (int)$faseActualNum;
-                        $completada = ($fase['estado'] ?? '') === 'completada';
+                        $completada = ($estadosFases[$numFase] ?? '') === 'completada';
                         $totalDocumentosFaseMenu = 0;
 
                         foreach (($documentosPorFase[$numFase] ?? []) as $documentosCategoria) {
@@ -121,21 +133,22 @@ foreach ($documentosPorFase as $categorias) {
                         }
                         ?>
                         <button
-                            class="nav-link<?= $esActiva ? ' active' : ($completada ? ' is-completed' : '') ?>"
+                            class="nav-link <?= $esActiva ? 'active' : ($completada ? 'is-completed' : '') ?>"
                             id="<?= htmlspecialchars($idFase) ?>-tab"
-                            <?php if ($esActiva): ?>
-                                data-bs-toggle="pill" data-bs-target="#<?= htmlspecialchars($idFase) ?>"
-                                aria-controls="<?= htmlspecialchars($idFase) ?>"
-                            <?php else: ?>
-                                disabled aria-disabled="true"
-                            <?php endif; ?>
+                            <?= $esActiva ? 'data-bs-toggle="pill" data-bs-target="#' . htmlspecialchars($idFase) . '"' : 'disabled tabindex="-1"' ?>
                             type="button"
                             role="tab"
+                            <?= $esActiva ? 'aria-controls="' . htmlspecialchars($idFase) . '"' : '' ?>
+                            aria-disabled="<?= $esActiva ? 'false' : 'true' ?>"
                             aria-selected="<?= $esActiva ? 'true' : 'false' ?>">
                             <span class="documents-phases__copy">
                                 <strong>Fase <?= htmlspecialchars($codigo) ?></strong>
                                 <small>
-                                    <?= $esActiva ? 'Fase activa · ' . (int)$totalDocumentosFaseMenu . ($totalDocumentosFaseMenu === 1 ? ' archivo' : ' archivos') : ($completada ? 'Completada · No disponible' : 'No disponible') ?>
+                                    <?php if ($esActiva): ?>
+                                        <?= (int)$totalDocumentosFaseMenu ?> <?= $totalDocumentosFaseMenu === 1 ? 'archivo' : 'archivos' ?>
+                                    <?php else: ?>
+                                        <?= $completada ? 'Completada · Deshabilitada' : 'Aún no disponible' ?>
+                                    <?php endif; ?>
                                 </small>
                             </span>
                             <?= $esActiva ? '<i class="bi bi-check-circle-fill" aria-label="Fase actual"></i>' : '<i class="bi bi-lock" aria-hidden="true"></i>' ?>
@@ -146,6 +159,13 @@ foreach ($documentosPorFase as $categorias) {
 
             <div class="documents-panel">
                 <div class="tab-content" id="faseTabsContent">
+                    <?php if (!$faseActualNum): ?>
+                        <div class="documents-empty">
+                            <span><i class="bi bi-folder"></i></span>
+                            <h3>Todavía no hay documentación publicada</h3>
+                            <p>Los documentos aparecerán aquí cuando se publique la primera fase.</p>
+                        </div>
+                    <?php endif; ?>
                     <?php foreach ($fasesMenu as $fase): ?>
                         <?php
                         $codigo = $fase['codigo'];
@@ -153,7 +173,10 @@ foreach ($documentosPorFase as $categorias) {
                         $idFase = 'fase-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string)$codigo);
                         $numFase = (int)$fase['num_fase'];
                         $esActiva = $numFase === (int)$faseActualNum;
-                        if (!$esActiva) continue;
+                        // No se generan listados ni enlaces de otras fases en el HTML.
+                        if (!$esActiva) {
+                            continue;
+                        }
                         $categoriasFase = $documentosPorFase[$numFase] ?? [];
                         $hayDocumentos = !empty($categoriasFase);
                         $totalDocumentosFase = 0;
@@ -166,7 +189,7 @@ foreach ($documentosPorFase as $categorias) {
                         $columnasCategorias = max(1, min(3, $totalCategoriasFase));
                         ?>
                         <article
-                            class="tab-pane fade <?= $esActiva ? 'show active' : '' ?>"
+                            class="tab-pane fade show active"
                             id="<?= htmlspecialchars($idFase) ?>"
                             role="tabpanel"
                             aria-labelledby="<?= htmlspecialchars($idFase) ?>-tab"
@@ -186,7 +209,8 @@ foreach ($documentosPorFase as $categorias) {
 
                                 <?php if ($hayDocumentos): ?>
                                     <span class="documents-status is-current">
-                                        <i class="bi bi-unlock"></i>Descargas disponibles
+                                        <i class="bi bi-unlock"></i>
+                                        Descargas disponibles
                                     </span>
                                 <?php endif; ?>
                             </header>
@@ -202,13 +226,6 @@ foreach ($documentosPorFase as $categorias) {
                             <?php endif; ?>
                         </article>
                     <?php endforeach; ?>
-                    <?php if (!$faseActualNum): ?>
-                        <div class="documents-empty">
-                            <span><i class="bi bi-folder"></i></span>
-                            <h3>Todavía no hay documentos publicados</h3>
-                            <p>La documentación estará disponible cuando se publique la fase activa.</p>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </section>
@@ -219,6 +236,6 @@ foreach ($documentosPorFase as $categorias) {
     <button type="button" id="btnScrollTop" class="portal-scroll-top" aria-label="Volver arriba"><i class="bi bi-arrow-up"></i></button>
 
     <script src="lib/bootstrap.bundle.min.js"></script>
-    <script src="js/documentos/documentos.js?v=pou-v7-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/documentos/documentos.js') ?>"></script>
+    <script src="js/documentos/documentos.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/documentos/documentos.js') ?>"></script>
 </body>
 </html>

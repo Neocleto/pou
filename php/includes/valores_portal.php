@@ -39,10 +39,8 @@ function obtenerContenidoInicialPortal()
         ],
         'participacion' => [
             'kicker' => 'Participación ciudadana',
-            'introduccion' => '<p>La implicación de los ciudadanos en la Participación es un pilar esencial en la elaboración del <strong>Plan de Ordenación Urbana (POU)</strong>. Este enfoque se centra en combinar las vivencias y perspectivas de la comunidad, con la experiencia técnica y administrativa del equipo del <strong>Servicio de Arquitectura y Planeamiento de la Diputación de Málaga</strong>, encargado de su redacción.</p>'
-                . '<p>El propósito es lograr que este instrumento de ordenación urbanística se fundamente en un <strong>amplio consenso</strong> y aborde efectivamente las <strong>necesidades concretas del municipio</strong>.</p>'
-                . '<p>A través de este <strong>proceso colaborativo</strong>, se buscan soluciones que no solo sean técnicamente sólidas, sino que también alcancen un alto grado de aceptación entre los habitantes del municipio.</p>'
-                . '<p>Este método de participación garantiza que los planes reflejen una <strong>visión compartida</strong> y sean más efectivos en su <strong>implementación y sostenibilidad</strong>.</p>',
+            // El texto se escribe en gestión o se incorpora al aplicar la plantilla.
+            'introduccion' => '',
             'formularios_titulo' => 'Encuestas y formularios',
             'formularios_descripcion' => 'Elige un formulario para responder online o descargar su versión imprimible.'
         ],

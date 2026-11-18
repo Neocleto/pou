@@ -1,4 +1,9 @@
 <?php
+/** Datos recibidos de la página que incluye esta vista.
+ * @var array $municipio
+ * @var string $codMun
+ * @var string $panelInicial
+ */
 // Acceso de gestión: convenio vigente y proyecto correcto.
 require_once __DIR__ . '/../login/permisos_proyecto.php';
 exigirAccesoProyecto(false, false);

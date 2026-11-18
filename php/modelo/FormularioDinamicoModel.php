@@ -503,22 +503,10 @@ class FormularioDinamicoModel
      */
     private function normalizarIcono($icono)
     {
-        $icono = normalizarNombreIconoPortal($icono);
-
-        if ($icono === '') {
-            return '';
-        }
-
-        if (preg_match('/^[a-zA-Z0-9-]+$/', $icono)) {
-            return $icono;
-        }
-
-        return 'clipboard-check';
+        return normalizarIconoPortal($icono);
     }
 
-    /**
-     * Elimina los apartados actuales antes de reconstruir el formulario.
-     */
+    /** Elimina los apartados actuales antes de reconstruir el formulario. */
     private function eliminarSecciones($formularioId)
     {
         $sql = "DELETE FROM pou.formulario_secciones
@@ -710,7 +698,7 @@ class FormularioDinamicoModel
             }
         }
 
-        if ($modalidad !== 'pdf' && $totalPreguntas === 0) {
+        if ($totalPreguntas === 0) {
             throw new Exception(
                 'Los formularios online necesitan al menos una pregunta.'
             );

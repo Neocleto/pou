@@ -32,7 +32,7 @@ class ParticipacionModel
         ];
     }
 
-    public function guardarParticipacion($datos)
+    public function guardarParticipacion($datos, bool $aplicarPlantilla = false)
     {
         $codMun = $datos['cod_mun'] ?? '';
         $titulo = $datos['titulo1'] ?? '';
@@ -43,9 +43,13 @@ class ParticipacionModel
             throw new Exception('Revisa el título y el texto de participación (máximo 120 y 6000 caracteres).');
         }
 
-        // Cambiamos únicamente los dos textos; conservamos el diseño y las demás secciones.
-        // El modelo de configuración aplica la misma limpieza HTML que el configurador.
-        $configuracion = $this->configuracionModel->obtenerPorMunicipio($codMun);
+        // La edición conserva el diseño municipal. La plantilla lo sustituye
+        // antes de incorporar los textos que llegan del paso 5.
+        if ($aplicarPlantilla) {
+            $configuracion = obtenerConfiguracionInicialPortal($codMun);
+        } else {
+            $configuracion = $this->configuracionModel->obtenerPorMunicipio($codMun);
+        }
         foreach ($configuracion['secciones_portal'] as &$seccion) {
             if ($seccion['id'] === 'participacion') {
                 $seccion['titulo'] = $titulo;
@@ -54,6 +58,13 @@ class ParticipacionModel
         }
         unset($seccion);
         $configuracion['contenido_portal']['participacion']['introduccion'] = $texto;
-        return $this->configuracionModel->guardar($configuracion);
+        if (!$this->configuracionModel->guardar($configuracion)) {
+            throw new Exception('No se pudo guardar la configuración de participación.');
+        }
+
+        if ($aplicarPlantilla) {
+            $this->configuracionModel->guardarAccesos($codMun, obtenerAccesosInicialesPortal());
+        }
+        return true;
     }
 }

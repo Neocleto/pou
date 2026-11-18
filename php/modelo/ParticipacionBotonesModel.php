@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../includes/iconos_portal.php';
 require_once __DIR__ . '/../includes/archivos_municipio.php';
+require_once __DIR__ . '/../includes/iconos_portal.php';
 // ============================================================================
 // MODELO: BOTONES DE PARTICIPACION
 //
@@ -311,17 +311,7 @@ class ParticipacionBotonesModel
 
     private function normalizarIcono($icono)
     {
-        $icono = normalizarNombreIconoPortal($icono);
-
-        if ($icono === '') {
-            return '';
-        }
-
-        if (preg_match('/^[a-zA-Z0-9-]+$/', $icono)) {
-            return $icono;
-        }
-
-        return 'file-earmark-arrow-down';
+        return normalizarIconoPortal($icono);
     }
 
     private function normalizarColor($color)

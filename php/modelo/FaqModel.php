@@ -253,7 +253,13 @@ class FaqModel
             $asignacionId = (int)($item['asignacion_id'] ?? 0);
             $preguntaId = (int)($item['pregunta_id'] ?? 0);
 
-            // 1. La pregunta ya estaba asignada: actualizamos sus textos y orden.
+            // Reutilizamos la asignación de biblioteca y aplicamos los textos
+            // del asistente. Al volver a la plantilla se retira la adaptación anterior.
+            if ($asignacionId === 0 && $preguntaId > 0) {
+                $asignacionId = (int)$this->asignarPreguntaAMunicipio($codMun, $preguntaId);
+            }
+
+            // 1. La pregunta ya está asignada: actualizamos sus textos y orden.
             if ($asignacionId > 0) {
                 $this->actualizarAsignacionWizard(
                     $codMun,
@@ -268,16 +274,7 @@ class FaqModel
                 continue;
             }
 
-            // 2. Pregunta seleccionada de la biblioteca común.
-            if ($preguntaId > 0) {
-                $asignacionId = (int)$this->asignarPreguntaAMunicipio($codMun, $preguntaId);
-                $this->actualizarOrdenAsignacion($codMun, $asignacionId, $orden);
-                $asignacionesConservadas[] = $asignacionId;
-                $orden++;
-                continue;
-            }
-
-            // 3. Pregunta escrita para este municipio.
+            // 2. Pregunta escrita para este municipio.
             $asignacionId = (int)$this->crearPreguntaExclusiva($codMun, $pregunta, $respuesta, $orden);
             $asignacionesConservadas[] = $asignacionId;
             $orden++;
