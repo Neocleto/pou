@@ -6,6 +6,17 @@ function verificarSesionCada(minutos = 1) {
         fetch("php/login/check_sesion.php")
             .then(res => res.json())
             .then(data => {
+                if (data.status === "forbidden" || data.status === "no_session") {
+                    modalSesionMostrada = true;
+                    Swal.fire({
+                        title: "Acceso no disponible",
+                        text: data.message || "Debes volver a identificarte.",
+                        icon: "warning",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then(() => { location.href = "index.php"; });
+                    return;
+                }
                 if (data.status === "expired") {
                     modalSesionMostrada = true;
 

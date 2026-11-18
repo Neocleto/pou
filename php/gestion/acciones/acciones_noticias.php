@@ -1,22 +1,19 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_POST['action'] ?? $_GET['action'] ?? '';
+$soloLectura = in_array($accionAcceso, ['listarNoticias'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 require_once(__DIR__ . '/../../db/conexion.php');
 require_once(__DIR__ . '/../../modelo/NoticiasModel.php');
 require_once __DIR__ . '/permisos_municipio.php';
 
-session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_SESSION["usuario_id"])) {
-  http_response_code(401);
-  echo json_encode(["success" => false, "message" => "Sesión no válida"]);
-  exit;
-}
 
 $usuario_id = $_SESSION['usuario_id'] ?? null;
-if (!$usuario_id) {
-  echo json_encode(['success' => false, 'message' => 'No autenticado']);
-  exit;
-}
+
 
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 $noticiasModel = new NoticiasModel($conn);

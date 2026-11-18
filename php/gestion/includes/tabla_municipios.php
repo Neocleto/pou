@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+
 // ============================================================================
 // TABLA DE MUNICIPIOS DEL PANEL
 // La variable $municipios llega preparada desde PanelGestionController.

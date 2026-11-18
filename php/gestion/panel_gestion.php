@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+
 // ================================================
 // PANEL DE GESTIÓN - CARGA DE MUNICIPIOS DEL USUARIO
 // ================================================
@@ -9,14 +13,11 @@ require_once(__DIR__ . '/../db/conexion.php');
 // 2. CONTROLADOR
 require_once(__DIR__ . '/../controlador/PanelGestionController.php');
 
-// 3. SUPONEMOS QUE HAY UN USUARIO LOGUEADO
-session_start();
+// 3. DATOS DEL USUARIO VALIDADO
+
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_correo = $_SESSION['usuario_correo'] ?? '';
 
-if (!$usuario_id) {
-    die("Usuario no autenticado.");
-}
 
 // 4. INICIAMOS EL CONTROLADOR
 $controlador = new PanelGestionController($conn);

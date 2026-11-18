@@ -1,3 +1,8 @@
+<?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+?>
 <!-- Paso 6: Noticias -->
 <div class="wizard-section">
 

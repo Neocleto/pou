@@ -1,3 +1,8 @@
+<?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -327,7 +332,7 @@
     <script src="lib/Sortable.min.js"></script>
 
     <!-- Script proyecto -->
-    <script src="js/login/verificacion_sesion.js"></script>
+    <script src="js/login/verificacion_sesion.js?v=convenios_20261117"></script>
     <script src="js/gestion/utilidadesGestion.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/utilidadesGestion.js') ?>"></script>
     <script src="js/gestion/editorEnriquecido.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/editorEnriquecido.js') ?>"></script>
     <script src="js/gestion/wizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/wizard.js') ?>"></script>

@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(true);
+
 // ============================================================================
 // SUBIDA DE PDF PARA FORMULARIOS DINÁMICOS
 // Guarda el documento en docs/{cod_mun}/formularios/.
@@ -8,21 +12,11 @@
 require_once(__DIR__ . '/../../db/conexion.php');
 require_once(__DIR__ . '/../../modelo/MunicipioModel.php');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 header('Content-Type: application/json; charset=utf-8');
 
 // 1. Comprobamos la sesión.
-if (empty($_SESSION['usuario_id'])) {
-    http_response_code(401);
-    echo json_encode([
-        'ok' => false,
-        'mensaje' => 'La sesión ha caducado.'
-    ]);
-    exit;
-}
+
 
 $codMun = trim($_POST['cod_mun'] ?? '');
 $archivo = $_FILES['archivo'] ?? null;

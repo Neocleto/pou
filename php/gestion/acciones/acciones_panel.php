@@ -1,4 +1,10 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_POST['action'] ?? $_GET['action'] ?? '';
+$soloLectura = in_array($accionAcceso, ['listarMunicipiosINE', 'buscarPoliticaPrivacidad', 'listarMunicipios', 'obtenerMunicipio', 'obtenerInformacion', 'obtenerFaseActual', 'listarFases', 'listarSubfases', 'obtenerParticipacion'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 // ===========================================================
 // ACCIONES GENERALES DEL PANEL DE GESTIÓN DE MUNICIPIOS (POU)
 // Archivo: acciones_panel.php
@@ -8,20 +14,16 @@
 
 // 1. SESIÓN Y PARÁMETROS
 // -----------------------------------------------------------
-session_start();
+
 header('Content-Type: application/json; charset=utf-8');
 
 $usuario_id = $_SESSION['usuario_id'] ?? null;
 $usuario_correo = $_SESSION['usuario_correo'] ?? '';
-if (!$usuario_id) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Sesión no válida.']);
-    exit;
-}
+
 $modo = $_POST['modo'] ?? $_GET['modo'] ?? null;
 $accion = $_POST['action'] ?? $_GET['action'] ?? null;
 
-// 2. BUSCAR POLÍTICA: NO NECESITA CONEXIÓN A LA BASE DE DATOS
+// 2. BUSCAR POLÍTICA: EL ACCESO YA SE HA COMPROBADO ANTES
 // -----------------------------------------------------------
 if ($accion === 'buscarPoliticaPrivacidad') {
     $nombreMunicipio = $_POST['municipio'] ?? $_GET['municipio'] ?? '';

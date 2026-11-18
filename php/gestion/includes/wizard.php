@@ -1,3 +1,8 @@
+<?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+?>
 <!-- MODAL WIZARD -->
 <div class="modal fade" id="modalWizard" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-xl">

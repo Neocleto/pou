@@ -1,4 +1,10 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_REQUEST['accion'] ?? 'obtener';
+$soloLectura = in_array($accionAcceso, ['obtener'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 // ============================================================================
 // CONFIGURADOR COMPLETO DEL PORTAL PUBLICO
 //
@@ -21,18 +27,13 @@ require_once(__DIR__ . '/../../modelo/FasesDocumentosModel.php');
 require_once(__DIR__ . '/../../modelo/NoticiasModel.php');
 require_once(__DIR__ . '/../../modelo/FaqModel.php');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
 // 1. Comprobamos la sesion antes de consultar datos.
-if (empty($_SESSION['usuario_id'])) {
-    responderConfigurador(false, 'La sesion ha caducado.', [], 401);
-}
+
 
 $configuracionModel = new ConfiguracionVisualModel($conn);
 $municipioModel = new MunicipioModel($conn);

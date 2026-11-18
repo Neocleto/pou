@@ -1,14 +1,13 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+
 // php/gestion/formularios/panel_documentos.php
 
 require_once __DIR__ . '/../../db/conexion.php';
 require_once __DIR__ . '/../../modelo/MunicipioModel.php';
 
-if (session_status() === PHP_SESSION_NONE) session_start();
-if (empty($_SESSION['usuario_id'])) {
-    header('Location: /pou/index.php');
-    exit;
-}
 
 $cod_mun = trim((string)($_GET['cod_mun'] ?? ''));
 $municipioModel = new MunicipioModel($conn);
@@ -286,7 +285,7 @@ if ($cod_mun !== '') {
     <script src="lib/Sortable.min.js"></script>
 
     <!-- Scripts del proyecto -->
-    <script src="js/login/verificacion_sesion.js"></script>
+    <script src="js/login/verificacion_sesion.js?v=convenios_20261117"></script>
     <script src="js/gestion/utilidadesGestion.js?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/js/gestion/utilidadesGestion.js') ?>"></script>
     <script src="js/gestion/documentosWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/js/gestion/documentosWizard.js') ?>"></script>
 

@@ -1,7 +1,9 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+
+
 $usuario_id = $_SESSION['usuario_id'] ?? '';
 ?>
 

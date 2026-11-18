@@ -1,4 +1,10 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_REQUEST['accion'] ?? 'listar';
+$soloLectura = in_array($accionAcceso, ['listar', 'obtener', 'respuestas'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 // ============================================================================
 // ACCIONES DE FORMULARIOS DINÁMICOS
 //
@@ -13,18 +19,13 @@ require_once(__DIR__ . '/../../db/conexion.php');
 require_once(__DIR__ . '/../../modelo/FormularioDinamicoModel.php');
 require_once(__DIR__ . '/../../modelo/MunicipioModel.php');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
 // 1. Comprobamos la sesión.
-if (empty($_SESSION['usuario_id'])) {
-    responderFormularioError('La sesión ha caducado.', 401);
-}
+
 
 $formularioModel = new FormularioDinamicoModel($conn);
 $municipioModel = new MunicipioModel($conn);

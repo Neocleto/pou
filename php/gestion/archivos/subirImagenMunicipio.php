@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(true);
+
 // ============================================================================
 // SUBIDA DE IMÁGENES DEL PORTAL PÚBLICO
 //
@@ -9,16 +13,11 @@
 require_once(__DIR__ . '/../../db/conexion.php');
 require_once(__DIR__ . '/../../modelo/MunicipioModel.php');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 header('Content-Type: application/json; charset=utf-8');
 
 // 1. Comprobamos que existe una sesión activa.
-if (empty($_SESSION['usuario_id'])) {
-    responderError('La sesión ha caducado.', 401);
-}
+
 
 $codigoMunicipio = trim($_POST['cod_mun'] ?? '');
 $tipoImagen = trim($_POST['tipo'] ?? '');

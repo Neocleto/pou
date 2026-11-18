@@ -1,14 +1,13 @@
 <?php
-session_start();
-header("Content-Type: application/json");
-
-if (!isset($_SESSION["usuario_id"])) {
-    echo json_encode(["status" => "no_session"]);
+require_once __DIR__ . '/permisos_proyecto.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+// Conservar la renovación existente, comprobando antes el permiso actual del convenio.
+$resultado = validarSesionProyecto(false);
+if (!$resultado['success']) {
+    http_response_code($resultado['http']);
+    echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
     exit;
 }
-
-// Renovamos por otras 3 horas
-$_SESSION["expira_en"] = time() + 3 * 60 * 60;
-echo json_encode(["status" => "renewed"]);
-
-?>
+$_SESSION['expira_en'] = time() + 3 * 60 * 60;
+echo json_encode(['status' => 'renewed']);

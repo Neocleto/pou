@@ -1,18 +1,19 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_POST['action'] ?? $_GET['action'] ?? '';
+$soloLectura = in_array($accionAcceso, ['listarPreguntasDisponibles', 'listarPreguntasMunicipio'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 
 require_once(__DIR__ . '/../../db/conexion.php');
 require_once(__DIR__ . '/../../modelo/FaqModel.php');
 require_once __DIR__ . '/permisos_municipio.php';
 
-session_start();
 header('Content-Type: application/json; charset=utf-8');
 
 // 1. Comprobamos que el usuario sigue conectado.
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Sesión no válida.']);
-    exit;
-}
+
 
 try {
     $faqModel = new FaqModel($conn);

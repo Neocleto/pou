@@ -8,6 +8,11 @@ session_start();
 $cod_mun   = $_GET['cod_mun'] ?? null;
 $esPreview = isset($_GET['preview']) && $_GET['preview'] === '1';
 
+if ($esPreview) {
+    require_once __DIR__ . '/../login/permisos_proyecto.php';
+    exigirAccesoProyecto(false, false);
+}
+
 // La vista previa siempre debe mostrar los datos actuales del municipio.
 if ($esPreview) {
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');

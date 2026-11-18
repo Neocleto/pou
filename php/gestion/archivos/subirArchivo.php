@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+exigirAccesoProyecto(true);
+
 // ===============================================
 // Script: subirArchivo.php (GENÉRICO)
 // Descripción: Gestiona la subida de documentos al servidor (documentos y botones)
@@ -8,7 +12,6 @@
 // - tipo (string): 'documento' o 'participacion'
 // ===============================================
 
-session_start();
 header('Content-Type: application/json; charset=utf-8');
 
 const MAX_UPLOAD_BYTES = 8388608; // 8 MB
@@ -74,10 +77,7 @@ if ($contentLength > 0 && $postMaxBytes > 0 && $contentLength > $postMaxBytes &&
 }
 
 // 1. Exigimos sesión antes de aceptar documentos.
-if (empty($_SESSION['usuario_id'])) {
-    http_response_code(401);
-    responderSubida(false, 'La sesión ha caducado.');
-}
+
 
 // 2. Validar archivo recibido
 if (!isset($_FILES['archivo'])) {

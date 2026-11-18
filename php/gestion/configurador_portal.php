@@ -1,4 +1,8 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../login/permisos_proyecto.php';
+exigirAccesoProyecto(false, false);
+
 // ============================================================================
 // CONFIGURADOR DEL PORTAL PÚBLICO
 //
@@ -21,9 +25,6 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 // 1. Comprobamos que existe una sesión activa.
 $usuarioId = $_SESSION['usuario_id'] ?? null;

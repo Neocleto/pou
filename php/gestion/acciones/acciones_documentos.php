@@ -1,4 +1,10 @@
 <?php
+// Acceso de gestión: convenio vigente y proyecto correcto.
+require_once __DIR__ . '/../../login/permisos_proyecto.php';
+$accionAcceso = $_POST['action'] ?? $_GET['action'] ?? '';
+$soloLectura = in_array($accionAcceso, ['listarDocumentos', 'listarCategorias', 'listarFasesDocumentos'], true);
+exigirAccesoProyecto(!$soloLectura);
+
 // ===========================================================
 // ACCIONES PARA DOCUMENTOS (POU)
 // -----------------------------------------------------------
@@ -13,21 +19,11 @@ require_once(__DIR__ . '/../../modelo/CategoriasModel.php');
 require_once(__DIR__ . '/../../modelo/FasesDocumentosModel.php');
 require_once __DIR__ . '/permisos_municipio.php';
 
-session_start();
 header('Content-Type: application/json');
 
-// Verificar si existe sesión
-if (!isset($_SESSION["usuario_id"])) {
-    http_response_code(401); // No autorizado
-    echo json_encode(["success" => false, "message" => "Sesión no válida."]);
-    exit;
-}
 
 $usuario_id = $_SESSION['usuario_id'] ?? null;
-if (!$usuario_id) {
-    echo json_encode(['success' => false, 'message' => 'Usuario no autenticado.']);
-    exit;
-}
+
 
 $accion = $_POST['action'] ?? $_GET['action'] ?? null;
 

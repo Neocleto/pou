@@ -1,17 +1,9 @@
 <?php
-session_start();
-header("Content-Type: application/json");
-
-if (!isset($_SESSION["usuario_id"])) {
-    echo json_encode(["status" => "no_session"]);
-    exit;
+require_once __DIR__ . '/permisos_proyecto.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+$resultado = validarSesionProyecto(false);
+if ($resultado['success'] && time() > (int)($_SESSION['expira_en'] ?? 0)) {
+    $resultado = ['success' => false, 'status' => 'expired', 'message' => 'La sesión ha caducado.'];
 }
-
-if (isset($_SESSION["expira_en"]) && time() > $_SESSION["expira_en"]) {
-    echo json_encode(["status" => "expired"]);
-    exit;
-}
-
-// Si sigue activa
-echo json_encode(["status" => "active"]);
-?>
+echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
