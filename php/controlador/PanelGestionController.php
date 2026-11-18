@@ -13,6 +13,7 @@ require_once(__DIR__ . '/../modelo/ParticipacionBotonesModel.php');
 require_once(__DIR__ . '/../modelo/FaqModel.php');
 require_once(__DIR__ . '/../modelo/DocumentosModel.php');
 require_once(__DIR__ . '/../modelo/NoticiasModel.php');
+require_once(__DIR__ . '/../modelo/ConfiguracionVisualModel.php');
 
 class PanelGestionController {
     private $conn;
@@ -233,7 +234,7 @@ class PanelGestionController {
     // =====================
     // CREAR NUEVO MUNICIPIO
     // =====================
-    public function crearMunicipioCompleto($datos) {
+    public function crearMunicipioCompleto($datos, $modoPlantilla = null) {
         $this->conn->beginTransaction();
 
         try {
@@ -313,10 +314,16 @@ class PanelGestionController {
                 );
             }
 
+            // Los datos y la plantilla se confirman juntos. Un fallo revierte todo.
+            if ($modoPlantilla !== null) {
+                $configuracionModel = new ConfiguracionVisualModel($this->conn);
+                $configuracionModel->aplicarPlantillaInicial($cod_mun, $modoPlantilla, $datos['paso5'] ?? []);
+            }
+
             $this->conn->commit();
             return true;
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->conn->rollBack();
             error_log("Error al crear municipio completo: " . $e->getMessage());
             return $e->getMessage(); // Devuelve el mensaje de error para el frontend
@@ -326,7 +333,7 @@ class PanelGestionController {
     // =====================
     // EDITAR MUNICIPIO (solo pasos modificados)
     // =====================
-    public function editarMunicipio($pasosModificados, $datos, $cod_mun) {
+    public function editarMunicipio($pasosModificados, $datos, $cod_mun, $modoPlantilla = null) {
         $this->conn->beginTransaction();
 
         try {
@@ -386,10 +393,16 @@ class PanelGestionController {
                 );
             }
 
+            // Los datos y la plantilla se confirman juntos. Un fallo revierte todo.
+            if ($modoPlantilla !== null) {
+                $configuracionModel = new ConfiguracionVisualModel($this->conn);
+                $configuracionModel->aplicarPlantillaInicial($cod_mun, $modoPlantilla, $datos['paso5'] ?? []);
+            }
+
             $this->conn->commit();
             return true;
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->conn->rollBack();
             error_log("Error al editar municipio: " . $e->getMessage());
             return false;

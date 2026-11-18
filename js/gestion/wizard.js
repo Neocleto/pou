@@ -135,6 +135,12 @@ function actualizarEstadoBotonGuardar() {
         return;
     }
 
+    // Aplicar una plantilla cuenta como cambio aunque los textos coincidan.
+    if (window.plantillaPortalAplicada) {
+        document.getElementById("btnGuardar").disabled = false;
+        return;
+    }
+
     // Recorremos todos los pasos para ver si hay cambios
     const hayCambios = Array.from({ length: totalSteps }, (_, i) => {
         const pasoNum = i + 1;
@@ -156,6 +162,7 @@ function actualizarEstadoBotonGuardar() {
  * (ignorando Documentos y Noticias, que van por libre).
  */
 function hayCambiosPendientesEnWizard() {
+    if (window.plantillaPortalAplicada) return true;
     // En creación y todavía no se ha guardado nunca -> hay cambios “pendientes” por definición
     if (!modoEdicion && !municipioGuardado) {
         return true;
@@ -748,7 +755,7 @@ document.getElementById("btnGuardar")?.addEventListener("click", () => {
                 document.getElementById("btnGuardar").disabled = false;
 
             } else {
-                Swal.fire("Error", "Error al crear municipio.", "error");
+                Swal.fire("No se pudo guardar", msg || "No se pudo guardar el municipio.", "error");
 
                 // Habilitar botón para volver a intentar
                 document.getElementById("btnGuardar").disabled = false
@@ -988,9 +995,7 @@ document.getElementById("btnPreviewMunicipio")?.addEventListener("click", () => 
 
             // Reutilizamos tu flujo de guardado genérico,
             // pero en modo "silencioso": sin SweetAlert de éxito, solo callback.
-            guardarMunicipioAntesDeSubir(() => {
-                abrirPreviewMunicipio(codMun);
-            }, { silencioso: true });
+            guardarYPrevisualizarMunicipio(codMun);
         });
 
         return;
@@ -1018,9 +1023,7 @@ document.getElementById("btnPreviewMunicipio")?.addEventListener("click", () => 
         }).then((result) => {
             if (!result.isConfirmed) return;
 
-            guardarMunicipioAntesDeSubir(() => {
-                abrirPreviewMunicipio(codMun);
-            }, { silencioso: true });
+            guardarYPrevisualizarMunicipio(codMun);
         });
 
     } else {
@@ -1281,8 +1284,13 @@ function guardarMunicipioAntesDeSubir(callback, opciones = {}) {
         guardarDatosPaso(paso);
     }
 
-    // Preparamos el FormData con todos los pasos rellenados
-    // Esta función separada crea un FormData solo con los pasos necesarios
+    // Un municipio ya guardado y sin cambios no necesita otra petición.
+    if (modoEdicion && !hayCambiosPendientesEnWizard()) {
+        if (typeof callback === "function") callback();
+        return;
+    }
+
+    // Preparamos el FormData con todos los pasos rellenados.
     const formData = generarFormDataDesdeWizard();
 
     mostrarSpinnerModal();
@@ -1333,10 +1341,30 @@ function guardarMunicipioAntesDeSubir(callback, opciones = {}) {
 }
 
 
-function abrirPreviewMunicipio(codMun) {
+function abrirPreviewMunicipio(codMun, ventanaPreparada = null) {
     if (!codMun) return;
     const url = `php/municipio/municipio.php?cod_mun=${encodeURIComponent(codMun)}&preview=1`;
-    window.open(url, '_blank');
+    if (ventanaPreparada && !ventanaPreparada.closed) {
+        ventanaPreparada.location.href = url;
+    } else {
+        window.open(url, '_blank', 'noopener');
+    }
+}
+
+// Reservamos la pestaña en la confirmación, antes de esperar al servidor.
+function guardarYPrevisualizarMunicipio(codMun) {
+    const ventana = window.open('about:blank', '_blank');
+    if (!ventana) {
+        Swal.fire('Previsualización', 'Permite las ventanas emergentes para abrir la vista previa.', 'info');
+        return;
+    }
+    ventana.opener = null;
+    guardarMunicipioAntesDeSubir(function () {
+        abrirPreviewMunicipio(codMun, ventana);
+    }, {
+        silencioso: true,
+        alError: function () { ventana.close(); }
+    });
 }
 
 
@@ -1655,6 +1683,9 @@ function inicializarBotonBuscarPolitica() {
 
 // --- Helper: refresca datosWizard desde el DOM y hace la "foto" inicial ---
 function refrescarFotoInicial() {
+  // Solo se llama después de guardar: la plantilla ya no debe volver a aplicarse.
+  window.plantillaPortalAplicada = false;
+  window.plantillaPortalModo = null;
   // 1) Regenerar datosWizard de TODOS los pasos desde el DOM
   for (let p = 1; p <= totalSteps; p++) {
     guardarDatosPaso(p);

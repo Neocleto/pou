@@ -19,7 +19,7 @@ function normalizarIconosDatosPortal($datos)
     foreach ($datos as $clave => $valor) {
         if (is_array($valor)) {
             $datos[$clave] = normalizarIconosDatosPortal($valor);
-        } elseif ($clave === 'icono' || str_ends_with((string)$clave, '_icono')) {
+        } elseif ($clave === 'icono' || substr((string)$clave, -6) === '_icono') {
             $datos[$clave] = normalizarNombreIconoPortal($valor);
         }
     }

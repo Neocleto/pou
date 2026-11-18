@@ -134,6 +134,49 @@ class ConfiguracionVisualModel
     }
 
     /**
+     * Genera el diseño general y el índice común cuando el usuario aplica la plantilla.
+     * No crea botones, documentos ni noticias porque son propios de cada municipio.
+     */
+    public function aplicarPlantillaInicial($codMun, $modo = 'sobrescribir', $participacion = [])
+    {
+        $soloVacios = $modo === 'soloVacios';
+
+        // 1. En modo "rellenar vacíos" conservamos un diseño ya guardado.
+        $stmtConfig = $this->conn->prepare(
+            "SELECT COUNT(*) FROM pou.configuracion_visual WHERE cod_mun = :cod_mun"
+        );
+        $stmtConfig->execute([':cod_mun' => $codMun]);
+        $tieneConfiguracion = (int)$stmtConfig->fetchColumn() > 0;
+
+        if (!$soloVacios || !$tieneConfiguracion) {
+            $configuracion = obtenerConfiguracionInicialPortal($codMun);
+            if (isset($participacion['titulo1'], $participacion['descripcion1'])) {
+                // El paso 5 ya contiene la plantilla aplicada y las correcciones del usuario.
+                foreach ($configuracion['secciones_portal'] as &$seccion) {
+                    if ($seccion['id'] === 'participacion') {
+                        $seccion['titulo'] = $participacion['titulo1'];
+                        break;
+                    }
+                }
+                unset($seccion);
+                $configuracion['contenido_portal']['participacion']['introduccion'] = $participacion['descripcion1'];
+            }
+            $this->guardar($configuracion);
+        }
+
+        // 2. Los accesos se crean si faltan o se sustituyen al sobrescribir.
+        $stmtAccesos = $this->conn->prepare(
+            "SELECT COUNT(*) FROM pou.accesos_publicos WHERE cod_mun = :cod_mun"
+        );
+        $stmtAccesos->execute([':cod_mun' => $codMun]);
+        $tieneAccesos = (int)$stmtAccesos->fetchColumn() > 0;
+
+        if (!$soloVacios || !$tieneAccesos) {
+            $this->guardarAccesos($codMun, obtenerAccesosInicialesPortal());
+        }
+    }
+
+    /**
      * Obtiene los accesos rápidos ordenados.
      */
     public function obtenerAccesos($codMun, $soloVisibles = false)
@@ -433,7 +476,7 @@ class ConfiguracionVisualModel
             return $valor;
         }
 
-        if ($claveActual === 'icono' || str_ends_with($claveActual, '_icono')) {
+        if ($claveActual === 'icono' || substr($claveActual, -6) === '_icono') {
             return $this->normalizarIcono($valor);
         }
 

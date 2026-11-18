@@ -55,49 +55,6 @@ require_once __DIR__ . '/../../modelo/ConfiguracionVisualModel.php';
 $controller = new PanelGestionController($conn);
 $municipioModel = new MunicipioModel($conn);
 
-/**
- * Genera el diseño general y el índice común cuando el usuario aplica la plantilla.
- * No crea botones, documentos ni noticias porque son propios de cada municipio.
- */
-function aplicarPlantillaPortalInicial($conn, $codMun, $modo = 'sobrescribir', $participacion = [])
-{
-    $modelo = new ConfiguracionVisualModel($conn);
-    $soloVacios = $modo === 'soloVacios';
-
-    // 1. En modo "rellenar vacíos" conservamos un diseño ya guardado.
-    $stmtConfig = $conn->prepare(
-        "SELECT COUNT(*) FROM pou.configuracion_visual WHERE cod_mun = :cod_mun"
-    );
-    $stmtConfig->execute([':cod_mun' => $codMun]);
-    $tieneConfiguracion = (int)$stmtConfig->fetchColumn() > 0;
-
-    if (!$soloVacios || !$tieneConfiguracion) {
-        $configuracion = obtenerConfiguracionInicialPortal($codMun);
-        if (isset($participacion['titulo1'], $participacion['descripcion1'])) {
-            // El paso 5 ya contiene la plantilla aplicada y las correcciones del usuario.
-            foreach ($configuracion['secciones_portal'] as &$seccion) {
-                if ($seccion['id'] === 'participacion') {
-                    $seccion['titulo'] = $participacion['titulo1'];
-                    break;
-                }
-            }
-            unset($seccion);
-            $configuracion['contenido_portal']['participacion']['introduccion'] = $participacion['descripcion1'];
-        }
-        $modelo->guardar($configuracion);
-    }
-
-    // 2. Los accesos se crean si faltan o se sustituyen al sobrescribir.
-    $stmtAccesos = $conn->prepare(
-        "SELECT COUNT(*) FROM pou.accesos_publicos WHERE cod_mun = :cod_mun"
-    );
-    $stmtAccesos->execute([':cod_mun' => $codMun]);
-    $tieneAccesos = (int)$stmtAccesos->fetchColumn() > 0;
-
-    if (!$soloVacios || !$tieneAccesos) {
-        $modelo->guardarAccesos($codMun, obtenerAccesosInicialesPortal());
-    }
-}
 
 try {
     // ==============================================
@@ -229,6 +186,15 @@ try {
         exit;
     }
 
+    // La plantilla es opcional y solo se acepta en los dos modos del asistente.
+    $modoPlantilla = null;
+    if (in_array($modo, ['crear', 'editar'], true) && !empty($_POST['aplicar_plantilla_portal'])) {
+        $modoPlantilla = $_POST['plantilla_portal_modo'] ?? 'sobrescribir';
+        if (!in_array($modoPlantilla, ['soloVacios', 'sobrescribir'], true)) {
+            throw new Exception('El modo de plantilla no es válido.');
+        }
+    }
+
     // ==============================================
     // CREAR MUNICIPIO COMPLETO (TODOS LOS PASOS)
     // ==============================================
@@ -244,12 +210,9 @@ try {
         }
 
         $datos['paso1']['usuario_id'] = $usuario_id;
-        $resultado = $controller->crearMunicipioCompleto($datos);
+        $resultado = $controller->crearMunicipioCompleto($datos, $modoPlantilla);
 
         if ($resultado === true) {
-            if (!empty($_POST['aplicar_plantilla_portal'])) {
-                aplicarPlantillaPortalInicial($conn, $datos['paso1']['cod_mun'], $_POST['plantilla_portal_modo'] ?? 'sobrescribir', $datos['paso5'] ?? []);
-            }
             echo json_encode(['success' => true, 'message' => 'Municipio creado con éxito']);
         } else {
             echo json_encode(['success' => false, 'message' => $resultado]);
@@ -284,16 +247,12 @@ try {
             }
         }
 
-        if (empty($pasosModificados)) {
+        if (empty($pasosModificados) && $modoPlantilla === null) {
             echo json_encode(['success' => false, 'message' => 'No hay pasos modificados.']);
             exit;
         }
 
-        $exito = $controller->editarMunicipio($pasosModificados, $datos, $cod_mun);
-
-        if ($exito && !empty($_POST['aplicar_plantilla_portal'])) {
-            aplicarPlantillaPortalInicial($conn, $cod_mun, $_POST['plantilla_portal_modo'] ?? 'sobrescribir', $datos['paso5'] ?? []);
-        }
+        $exito = $controller->editarMunicipio($pasosModificados, $datos, $cod_mun, $modoPlantilla);
 
         echo json_encode([
             'success' => $exito,
