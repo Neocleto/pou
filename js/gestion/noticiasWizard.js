@@ -14,7 +14,10 @@ let offcanvasNoticia = null;
 
 function initNoticiasWizard() {
   const elOff = document.getElementById("offcanvasNoticia");
-  if (elOff) offcanvasNoticia = bootstrap.Offcanvas.getOrCreateInstance(elOff);
+  if (elOff) {
+    document.querySelector("#modalWizard .modal-content").appendChild(elOff);
+    offcanvasNoticia = bootstrap.Offcanvas.getOrCreateInstance(elOff);
+  }
 
   // Por defecto: el formulario NO cuenta para el wizard
   setFormNoticiaHabilitado(false);
@@ -202,7 +205,7 @@ function renderTablaNoticias(noticias) {
         ${noticias.map(n => {
           const fechaES = formatearFechaES(n.fecha_publicacion);
           const sortKey = parseFechaES_toSortable(n.fecha_publicacion);
-          const activo = String(n.activa) === "1" || n.activa === 1 || n.activa === true;
+          const activo = ["1", "t", "true"].includes(String(n.activa).toLowerCase());
           const json = encodeURIComponent(JSON.stringify(n));
 
           return `
@@ -301,10 +304,11 @@ function setFormNoticia({ modo, noticia }) {
   document.getElementById("tituloOffcanvasNoticia").textContent =
     (modo === "editar") ? "Editar noticia" : "Nueva noticia";
 
+  // Primero reiniciamos; hacerlo después borraría el ID y crearía otra noticia.
+  form.reset();
   document.getElementById("cod_mun_noticia").value = obtenerCodMunActual() || "";
   document.getElementById("id_noticia").value = (noticia?.id || "");
-
-  form.reset();
+  actualizarEditorEnriquecido("resumen", "");
 
   // Imagen preview
   const prev = document.getElementById("imagenActualPreview");
@@ -322,10 +326,10 @@ function setFormNoticia({ modo, noticia }) {
   if (modo === "editar" && noticia) {
     document.getElementById("titulo_noticia").value = noticia.titulo || "";
     document.getElementById("fecha_publicacion").value = String(noticia.fecha_publicacion || "").slice(0, 10);
-    document.getElementById("resumen").value = noticia.resumen || "";
+    actualizarEditorEnriquecido("resumen", noticia.resumen || "");
     document.getElementById("enlace_detalle").value = noticia.enlace_detalle || "";
     document.getElementById("activa").checked =
-      (String(noticia.activa) === "1" || noticia.activa === 1 || noticia.activa === true);
+      (["1", "t", "true"].includes(String(noticia.activa).toLowerCase()));
 
     if (noticia.imagen_url && prev && name) {
       prev.classList.remove("d-none");

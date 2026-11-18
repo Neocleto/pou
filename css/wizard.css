@@ -704,6 +704,8 @@
 ========================================================= */
 #modalWizard .modal-content {
   position: relative;
+  /* Ancla los paneles fijos al modal, también al cambiar el tamaño de pantalla. */
+  transform: translateZ(0);
   overflow: visible;
 }
 
@@ -755,12 +757,12 @@
    - Sin recorte
 ========================================================= */
 #modalWizard .offcanvas-participacion {
-  position: absolute;
+  position: fixed;
   right: 12px;
-  top: 44px;
-  bottom: auto;
+  top: 60px;
+  bottom: 8px;
   height: auto;
-  width: min(560px, 94vw);
+  width: min(620px, calc(100% - 24px));
   background: #fff;
 
   border-radius: 14px;
@@ -792,8 +794,8 @@
     left: 8px;
     right: 8px;
     width: auto;
-    top: 40px;
-    bottom: 50px;
+    top: 60px;
+    bottom: 8px;
     border-radius: 12px;
   }
 }
@@ -836,13 +838,13 @@ body.modal-open {
 
 /* Offcanvas noticias */
 #modalWizard .offcanvas-noticias {
-  position: absolute;
+  position: fixed;
   right: 12px;
-  top: -175px;
-  bottom: 12px;
-  height: 695px;
+  top: 60px;
+  bottom: 8px;
+  height: auto;
 
-  width: min(620px, 94vw);
+  width: min(620px, calc(100% - 24px));
   background: #fff;
 
   border-radius: 14px;
@@ -868,7 +870,7 @@ body.modal-open {
 }
 
 #modalWizard .offcanvas-noticias .offcanvas-body {
-  height: calc(100% - 64px);
+  min-height: 0;
   overflow-y: auto;
   padding-bottom: 1rem;
 }
@@ -878,7 +880,7 @@ body.modal-open {
   #modalWizard .offcanvas-noticias {
     left: 8px;
     right: 8px;
-    top: 8px;
+    top: 60px;
     bottom: 8px;
     width: auto;
     height: auto; /* coherente en móvil */
@@ -1236,5 +1238,38 @@ body.modal-open {
 
   #modalWizard .wizard-section {
     padding: 13px 16px;
+  }
+}
+
+/* Inspectores anclados al modal: el fondo queda quieto y solo desliza el formulario. */
+#modalWizard.locked .modal-body {
+  overflow: hidden;
+}
+
+#modalWizard .offcanvas-participacion .offcanvas-body,
+#modalWizard .offcanvas-noticias .offcanvas-body {
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+/* La ayuda va debajo del interruptor y no compite con su etiqueta. */
+#offcanvasBotonParticipacion .recurso-visible .form-check-label {
+  flex: none;
+  white-space: nowrap;
+}
+
+#offcanvasBotonParticipacion .recurso-visible .form-check-input {
+  flex-shrink: 0;
+}
+
+#offcanvasBotonParticipacion .icono-boton-preview {
+  min-width: 44px;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+@media (max-width: 576px) {
+  #offcanvasBotonParticipacion .recurso-visible .form-check-label {
+    font-size: 0.85rem;
   }
 }

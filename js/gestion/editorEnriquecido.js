@@ -50,6 +50,11 @@ function inicializarEditoresEnriquecidos(contenedor) {
                 'undo', 'redo'
             ]
         }).then(function (editor) {
+            // El usuario puede cerrar y reabrir el asistente mientras carga el editor.
+            if (!textarea.isConnected) {
+                editor.destroy();
+                return;
+            }
             window.POU_EDITORES_ENRIQUECIDOS.set(textarea, editor);
 
             // Conservamos cualquier valor escrito antes de que cargase CKEditor.
@@ -87,6 +92,16 @@ function actualizarEditorEnriquecido(campo, valor) {
     const editor = window.POU_EDITORES_ENRIQUECIDOS.get(textarea);
     if (editor && editor.getData() !== nuevoValor) {
         editor.setData(nuevoValor);
+    }
+}
+
+/** Libera los editores de un formulario antes de reemplazar su HTML. */
+async function destruirEditoresEnriquecidos(contenedor) {
+    for (const [textarea, editor] of window.POU_EDITORES_ENRIQUECIDOS) {
+        if (contenedor.contains(textarea) || !textarea.isConnected) {
+            window.POU_EDITORES_ENRIQUECIDOS.delete(textarea);
+            await editor.destroy();
+        }
     }
 }
 

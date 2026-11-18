@@ -59,7 +59,7 @@ $municipioModel = new MunicipioModel($conn);
  * Genera el diseño general y el índice común cuando el usuario aplica la plantilla.
  * No crea botones, documentos ni noticias porque son propios de cada municipio.
  */
-function aplicarPlantillaPortalInicial($conn, $codMun, $modo = 'sobrescribir')
+function aplicarPlantillaPortalInicial($conn, $codMun, $modo = 'sobrescribir', $participacion = [])
 {
     $modelo = new ConfiguracionVisualModel($conn);
     $soloVacios = $modo === 'soloVacios';
@@ -72,7 +72,19 @@ function aplicarPlantillaPortalInicial($conn, $codMun, $modo = 'sobrescribir')
     $tieneConfiguracion = (int)$stmtConfig->fetchColumn() > 0;
 
     if (!$soloVacios || !$tieneConfiguracion) {
-        $modelo->guardar(obtenerConfiguracionInicialPortal($codMun));
+        $configuracion = obtenerConfiguracionInicialPortal($codMun);
+        if (isset($participacion['titulo1'], $participacion['descripcion1'])) {
+            // El paso 5 ya contiene la plantilla aplicada y las correcciones del usuario.
+            foreach ($configuracion['secciones_portal'] as &$seccion) {
+                if ($seccion['id'] === 'participacion') {
+                    $seccion['titulo'] = $participacion['titulo1'];
+                    break;
+                }
+            }
+            unset($seccion);
+            $configuracion['contenido_portal']['participacion']['introduccion'] = $participacion['descripcion1'];
+        }
+        $modelo->guardar($configuracion);
     }
 
     // 2. Los accesos se crean si faltan o se sustituyen al sobrescribir.
@@ -236,7 +248,7 @@ try {
 
         if ($resultado === true) {
             if (!empty($_POST['aplicar_plantilla_portal'])) {
-                aplicarPlantillaPortalInicial($conn, $datos['paso1']['cod_mun'], $_POST['plantilla_portal_modo'] ?? 'sobrescribir');
+                aplicarPlantillaPortalInicial($conn, $datos['paso1']['cod_mun'], $_POST['plantilla_portal_modo'] ?? 'sobrescribir', $datos['paso5'] ?? []);
             }
             echo json_encode(['success' => true, 'message' => 'Municipio creado con éxito']);
         } else {
@@ -280,7 +292,7 @@ try {
         $exito = $controller->editarMunicipio($pasosModificados, $datos, $cod_mun);
 
         if ($exito && !empty($_POST['aplicar_plantilla_portal'])) {
-            aplicarPlantillaPortalInicial($conn, $cod_mun, $_POST['plantilla_portal_modo'] ?? 'sobrescribir');
+            aplicarPlantillaPortalInicial($conn, $cod_mun, $_POST['plantilla_portal_modo'] ?? 'sobrescribir', $datos['paso5'] ?? []);
         }
 
         echo json_encode([

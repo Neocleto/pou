@@ -289,7 +289,12 @@ async function cargarTodosLosPasos(callback) {
         7: "php/gestion/formularios/formulario_faqs.php"
     };
 
-    // Limpia el contenido anterior del wizard (por si lo abres otra vez)
+    // Al reabrir retiramos los editores y los inspectores de la sesión anterior.
+    await destruirEditoresEnriquecidos(document.getElementById("modalWizard"));
+    document.querySelectorAll("#modalWizard .modal-content > .offcanvas").forEach(function (panel) {
+        bootstrap.Offcanvas.getInstance(panel)?.dispose();
+        panel.remove();
+    });
     content.innerHTML = "";
 
     // Muestra el spinner de carga
@@ -1201,14 +1206,9 @@ async function editarMunicipio(codMun) {
                     if (data5.success && data5.data) {
                         const part = data5.data;
 
-                        // El texto público es común para todos los municipios.
-                        // Conservamos valores en la tabla únicamente por compatibilidad.
-                        document.getElementById("titulo1").value = part.titulo1 || "Participa en el POU";
-                        document.getElementById("titulo2").value = part.titulo2 || "Encuestas y formularios";
-                        document.getElementById("descripcion1").value = part.descripcion1
-                            || "El POU se construye también con la participación de la ciudadanía.";
-                        document.getElementById("descripcion2").value = part.descripcion2
-                            || "Consulta los formularios y recursos disponibles para participar.";
+                        // Son los mismos textos que usa el configurador y el portal público.
+                        document.getElementById("titulo1").value = part.titulo1 ?? "";
+                        actualizarEditorEnriquecido("descripcion1", part.descripcion1 ?? "");
 
                         guardarDatosPaso(5);
                         estadoInicialWizard[5] = { ...datosWizard[5] };

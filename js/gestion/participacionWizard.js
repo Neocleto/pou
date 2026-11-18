@@ -59,6 +59,8 @@ function limpiarYDesbloquearPanelParticipacion() {
   const n = document.getElementById("archivoActualNombre");
   if (n) n.textContent = "";
 
+  actualizarVistaIconoParticipacion();
+
   const contador = document.getElementById("contadorTextoBoton");
   if (contador) contador.textContent = "0/50";
 }
@@ -111,6 +113,9 @@ function inicializarPasoParticipacion() {
 
   const hidden = document.getElementById("cod_mun_participacion");
   if (hidden) hidden.value = codMun;
+
+  const panel = document.getElementById("offcanvasBotonParticipacion");
+  if (panel) document.querySelector("#modalWizard .modal-content").appendChild(panel);
 
   // Enganchar listeners UNA sola vez por carga de página
   if (!participacionUIBound) {
@@ -207,6 +212,16 @@ function bindParticipacionUI() {
       const c = document.getElementById("contadorTextoBoton");
       if (c) c.textContent = `${v.length}/50`;
     }
+  });
+
+  // La vista previa cambia al elegir otro icono o color.
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "icono_boton_modal" || e.target.id === "color_boton_modal") {
+      actualizarVistaIconoParticipacion();
+    }
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.id === "color_boton_modal") actualizarVistaIconoParticipacion();
   });
 
   // Botón cancelar del panel
@@ -361,9 +376,12 @@ function setPanelMode({ modo, boton }) {
       if (texto) texto.value = boton.texto_boton || "";
       if (archivoUrlActual) archivoUrlActual.value = boton.archivo_url || "";
       if (icono) {
-        icono.value = boton.icono === null || boton.icono === undefined
-          ? "file-earmark-arrow-down"
-          : boton.icono;
+        const seleccionado = boton.icono ?? "file-earmark-arrow-down";
+        // Conservamos también un icono existente que no figure en el catálogo.
+        if (![...icono.options].some(opcion => opcion.value === seleccionado)) {
+          icono.add(new Option(seleccionado, seleccionado));
+        }
+        icono.value = seleccionado;
       }
       if (color) {
         color.value = boton.color || "#540000";
@@ -378,6 +396,19 @@ function setPanelMode({ modo, boton }) {
       preview?.classList.remove("d-none");
     }
   }
+  actualizarVistaIconoParticipacion();
+}
+
+/** Muestra el mismo icono y color que tendrá el botón público. */
+function actualizarVistaIconoParticipacion() {
+  const selector = document.getElementById("icono_boton_modal");
+  const vista = document.getElementById("vistaIconoBoton");
+  const icono = document.getElementById("icono_boton_preview");
+  if (!selector || !vista || !icono) return;
+  const nombre = selector.value;
+  icono.className = /^[a-z0-9-]+$/.test(nombre) ? "bi bi-" + nombre : "bi bi-slash-circle";
+  vista.title = selector.selectedOptions[0]?.textContent || "Sin icono";
+  vista.style.color = document.getElementById("color_boton_modal").value;
 }
 
 /**

@@ -44,16 +44,14 @@ const PLANTILLA_WIZARD = {
     }
   },
   paso5: {
-    // Estos textos se guardan para mantener compatibilidad con la tabla antigua.
+    // Título y texto públicos de la sección de participación.
     titulo1: 'Participación ciudadana en el POU',
     descripcion1: `
       <p>La implicación de los ciudadanos en la Participación es un pilar esencial en la elaboración del <strong>Plan de Ordenación Urbana (POU)</strong>. Este enfoque se centra en combinar las vivencias y perspectivas de la comunidad, con la experiencia técnica y administrativa del equipo del <strong>Servicio de Arquitectura y Planeamiento de la Diputación de Málaga</strong>, encargado de su redacción.</p>
       <p>El propósito es lograr que este instrumento de ordenación urbanística se fundamente en un <strong>amplio consenso</strong> y aborde efectivamente las <strong>necesidades concretas del municipio</strong>.</p>
       <p>A través de este <strong>proceso colaborativo</strong>, se buscan soluciones que no solo sean técnicamente sólidas, sino que también alcancen un alto grado de aceptación entre los habitantes del municipio.</p>
       <p>Este método de participación garantiza que los planes reflejen una <strong>visión compartida</strong> y sean más efectivos en su <strong>implementación y sostenibilidad</strong>.</p>
-    `.trim(),
-    titulo2: 'Encuestas y formularios',
-    descripcion2: 'Consulta los formularios y recursos disponibles para participar.'
+    `.trim()
   },
   // Las primeras nueve preguntas del documento oficial del POU (13/11/2026).
   // Son textos municipales y no modifican la biblioteca comun de FAQs.
@@ -283,9 +281,7 @@ async function aplicarPlantilla(modo = 'soloVacios') {
 
   // Paso 5 (participación)
   escribirCampoTexto(document.getElementById('titulo1'), PLANTILLA_WIZARD.paso5.titulo1, modo);
-  escribirCampoTexto(document.getElementById('titulo2'), PLANTILLA_WIZARD.paso5.titulo2, modo);
   escribirCampoTexto(document.getElementById('descripcion1'), PLANTILLA_WIZARD.paso5.descripcion1, modo);
-  escribirCampoTexto(document.getElementById('descripcion2'), PLANTILLA_WIZARD.paso5.descripcion2, modo);
   if (typeof guardarDatosPaso === 'function') guardarDatosPaso(5);
 
   // Paso 7 (FAQs reutilizables)

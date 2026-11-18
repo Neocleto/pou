@@ -2,6 +2,17 @@
 // Acceso de gestión: convenio vigente y proyecto correcto.
 require_once __DIR__ . '/../../login/permisos_proyecto.php';
 exigirAccesoProyecto(false, false);
+require_once __DIR__ . '/../../includes/valores_portal.php';
+$contenidoInicialParticipacion = obtenerContenidoInicialPortal()['participacion'];
+$tituloInicialParticipacion = '';
+foreach (obtenerSeccionesInicialesPortal() as $seccionInicialParticipacion) {
+    if ($seccionInicialParticipacion['id'] === 'participacion') {
+        $tituloInicialParticipacion = $seccionInicialParticipacion['titulo'];
+        break;
+    }
+}
+$iconosParticipacion = obtenerIconosPortal();
+usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]); });
 ?>
 <div class="wizard-section">
 
@@ -15,40 +26,22 @@ exigirAccesoProyecto(false, false);
     </div>
   </div>
 
-  <!-- CONTENIDO PÚBLICO NORMALIZADO -->
-  <form id="formParticipacion">
+  <!-- TEXTOS PÚBLICOS: SE GUARDAN CON EL BOTÓN GENERAL DEL ASISTENTE -->
+  <form id="formParticipacion" class="mb-4">
     <input type="hidden" name="cod_mun" id="cod_mun_participacion">
-
-    <!--
-      Estos valores se mantienen por compatibilidad con la tabla existente.
-      El portal público usa un texto institucional normalizado para todos los
-      municipios, por lo que el usuario ya no tiene que redactarlo a mano.
-    -->
-    <input type="hidden" id="titulo1" name="titulo1" value="Participa en el POU">
-    <textarea class="d-none" id="descripcion1" name="descripcion1">El POU se construye también con la participación de la ciudadanía.</textarea>
-    <input type="hidden" id="titulo2" name="titulo2" value="Encuestas y formularios">
-    <textarea class="d-none" id="descripcion2" name="descripcion2">Consulta los formularios y recursos disponibles para participar.</textarea>
+    <div class="mb-3">
+      <label for="titulo1" class="form-label fw-bold">Título de la sección</label>
+      <input type="text" class="form-control" id="titulo1" name="titulo1" maxlength="120" required
+             value="<?= htmlspecialchars($tituloInicialParticipacion, ENT_QUOTES, 'UTF-8') ?>">
+    </div>
+    <div class="mb-3">
+      <label for="descripcion1" class="form-label fw-bold">Texto de participación</label>
+      <textarea class="form-control" id="descripcion1" name="descripcion1" rows="6" data-rich-editor="1"><?= htmlspecialchars($contenidoInicialParticipacion['introduccion'], ENT_QUOTES, 'UTF-8') ?></textarea>
+      <div class="form-text">Máximo 6000 caracteres. Pulsa Guardar para aplicar los cambios al portal y al configurador.</div>
+    </div>
   </form>
 
-  <div class="alert alert-primary-subtle border d-flex align-items-start justify-content-between gap-3 flex-wrap mb-4">
-    <div class="d-flex align-items-start gap-2">
-      <i class="bi bi-info-circle text-primary mt-1"></i>
-      <div>
-        <strong>Texto público normalizado</strong>
-        <div class="small text-muted mt-1">
-          La explicación de participación es común para todos los municipios.
-          Desde el configurador puedes cambiar el título, icono y color del bloque.
-        </div>
-      </div>
-    </div>
-
-    <button type="button" class="btn btn-outline-primary btn-sm" id="btnAbrirConfiguradorParticipacion">
-      <i class="bi bi-palette me-1"></i>Configurar título y diseño
-    </button>
-  </div>
-
   <!-- BOTONES -->
-  <br>
   <div class="p-3 bg-light rounded-4 border">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
       <div class="d-flex align-items-center gap-2">
@@ -123,17 +116,17 @@ exigirAccesoProyecto(false, false);
         <div class="row g-3 mb-3">
           <div class="col-8">
             <label for="icono_boton_modal" class="form-label fw-bold mb-1">Icono</label>
-            <select class="form-select" id="icono_boton_modal">
-              <option value="">Sin icono</option>
-              <option value="file-earmark-arrow-down">Documento para descargar</option>
-              <option value="download">Descarga</option>
-              <option value="clipboard-check">Formulario o encuesta</option>
-              <option value="people">Participación ciudadana</option>
-              <option value="chat-dots">Consulta o comentario</option>
-              <option value="calendar-event">Jornada o evento</option>
-              <option value="info-circle">Información</option>
-              <option value="link-45deg">Enlace</option>
-            </select>
+            <div class="input-group">
+              <span class="input-group-text icono-boton-preview" id="vistaIconoBoton" aria-label="Icono seleccionado">
+                <i id="icono_boton_preview" class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>
+              </span>
+              <select class="form-select" id="icono_boton_modal">
+                <option value="">Sin icono</option>
+                <?php foreach ($iconosParticipacion as $iconoParticipacion): ?>
+                <option value="<?= htmlspecialchars($iconoParticipacion[0], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($iconoParticipacion[1], ENT_QUOTES, 'UTF-8') ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
             <div class="form-text small mt-1">Elige un icono reconocible para la ciudadanía.</div>
           </div>
 
@@ -144,11 +137,13 @@ exigirAccesoProyecto(false, false);
           </div>
         </div>
 
-        <div class="form-check form-switch mb-3">
-          <input class="form-check-input" type="checkbox" id="visible_boton_modal" checked>
-          <label class="form-check-label" for="visible_boton_modal">
-            Mostrar este recurso en la página pública
-          </label>
+        <div class="mb-3">
+          <div class="form-check form-switch recurso-visible">
+            <input class="form-check-input" type="checkbox" id="visible_boton_modal" checked>
+            <label class="form-check-label" for="visible_boton_modal">
+              Mostrar recurso en la página pública
+            </label>
+          </div>
           <div class="form-text small mt-1">
             Puedes ocultarlo temporalmente sin eliminar el archivo ni su configuración.
           </div>
