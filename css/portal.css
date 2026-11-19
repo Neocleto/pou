@@ -1466,6 +1466,10 @@ body.portal-page {
     font-size: .94rem;
 }
 
+.portal-page .portal-phase-guide__item p + p {
+    margin-top: .625rem;
+}
+
 /* 14. Los puntos de ruptura reorganizan contenido, sin recortar textos ni imágenes. */
 @media (max-width:1450px)  {
 
