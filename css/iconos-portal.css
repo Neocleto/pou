@@ -1,8 +1,6 @@
 /* Los iconos conservan sus dibujos originales y heredan el color del botón o bloque.
    Esta hoja se comparte entre el portal y el configurador. */
 .bi.bi-pou-fases::before,
-.bi.bi-pou-encuesta-infantil::before,
-.bi.bi-pou-encuesta-participacion::before,
 .bi.bi-pou-manos::before,
 .bi.bi-pou-documentos::before,
 .bi.bi-pou-noticias::before,
@@ -23,5 +21,17 @@
 .bi.bi-pou-noticias { --pou-icono-original: url("../images/iconos/noticias.png?v=pou-iconos-20261112-2"); }
 .bi.bi-pou-buzon { --pou-icono-original: url("../images/iconos/original-buzon.svg"); }
 .bi.bi-pou-fases { --pou-icono-original: url("../images/iconos/fases-guia.svg"); }
-.bi.bi-pou-encuesta-infantil { --pou-icono-original: url("../images/iconos/encuesta-infantil.png?v=pou-iconos-20261112-2"); }
-.bi.bi-pou-encuesta-participacion { --pou-icono-original: url("../images/iconos/encuesta-participacion.png?v=pou-iconos-20261112-2"); }
+
+/* El dibujo tiene fondo transparente y toma el color del icono del portal. */
+.bi.bi-pou-encuesta-infantil::before,
+.bi.bi-pou-encuesta-participacion::before {
+    content: "";
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -.125em;
+    background-color: currentColor;
+    mask: var(--icono-encuesta) center / contain no-repeat;
+}
+.bi.bi-pou-encuesta-infantil { --icono-encuesta: url("../images/iconos/encuesta-infantil-contorno.svg"); }
+.bi.bi-pou-encuesta-participacion { --icono-encuesta: url("../images/iconos/encuesta-participacion-contorno.svg"); }

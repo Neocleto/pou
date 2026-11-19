@@ -640,6 +640,9 @@ document.getElementById("btnGuardar")?.addEventListener("click", () => {
         .then(data => {
             if (data.success) {
                 municipioGuardado = true; // Marcamos que ya se ha guardado
+                if (plantillaPendiente) {
+                    cargarBotonesParticipacion(datosWizard[1].cod_mun);
+                }
 
                 // Mostramos mensaje de éxito
                 if (!modoEdicion) {
@@ -1229,6 +1232,9 @@ function guardarMunicipioAntesDeSubir(callback, opciones = {}) {
             if (data.success) {
                 municipioGuardado = true;
                 modoEdicion = true;
+                if (plantillaPendiente) {
+                    cargarBotonesParticipacion(datosWizard[1].cod_mun);
+                }
 
                 refrescarFotoInicial();
                 
@@ -1347,9 +1353,8 @@ function validarPaso(step) {
         return false;
     }
 
-    // En Participación solo se exige al menos un recurso publicado.
-    if (parseInt(step) === 5) {
-        // Validar que al menos haya un boton
+    // Al guardar la plantilla se crearán los botones de participación.
+    if (Number(step) === 5 && !plantillaPendiente) {
         if (typeof participacionTieneBotones === "function" && !participacionTieneBotones()) {
             Swal.fire({
                 title: "Botón requerido",

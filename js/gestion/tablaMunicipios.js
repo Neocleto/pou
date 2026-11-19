@@ -315,7 +315,7 @@ function confirmarPublicarMunicipio(codMun, activo) {
                 const listaHtml = (result.pasosIncompletos && result.pasosIncompletos.length)
                     ? `
                         <ul class="mb-0" style="padding-left: 1.2rem; font-size:0.93rem; column-count: 1; column-gap: 1.5rem;">
-                            ${result.pasosIncompletos.map(p => `<li>${p}</li>`).join('')}
+                            ${result.pasosIncompletos.map(p => `<li>${escapeHtml(p)}</li>`).join('')}
                         </ul>
                       `
                     : '<span class="text-muted">No se han podido obtener los pasos pendientes.</span>';
@@ -416,7 +416,7 @@ function publicarMunicipio(codMun) {
             if (!data.success && data.code === 'VALIDACION_INCOMPLETA') {
                 const lista = data.pasosIncompletos && data.pasosIncompletos.length
                     ? '<ul class="text-start mb-0">' +
-                    data.pasosIncompletos.map(p => `<li>${p}</li>`).join('') +
+                    data.pasosIncompletos.map(p => `<li>${escapeHtml(p)}</li>`).join('') +
                     '</ul>'
                     : '';
 

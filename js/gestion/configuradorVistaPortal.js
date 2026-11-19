@@ -321,11 +321,13 @@ function actualizarBotonesParticipacionVistaPrevia(documento) {
         }
 
         elemento.style.setProperty('--resource-color', boton.color || estadoPortal.configuracion.color_primario);
-        elemento.style.display = boton.visible === false ? 'none' : '';
-        elemento.dataset.resourceVisible = boton.visible === false ? '0' : '1';
+        const visible = boton.documento_pendiente || boton.visible !== false;
+        elemento.style.display = visible ? '' : 'none';
+        elemento.dataset.resourceVisible = visible ? '1' : '0';
+        elemento.dataset.resourceSurvey = /^\s*encuesta\b/i.test(boton.texto_boton || '') ? '1' : '0';
 
         const texto = elemento.querySelector('[data-participation-button-text]');
-        let contenedorIcono = elemento.querySelector('.participation-resource-card__icon, .participation-resource__icon');
+        let contenedorIcono = elemento.querySelector('.participation-resource-card__icon');
 
         if (texto) {
             texto.textContent = boton.texto_boton || '';
@@ -344,24 +346,6 @@ function actualizarBotonesParticipacionVistaPrevia(documento) {
                 : '';
         }
     });
-
-    // Ajustamos la cuadrícula al número real de recursos visibles.
-    const contenedor = documento.querySelector('.participation-resources');
-
-    if (contenedor) {
-        const visibles = estadoPortal.botonesParticipacion.filter(function (boton) {
-            return boton.visible !== false;
-        }).length;
-        const claseCantidad = visibles <= 6 ? `resources-count-${visibles}` : 'resources-count-many';
-
-        Array.from(contenedor.classList).forEach(function (clase) {
-            if (clase.startsWith('resources-count-')) {
-                contenedor.classList.remove(clase);
-            }
-        });
-        contenedor.classList.add(claseCantidad);
-        contenedor.dataset.resourceCount = String(visibles);
-    }
 }
 
 /**

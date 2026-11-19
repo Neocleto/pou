@@ -285,7 +285,7 @@ if ($cod_mun !== '') {
     <script src="lib/Sortable.min.js"></script>
 
     <!-- Scripts del proyecto -->
-    <script src="js/login/verificacion_sesion.js?v=convenios_20261117"></script>
+    <script src="js/login/verificacion_sesion.js?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/js/login/verificacion_sesion.js') ?>"></script>
     <script src="js/gestion/utilidadesGestion.js?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/js/gestion/utilidadesGestion.js') ?>"></script>
     <script src="js/gestion/documentosWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 3) . '/js/gestion/documentosWizard.js') ?>"></script>
 

@@ -197,8 +197,14 @@ class PanelGestionController {
         // ======================================================
         $botones = $botonesModel->listarBotonesPorMunicipio($codMun);
 
-        if (empty($botones) || count($botones) === 0) {
+        if (!$botones) {
             $pasosIncompletos[] = "Paso 5 - Debe existir al menos un botón de participación";
+        }
+
+        foreach ($botones as $boton) {
+            if ($boton['documento_pendiente']) {
+                $pasosIncompletos[] = 'Paso 5 - Sube el documento de «' . $boton['texto_boton'] . '» antes de publicar.';
+            }
         }
 
         // ======================================================
@@ -305,7 +311,10 @@ class PanelGestionController {
                 $this->participacionModel->guardarParticipacion($participacion, $aplicarPlantilla);
             }
 
-            // Paso 5.1: Participación Botones al tener subida de documentos se gestiona desde acciones_participacion y participacionWizard.js
+            // Los botones iniciales se guardan junto con el municipio y la plantilla.
+            if ($aplicarPlantilla) {
+                $this->participacionBotonesModel->aplicarPlantilla($cod_mun);
+            }
 
             // Paso 6: Se gestiona desde accione_noticias y noticiasWizard.js (No se guardan con el boton GUARDAR generico sino con el suyo propio)
 
@@ -383,7 +392,12 @@ class PanelGestionController {
                 $this->participacionModel->guardarParticipacion($participacion, $aplicarPlantilla);
             }
 
-            // Paso 4 (Documentos), Paso 5.1 (Botones), Paso 6 (Noticias) no se gestionan con el GUARDAR generico
+            // Los botones iniciales se guardan junto con el municipio y la plantilla.
+            if ($aplicarPlantilla) {
+                $this->participacionBotonesModel->aplicarPlantilla($cod_mun);
+            }
+
+            // Los documentos y las noticias se guardan desde sus propios pasos.
 
             // Paso 7: actualizamos asignaciones y textos propios del municipio.
             if (in_array(7, $pasosModificados) && isset($datos['paso7']['faqs'])) {

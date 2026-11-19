@@ -7,6 +7,7 @@
 // ============================================================================
 
 require_once(__DIR__ . '/../db/conexion.php');
+require_once __DIR__ . '/../login/permisos_proyecto.php';
 require_once(__DIR__ . '/../includes/imagenes_municipio.php');
 
 class MunicipioModel
@@ -78,9 +79,12 @@ class MunicipioModel
             ':usuario_id' => $usuarioId
         ];
 
-        // Solo comparamos por correo cuando la sesión contiene uno válido.
-        // Así evitamos que un correo vacío coincida con municipios sin contacto.
-        if ($correoUsuario !== '') {
+        // Los superusuarios ven todos los municipios de esta aplicación.
+        if (esSuperusuarioProyecto($this->conn, $usuarioId)) {
+            $condiciones = ['TRUE'];
+            $parametros = [];
+        } elseif ($correoUsuario !== '') {
+            // También se conserva el acceso por correo de contacto o de gestión.
             $condiciones[] = "LOWER(COALESCE(correo_contacto, '')) = LOWER(:correo_usuario)";
             $condiciones[] = "LOWER(COALESCE(correo_contacto_gestor, '')) = LOWER(:correo_usuario)";
             $parametros[':correo_usuario'] = $correoUsuario;
@@ -114,7 +118,11 @@ class MunicipioModel
             ':usuario_id' => $usuarioId
         ];
 
-        if ($correoUsuario !== '') {
+        // Esta comprobación también cubre acciones AJAX, subidas y vistas previas.
+        if (esSuperusuarioProyecto($this->conn, $usuarioId)) {
+            $condiciones = ['TRUE'];
+            $parametros = [':cod_mun' => $codMun];
+        } elseif ($correoUsuario !== '') {
             $condiciones[] = "LOWER(COALESCE(correo_contacto, '')) = LOWER(:correo_usuario)";
             $condiciones[] = "LOWER(COALESCE(correo_contacto_gestor, '')) = LOWER(:correo_usuario)";
             $parametros[':correo_usuario'] = $correoUsuario;

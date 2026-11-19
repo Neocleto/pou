@@ -1,0 +1,25 @@
+/* Paleta compartida por el configurador y el asistente municipal. */
+.portal-color-field {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+}
+
+.portal-color-trigger {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    width: 44px; min-height: 39px; padding: 4px; border: 1px solid #e5ccce;
+    border-radius: 8px; background: white; color: #785255;
+}
+.portal-color-trigger > span { width: 21px; height: 26px; border-radius: 4px; background: var(--chosen-color); border: 1px solid #00000012; }
+.portal-color-trigger > i { font-size: .55rem; }
+.portal-color-trigger[aria-expanded=true] { outline: 2px solid #d2adb0; outline-offset: 2px; }
+.portal-color-palette { margin-top: 8px; padding: 12px; border: 1px solid #ecd8da; border-radius: 10px; background: #fff; box-shadow: 0 6px 20px #5321260c; }
+.portal-color-palette[hidden] { display: none; }
+.portal-color-palette__group + .portal-color-palette__group { margin-top: 12px; }
+.portal-color-palette__group > span { display: block; margin-bottom: 7px; color: #876467; font-size: .74rem; }
+.portal-color-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+.portal-color-swatch { display: grid; place-items: center; width: 27px; height: 27px; padding: 0; border: 1px solid #00000018; border-radius: 6px; background: var(--swatch-color); color: white; }
+.portal-color-swatch i { visibility: hidden; text-shadow: 0 1px 2px #000; }
+.portal-color-swatch[aria-pressed=true] i { visibility: visible; }
+.portal-color-swatch:focus-visible { outline: 2px solid #472629; outline-offset: 3px; }
+.portal-color-custom { display: flex; align-items: center; gap: 7px; margin-top: 13px; padding: 7px 0 0; border: 0; border-top: 1px solid #f1e8e9; width: 100%; color: #5a3437; background: white; font-size: .78rem; }

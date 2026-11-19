@@ -34,6 +34,34 @@ function obtenerPermisoProyecto($conexion, $usuarioId)
     return null;
 }
 
+/**
+ * El perfil se asigna en el esquema de cada aplicación.
+ * Se consulta en el servidor para que darlo o retirarlo tenga efecto en la siguiente petición.
+ */
+function esSuperusuarioProyecto($conexion, $usuarioId)
+{
+    if (!is_scalar($usuarioId) || !preg_match('/^[1-9][0-9]*$/D', (string)$usuarioId)) {
+        return false;
+    }
+
+    $tabla = strtolower(PROYECTO_ACCESO) . '.superusuarios';
+    $stmt = $conexion->prepare('SELECT to_regclass(:tabla)');
+    $stmt->execute([':tabla' => $tabla]);
+    if (!$stmt->fetchColumn()) {
+        // Hasta ejecutar el SQL, los usuarios mantienen su acceso habitual.
+        return false;
+    }
+
+    $stmt = $conexion->prepare("SELECT 1 FROM {$tabla} WHERE usuario_id = :usuario_id");
+    $stmt->execute([':usuario_id' => $usuarioId]);
+    if (!$stmt->fetchColumn()) {
+        return false;
+    }
+
+    // El perfil amplía los permisos únicamente mientras haya un convenio vigente.
+    return obtenerPermisoProyecto($conexion, $usuarioId) !== null;
+}
+
 /** Comprueba la sesión y vuelve a consultar el permiso en cada petición. */
 function validarSesionProyecto($comprobarExpiracion = true)
 {
@@ -60,6 +88,9 @@ function validarSesionProyecto($comprobarExpiracion = true)
             $permisosConsultados[(string)$usuarioId] = obtenerPermisoProyecto($conn, $usuarioId);
         }
         $permiso = $permisosConsultados[(string)$usuarioId];
+        if ($permiso !== null && esSuperusuarioProyecto($conn, $usuarioId)) {
+            $permiso = 'E';
+        }
     } catch (Throwable $error) {
         error_log('Acceso ' . PROYECTO_ACCESO . ': ' . $error->getMessage());
         return ['success' => false, 'status' => 'error', 'http' => 503,

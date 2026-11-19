@@ -52,8 +52,10 @@ function limpiarYDesbloquearPanelParticipacion() {
   const color = document.getElementById("color_boton_modal");
   const visible = document.getElementById("visible_boton_modal");
   if (icono) icono.value = "file-earmark-arrow-down";
-  if (color) color.value = "#540000";
+  if (color) color.value = color.defaultValue;
   if (visible) visible.checked = true;
+  actualizarMuestraColorPortal(color);
+  cerrarPaletasColorPortal();
 
   document.getElementById("archivoActualPreview")?.classList.add("d-none");
   const n = document.getElementById("archivoActualNombre");
@@ -124,7 +126,11 @@ function inicializarPasoParticipacion() {
   }
 
   // Cargar botones de participación del municipio actual
-  if (codMun) cargarBotonesParticipacion(codMun);
+  if (codMun) {
+    cargarBotonesParticipacion(codMun);
+  } else {
+    renderizarBotonesParticipacion([]);
+  }
 }
 
 //
@@ -171,9 +177,8 @@ function bindParticipacionUI() {
 
     if (btnDel) {
       const id = btnDel.dataset.id;
-      const url = btnDel.dataset.url;
       const codMunNow = getCodMunActual();
-      if (!id || !url || !codMunNow) return;
+      if (!id || !codMunNow) return;
       if (typeof Swal === "undefined") return;
 
       Swal.fire({
@@ -190,7 +195,7 @@ function bindParticipacionUI() {
         buttonsStyling: false,
       }).then((r) => {
         if (!r.isConfirmed) return;
-        eliminarBoton(id, url, codMunNow);
+        eliminarBoton(id, codMunNow);
       });
 
       return;
@@ -214,14 +219,25 @@ function bindParticipacionUI() {
     }
   });
 
-  // La vista previa cambia al elegir otro icono o color.
   document.addEventListener("change", (e) => {
+    // Al añadir el documento pendiente, proponemos mostrar el botón. Se puede desmarcar antes de guardar.
+    if (e.target.id === "archivo_boton_modal" && e.target.files.length) {
+      const id = document.getElementById("boton_id").value;
+      const boton = botonesParticipacionCargados.find(boton => String(boton.id) === id);
+      if (boton?.documento_pendiente) {
+        document.getElementById("visible_boton_modal").checked = true;
+      }
+    }
+
+    // La vista previa cambia al elegir otro icono o color.
     if (e.target.id === "icono_boton_modal" || e.target.id === "color_boton_modal") {
       actualizarVistaIconoParticipacion();
     }
   });
   document.addEventListener("input", (e) => {
-    if (e.target.id === "color_boton_modal") actualizarVistaIconoParticipacion();
+    if (e.target.id === "color_boton_modal" || e.target.id === "texto_color_boton_modal") {
+      actualizarVistaIconoParticipacion();
+    }
   });
 
   // Botón cancelar del panel
@@ -349,7 +365,7 @@ function setPanelMode({ modo, boton }) {
   if (archivoUrlActual) archivoUrlActual.value = "";
 
   if (icono) icono.value = "file-earmark-arrow-down";
-  if (color) color.value = "#540000";
+  if (color) color.value = color.defaultValue;
   if (visible) visible.checked = true;
 
   preview?.classList.add("d-none");
@@ -384,7 +400,7 @@ function setPanelMode({ modo, boton }) {
         icono.value = seleccionado;
       }
       if (color) {
-        color.value = boton.color || "#540000";
+        color.value = boton.color || color.defaultValue;
       }
       if (visible) {
         visible.checked = convertirBooleanoParticipacion(boton.visible, true);
@@ -392,10 +408,16 @@ function setPanelMode({ modo, boton }) {
 
       if (contador) contador.textContent = `${(texto.value || "").length}/50`;
 
-      if (previewNombre) previewNombre.textContent = "Archivo actual";
-      preview?.classList.remove("d-none");
+      if (boton.url_documento) {
+        if (previewNombre) previewNombre.textContent = boton.url_documento.split("/").pop();
+        preview?.classList.remove("d-none");
+      } else if (boton.documento_pendiente && ayuda) {
+        ayuda.textContent = "El botón estará deshabilitado hasta que subas su documento.";
+      }
     }
   }
+  actualizarMuestraColorPortal(color);
+  cerrarPaletasColorPortal();
   actualizarVistaIconoParticipacion();
 }
 
@@ -472,14 +494,16 @@ function renderizarBotonesParticipacion(botones) {
       <div class="list-group list-group-flush">
         ${botonesParticipacionCargados.map((b) => {
           const texto = escapeHtml(b.texto_boton || "");
-          const url = b.archivo_url || "";
+          const url = b.url_documento || "";
+          const pendiente = b.documento_pendiente;
           const icono = escapeHtml(
             b.icono === null || b.icono === undefined
               ? "file-earmark-arrow-down"
               : b.icono
           );
-          const color = escapeHtml(b.color || "#540000");
-          const visible = convertirBooleanoParticipacion(b.visible, true);
+          const color = escapeHtml(b.color || document.getElementById("color_boton_modal").defaultValue);
+          const visible = !pendiente && convertirBooleanoParticipacion(b.visible, true);
+          const estado = pendiente ? "Pendiente de subir el documento" : (visible ? "Visible en la página pública" : "Oculto temporalmente");
 
           return `
             <div class="list-group-item py-1 ${visible ? "" : "bg-light"}">
@@ -492,19 +516,19 @@ function renderizarBotonesParticipacion(botones) {
                   <div>
                     <div class="fw-semibold">${texto}</div>
                     <span class="small ${visible ? "text-success" : "text-muted"}">
-                      <i class="bi bi-${visible ? "eye" : "eye-slash"} me-1"></i>${visible ? "Visible en la página pública" : "Oculto temporalmente"}
+                      <i class="bi bi-${visible ? "eye" : "eye-slash"} me-1"></i>${estado}
                     </span>
                   </div>
                 </div>
 
                 <div class="btn-group" role="group" aria-label="Acciones">
-                  <button type="button" class="btn btn-outline-primary btn-sm btnVerBoton" data-url="${escapeHtml(url)}" title="Ver">
+                  <button type="button" class="btn btn-outline-primary btn-sm btnVerBoton" data-url="${escapeHtml(url)}" title="Ver archivo" ${url ? "" : "disabled"}>
                     <i class="bi bi-eye"></i>
                   </button>
                   <button type="button" class="btn btn-outline-secondary btn-sm btnEditarBoton" data-id="${b.id}" title="Editar">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button type="button" class="btn btn-outline-danger btn-sm btnEliminarBoton" data-id="${b.id}" data-url="${escapeHtml(url)}" title="Eliminar">
+                  <button type="button" class="btn btn-outline-danger btn-sm btnEliminarBoton" data-id="${b.id}" title="Eliminar">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -533,8 +557,12 @@ async function guardarOActualizarDesdePanel() {
   const archivo = document.getElementById("archivo_boton_modal")?.files?.[0] || null;
   const archivoActual = document.getElementById("archivo_url_actual")?.value || "";
   const icono = document.getElementById("icono_boton_modal")?.value ?? "file-earmark-arrow-down";
-  const color = document.getElementById("color_boton_modal")?.value || "#540000";
+  const color = document.getElementById("color_boton_modal").value;
   const visible = document.getElementById("visible_boton_modal")?.checked !== false;
+  const botonActual = botonesParticipacionCargados.find(function (boton) {
+    return String(boton.id) === id;
+  });
+  const tipoContenido = botonActual?.tipo_contenido || 'pdf';
 
   if (!codMun) {
     Swal?.fire?.("Faltan datos", "No se ha detectado el municipio (cod_mun).", "warning");
@@ -559,7 +587,7 @@ async function guardarOActualizarDesdePanel() {
   }
 
   if (!esEdicion && !archivo) {
-    Swal?.fire?.("Faltan datos", "Debes seleccionar un archivo para crear el botón.", "warning");
+    Swal?.fire?.("Falta el documento", "Selecciona el archivo antes de mostrar el botón.", "warning");
     return;
   }
 
@@ -580,10 +608,6 @@ async function guardarOActualizarDesdePanel() {
         buttonsStyling: false
       });
     } else {
-      const botonActual = botonesParticipacionCargados.find(function (boton) {
-        return String(boton.id) === String(id);
-      }) || {};
-
       await actualizarBotonEnBBDD(
         id,
         codMun,
@@ -592,8 +616,8 @@ async function guardarOActualizarDesdePanel() {
         icono,
         color,
         visible,
-        botonActual.tipo_contenido || 'pdf',
-        botonActual.formulario_id || ''
+        tipoContenido,
+        botonActual?.formulario_id || ''
       );
       Swal?.fire?.({
         icon: "success",
@@ -687,11 +711,11 @@ function actualizarBotonEnBBDD(
     });
 }
 
-function eliminarBoton(id, archivo_url, cod_mun) {
+function eliminarBoton(id, cod_mun) {
   const datos = new URLSearchParams();
   datos.append("action", "eliminarBotonParticipacion");
   datos.append("id", id);
-  datos.append("archivo_url", archivo_url);
+  datos.append("cod_mun", cod_mun);
 
   fetch("php/gestion/acciones/acciones_participacion.php", { method: "POST", body: datos })
     .then((res) => res.json())

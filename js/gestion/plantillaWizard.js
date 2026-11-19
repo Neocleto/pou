@@ -6,7 +6,7 @@ const PLANTILLA_WIZARD = {
   // Textos de Información de los documentos 1.1 y 1.2.
   paso2: {
     sinPlaneamiento: {
-      titulo: "PARA QUÉ SIRVE EL PLAN DE ORDENACIÓN URBANA",
+      titulo: "Para qué sirve el Plan de Ordenación Urbana",
       descripcion: `
         <p>Un POU es uno de los instrumentos de ordenación urbanística detallada que sirven para establecer las directrices y los objetivos de la planificación del suelo urbano, es decir, el suelo transformado por la edificación o la urbanización.</p>
         <p>Con la legislación anterior, estas determinaciones formaban parte de las Normas Subsidiarias (NNSS) o de los Planes Generales (PGOU) municipales, y ahora, la nueva normativa de aplicación en Andalucía, la denominada LISTA (Ley de Impulso para la Sostenibilidad del Territorio de Andalucía) posibilita la división de la ordenación en dos instrumentos, en función de dos niveles de ordenación, general y detallada.</p>
@@ -16,7 +16,7 @@ const PLANTILLA_WIZARD = {
       `.trim()
     },
     conPlaneamiento: {
-      titulo: "¿POR QUÉ ES NECESARIO UN NUEVO PLAN DE ORDENACIÓN URBANA?",
+      titulo: "¿Por qué es necesario un nuevo Plan de Ordenación Urbana?",
       descripcion: `
         <p>Un POU es uno de los instrumentos de ordenación urbanística detallada que sirven para establecer las directrices y los objetivos de la planificación del suelo urbano, es decir, el suelo transformado por la edificación o la urbanización.</p>
         <p>Con la legislación anterior, estas determinaciones formaban parte de las Normas Subsidiarias (NNSS) o de los Planes Generales (PGOU) municipales, y ahora, la nueva normativa de aplicación en Andalucía, la denominada LISTA (Ley de Impulso para la Sostenibilidad del Territorio de Andalucía) posibilita la división de la ordenación en dos instrumentos, en función de dos niveles de ordenación, general y detallada.</p>
@@ -167,7 +167,7 @@ document.getElementById('btnCargarPlantilla')?.addEventListener('click', async f
 
   const resultado = await Swal.fire({
     title: '¿Este municipio tiene planeamiento vigente?',
-    text: 'La plantilla sustituirá los textos de información y participación, la fase, el estado del buzón, las preguntas frecuentes, el diseño y los accesos. Pulsa Guardar para confirmar los cambios.',
+    text: 'La plantilla sustituirá los textos de información y participación, la fase, el estado del buzón, las preguntas frecuentes, el diseño y los accesos. Pulsa Guardar para aplicar los cambios y crear los botones de participación si el municipio todavía no tiene ninguno.',
     icon: 'warning',
     showDenyButton: true,
     showCancelButton: true,

@@ -1273,3 +1273,14 @@ body.modal-open {
     font-size: 0.85rem;
   }
 }
+
+/* La paleta se abre sobre el editor del botón sin mover los campos. */
+#offcanvasBotonParticipacion .portal-color-picker {
+    position: relative;
+}
+#offcanvasBotonParticipacion .portal-color-palette {
+    position: absolute;
+    inset-inline-end: calc(var(--bs-gutter-x) / 2);
+    width: min(258px, calc(100vw - 48px));
+    z-index: 5;
+}

@@ -8,7 +8,7 @@ const coloresHabitualesPortal = [
     ['#540000', 'Burdeos POU'], ['#0f4593', 'Azul'],
     ['#0891b2', 'Turquesa'], ['#16835b', 'Verde'],
     ['#65a30d', 'Verde claro'], ['#d69e00', 'Amarillo'],
-    ['#ea780f', 'Naranja'], ['#dc403b', 'Rojo'],
+    ['#b54d00', 'Naranja de participación'], ['#ea780f', 'Naranja'], ['#dc403b', 'Rojo'],
     ['#c84985', 'Rosa'], ['#8056b3', 'Violeta'],
     ['#64748b', 'Gris'], ['#263247', 'Oscuro'], ['#ffffff', 'Blanco']
 ];
@@ -50,11 +50,14 @@ function obtenerColoresUsadosPortal() {
             colores.push(valor.toLowerCase());
         }
     }
-    Object.values(estadoPortal.configuracion).forEach(agregar);
-    [estadoPortal.secciones, estadoPortal.accesos, estadoPortal.botonesParticipacion, estadoPortal.formularios].forEach(function (lista) {
-        (lista || []).forEach(function (elemento) { agregar(elemento.color); });
-    });
-    agregar(estadoPortal.contenido?.pie?.color);
+    // El asistente comparte la paleta con el configurador.
+    if (typeof estadoPortal !== 'undefined') {
+        Object.values(estadoPortal.configuracion).forEach(agregar);
+        [estadoPortal.secciones, estadoPortal.accesos, estadoPortal.botonesParticipacion, estadoPortal.formularios].forEach(function (lista) {
+            (lista || []).forEach(function (elemento) { agregar(elemento.color); });
+        });
+        agregar(estadoPortal.contenido?.pie?.color);
+    }
     document.querySelectorAll('.portal-color-field input[type=color]').forEach(function (campo) { agregar(campo.value); });
     return colores;
 }
@@ -85,15 +88,23 @@ function cerrarPaletasColorPortal() {
 }
 
 /** Sincroniza las dos entradas antes de que los editores lean sus eventos. */
-function sincronizarMuestraColorPortal(evento) {
-    const campo = evento.target;
+function actualizarMuestraColorPortal(campo) {
+    if (!campo) return;
     const selector = campo.closest('.portal-color-picker');
-    if (!selector || !campo.matches('input')) return;
-    if (!esColorPortal(campo.value)) { campo.setAttribute('aria-invalid', 'true'); return; }
-    campo.removeAttribute('aria-invalid');
-    selector.querySelectorAll('.portal-color-field input').forEach(function (pareja) { pareja.value = campo.value; });
+    if (!selector || !campo.matches('input')) return false;
+    if (!esColorPortal(campo.value)) { campo.setAttribute('aria-invalid', 'true'); return false; }
+    selector.querySelectorAll('.portal-color-field input').forEach(function (pareja) {
+        pareja.value = campo.value;
+        pareja.removeAttribute('aria-invalid');
+    });
     selector.querySelector('[data-color-open]').style.setProperty('--chosen-color', campo.value);
-    if (evento.type === 'change') recordarColorPortal(campo.value);
+    return true;
+}
+
+function sincronizarMuestraColorPortal(evento) {
+    if (actualizarMuestraColorPortal(evento.target) && evento.type === 'change') {
+        recordarColorPortal(evento.target.value);
+    }
 }
 document.addEventListener('input', sincronizarMuestraColorPortal, true);
 document.addEventListener('change', sincronizarMuestraColorPortal, true);

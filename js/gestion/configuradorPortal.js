@@ -1463,7 +1463,7 @@ function normalizarBotonParticipacion(boton) {
         id: Number(boton.id || 0),
         texto_boton: boton.texto_boton || '',
         archivo_url: boton.archivo_url || '',
-        archivo_url_old: boton.archivo_url || '',
+        documento_pendiente: convertirBooleano(boton.documento_pendiente, false),
         icono: obtenerIconoBotonParticipacionPortal(boton),
         color: colorRecurso,
         tipo_contenido: boton.tipo_contenido || 'pdf',

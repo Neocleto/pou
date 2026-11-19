@@ -1,5 +1,5 @@
 @import url("pie-institucional.css?v=pou-v6-20261113");
-@import url("iconos-portal.css?v=pou-v3-color-configurable-20261113");
+@import url("iconos-portal.css?v=encuestas-contorno");
 /* ============================================================================
    PORTAL MUNICIPAL · única hoja de estructura y diseño público
    Consumidores: municipio_template.php y documentos_template.php.
@@ -449,10 +449,12 @@ body.portal-page {
     min-width: 0;
 }
 
+/* Antetítulo común de todas las secciones del portal. */
 .portal-page .section-kicker {
     margin: 0 0 4px;
-    font-size: .7rem;
-    letter-spacing: .09em;
+    font-size: 1em;
+    line-height: 1.3;
+    letter-spacing: .025em;
     color: var(--section-color);
 }
 
@@ -632,12 +634,13 @@ body.portal-page {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    /* Reserva el ancho original de las tres tarjetas de documentos. */
+    grid-template-columns: minmax(0, 1fr) minmax(840px, 1fr);
     gap: 28px;
     align-items: center;
 }
 
-.portal-page .participation-layout.sin-recursos {
+.portal-page .participation-layout:not(:has([data-resource-visible="1"])) {
     grid-template-columns: minmax(0, 1fr);
 }
 
@@ -690,8 +693,9 @@ body.portal-page {
     font-weight: 700;
 }
 
-/* Tres tarjetas por fila; las filas incompletas quedan centradas. */
+/* Las encuestas se amplían por título, aunque tengan un icono personalizado. */
 .portal-page .portal-participation .participation-resources {
+    container-type: inline-size;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -701,21 +705,59 @@ body.portal-page {
 }
 
 .portal-page .portal-participation .participation-resource-card {
-    flex: 0 0 calc((100% - 24px) / 3);
+    --resource-color: var(--section-color);
+    --resource-icon-size: 38px;
+    flex: 0 0 min(270px, calc((100% - 24px) / 3));
     display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    grid-template-rows: minmax(45px, auto) auto;
+    grid-template-columns: var(--resource-icon-size) minmax(0, 1fr);
+    grid-template-rows: minmax(var(--resource-icon-size), auto) auto;
     align-content: center;
     align-items: center;
+    gap: 6px 10px;
+    min-width: 0;
+    min-height: 94px;
+    padding: 10px;
+    color: #fff;
+    background: var(--resource-color);
+    border: 1px solid var(--resource-color);
+    border-radius: 14px;
+}
+
+/* Conserva las dimensiones originales de las tarjetas y los iconos de documentos. */
+.portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) {
+    grid-template-rows: minmax(45px, auto) auto;
     column-gap: clamp(9px, .72vw, 14px);
     row-gap: 7px;
-    min-width: 0;
-    min-height: 104px;
+    min-height: 114px;
     padding: 12px;
-    background: rgba(255, 255, 255, .94);
-    border: 1px solid var(--portal-border);
-    border-radius: 14px;
-    box-shadow: 0 5px 18px rgba(125, 40, 48, .035);
+}
+
+.portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] {
+    --resource-icon-size: 34px;
+    flex-basis: min(358px, calc((100% - 12px) / 2));
+}
+
+.portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] .participation-resource-card__content > strong {
+    letter-spacing: -.02em;
+}
+
+/* Cuando falta espacio, las encuestas pasan a otra fila sin alargarse. */
+@container (width < 728px) {
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] {
+        flex-basis: min(100%, 358px);
+    }
+}
+
+.portal-page .portal-participation .participation-resource-card[data-resource-pending="1"] {
+    color: #394150;
+    background: color-mix(in srgb, var(--resource-color) 7%, #f7f7f9);
+    border-color: color-mix(in srgb, var(--resource-color) 30%, #e2e4e7);
+}
+
+.portal-page .portal-participation .participation-resource-card__actions button:disabled {
+    cursor: not-allowed;
+    background: #fff8;
+    border-color: #67738355;
 }
 
 .portal-page .portal-participation .participation-resource-card__icon {
@@ -723,28 +765,32 @@ body.portal-page {
     grid-column: 1;
     grid-row: 1;
     place-items: center;
-    width: 38px;
-    height: 38px;
-    color: var(--resource-color, var(--section-color, var(--pou-primary)));
-    background: color-mix(in srgb, var(--resource-color, var(--section-color, var(--pou-primary))) 9%, white);
-    border: 1px solid color-mix(in srgb, var(--resource-color, var(--section-color, var(--pou-primary))) 14%, white);
+    width: var(--resource-icon-size);
+    height: var(--resource-icon-size);
+    background: rgba(255, 255, 255, .15);
+    border-radius: 11px;
+    font-size: 1.35rem;
+}
+
+.portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) .participation-resource-card__icon {
     border-radius: 13px;
     font-size: clamp(1.2rem, 1.14vw, 1.48rem);
 }
 
-/* Los iconos de las encuestas conservan su dibujo y heredan el color elegido para el recurso. */
-.portal-page .portal-participation .participation-resource-card__icon:has(.bi-pou-encuesta-infantil, .bi-pou-encuesta-participacion) {
-    background: transparent;
-    border: 0;
-}
 .portal-page .participation-resource-card__icon :is(.bi-pou-encuesta-infantil, .bi-pou-encuesta-participacion) {
     display: block;
-    font-size: 38px;
+    font-size: 22px;
     line-height: 1;
 }
-.portal-page .participation-resource-card__icon :is(.bi-pou-encuesta-infantil, .bi-pou-encuesta-participacion)::before {
-    display: block;
-    vertical-align: 0;
+
+.portal-page .portal-participation .participation-resource-card[data-resource-pending="1"] .participation-resource-card__icon {
+    color: var(--resource-color);
+    background: color-mix(in srgb, var(--resource-color) 12%, transparent);
+}
+
+/* El texto de los tres documentos mantiene la proporción de la referencia. */
+.portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) .participation-resource-card__content > strong {
+    font-size: .98rem;
 }
 
 /* El contenido usa la cuadrícula del artículo: el título queda junto al icono. */
@@ -757,8 +803,7 @@ body.portal-page {
     grid-row: 1;
     min-width: 0;
     margin: 0;
-    color: var(--resource-color, var(--section-color, var(--pou-primary)));
-    font-size: 0.98rem;
+    font-size: .94rem;
     font-weight: 600;
     line-height: 1.28;
     overflow-wrap: break-word;
@@ -776,7 +821,8 @@ body.portal-page {
     min-width: 0;
 }
 
-.portal-page .portal-participation .participation-resource-card__actions a {
+.portal-page .portal-participation .participation-resource-card__actions a,
+.portal-page .portal-participation .participation-resource-card__actions button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -784,9 +830,9 @@ body.portal-page {
     min-height: 35px;
     max-width: 100%;
     padding: 5px 9px;
-    color: var(--resource-color, var(--section-color, var(--pou-primary)));
-    background: color-mix(in srgb, var(--resource-color, var(--section-color, var(--pou-primary))) 5%, white);
-    border: 1px solid color-mix(in srgb, var(--resource-color, var(--section-color, var(--pou-primary))) 13%, #eae1e2);
+    color: inherit;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .5);
     border-radius: 9px;
     font-size: 0.82rem;
     font-weight: 600;
@@ -798,9 +844,14 @@ body.portal-page {
 
 .portal-page .portal-participation .participation-resource-card__actions a:hover,
 .portal-page .portal-participation .participation-resource-card__actions a:focus-visible {
-    color: #fff;
-    background: var(--resource-color, var(--section-color, var(--pou-primary)));
-    border-color: var(--resource-color, var(--section-color, var(--pou-primary)));
+    color: var(--resource-color);
+    background: #fff;
+    border-color: #fff;
+}
+
+.portal-page .portal-participation .participation-resource-card__actions a:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
 }
 
 /* Sin icono, el título y los enlaces aprovechan toda la tarjeta. */
@@ -836,7 +887,7 @@ body.portal-page {
     border-color: var(--survey-color, var(--section-color, var(--pou-primary)));
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1250px) {
     .portal-page .participation-layout {
         grid-template-columns: minmax(0, 1fr);
         gap: 22px;
@@ -852,7 +903,7 @@ body.portal-page {
 }
 
 @media (max-width: 840px) {
-    .portal-page .portal-participation .participation-resource-card {
+    .portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) {
         flex-basis: calc((100% - 12px) / 2);
     }
 
@@ -884,17 +935,33 @@ body.portal-page {
         gap: 11px;
     }
 
-    .portal-page .portal-participation .participation-resource-card {
-        flex-basis: 100%;
-        min-height: 100px;
-        padding: 12px;
-        grid-template-columns: 44px minmax(0, 1fr);
+    .portal-page .portal-participation .participation-resource-card,
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] {
+        flex-basis: min(100%, 358px);
     }
 
-    .portal-page .portal-participation .participation-resource-card__icon {
-        width: 44px;
-        height: 44px;
+    .portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) {
+        --resource-icon-size: 44px;
+        flex-basis: 100%;
+        min-height: 100px;
+    }
+
+    .portal-page .portal-participation .participation-resource-card:not([data-resource-survey="1"]) .participation-resource-card__icon {
         font-size: 1.2rem;
+    }
+
+    .portal-page .portal-participation .participation-resource-card__content > strong {
+        font-size: .92rem;
+    }
+
+    /* En móvil el título de la encuesta aprovecha también el ancho del icono. */
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] .participation-resource-card__content > strong {
+        grid-column: 1 / -1;
+        font-size: .86rem;
+    }
+
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] .participation-resource-card__icon {
+        grid-row: 2;
     }
 
 }

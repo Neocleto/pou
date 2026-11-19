@@ -615,7 +615,8 @@ function crearFilaRecursoParticipacion(boton, indice) {
     const detalleFormulario = boton.formulario_titulo
         ? ` · ${boton.formulario_titulo}`
         : '';
-    const visible = boton.visible !== false;
+    const pendiente = boton.documento_pendiente;
+    const estado = pendiente ? 'Pendiente de subir el documento' : (boton.visible !== false ? 'Visible' : 'Oculto temporalmente');
 
     return `
         <article class="portal-content-row" data-resource-row="${indice}">
@@ -625,7 +626,7 @@ function crearFilaRecursoParticipacion(boton, indice) {
             <span class="portal-content-row__copy">
                 <strong>${escaparHtml(boton.texto_boton || 'Recurso sin título')}</strong>
                 <small>${escaparHtml((etiquetas[tipo] || etiquetas.pdf) + detalleFormulario)}</small>
-                <em class="portal-content-row__meta">${visible ? 'Visible' : 'Oculto temporalmente'}</em>
+                <em class="portal-content-row__meta">${estado}</em>
             </span>
             <span class="portal-content-row__actions">
                 <button type="button" data-action="content-edit-resource" data-index="${indice}" title="Editar" aria-label="Editar ${escaparHtml(boton.texto_boton || 'recurso')}" aria-expanded="${estadoEditorContenido.recursoIndice === indice}"><i class="bi bi-pencil"></i></button>
@@ -1004,9 +1005,15 @@ document.addEventListener('change', async function (evento) {
 
     if (tipoArchivo === 'resource') {
         // Conservar título, tipo y color escritos antes de repintar tras la subida.
-        leerCamposLocalesRecurso(estadoEditorContenido.recursoEditando);
+        const recurso = estadoEditorContenido.recursoEditando;
+        leerCamposLocalesRecurso(recurso);
         const url = await subirArchivoContenido(archivo, 'participacion');
-        estadoEditorContenido.recursoEditando.archivo_url = url;
+        // Un recurso pendiente puede mostrarse en cuanto tenga un archivo subido.
+        if (recurso.id && recurso.documento_pendiente) {
+            recurso.visible = true;
+        }
+        recurso.archivo_url = url;
+        recurso.documento_pendiente = false;
         marcarCambios(true, 'local');
         actualizarListadoRecursosParticipacion();
         return;

@@ -329,11 +329,17 @@ function conectarAccionesFilaFaq(fila, faq) {
 /** Abre un editor y modifica solo la copia municipal. */
 function editarFaqMunicipio(faq) {
     Swal.fire({
+        // Bootstrap conserva el foco dentro del asistente. El editor también debe estar dentro.
+        target: document.getElementById('modalWizard'),
+        focusConfirm: false,
+        didOpen: function (ventana) {
+            ventana.querySelector('#faqEditPregunta').focus();
+        },
         title: faq.es_exclusiva ? 'Editar pregunta municipal' : 'Adaptar para este municipio',
         html: `
-            <label class="form-label w-100 text-start">Pregunta</label>
+            <label for="faqEditPregunta" class="form-label w-100 text-start">Pregunta</label>
             <input id="faqEditPregunta" class="form-control mb-3" value="${escaparAtributoFaq(faq.pregunta)}">
-            <label class="form-label w-100 text-start">Respuesta</label>
+            <label for="faqEditRespuesta" class="form-label w-100 text-start">Respuesta</label>
             <textarea id="faqEditRespuesta" class="form-control" rows="7">${escaparFaq(faq.respuesta)}</textarea>`,
         showCancelButton: true,
         confirmButtonText: 'Aplicar cambios',

@@ -128,6 +128,5 @@ if (session_status() === PHP_SESSION_NONE) {
     <script src="lib/sweetalert2@11.js"></script>
     <script src="js/index.js?v=<?= (int)@filemtime(__DIR__ . '/js/index.js') ?>"></script>
     <script src="js/login/login.js"></script>
-    <script src="js/login/verificacion_sesion.js"></script>
 </body>
 </html>

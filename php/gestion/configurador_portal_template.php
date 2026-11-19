@@ -24,6 +24,7 @@ $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '
 
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap@5.3.0.min.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/selector-color.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/selector-color.css') ?>">
     <link rel="stylesheet" href="css/configurador-portal.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/configurador-portal.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
@@ -166,6 +167,7 @@ $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '
     <script src="lib/bootstrap.bundle.min.js"></script>
     <script src="lib/ckeditor.js"></script>
     <script src="lib/sweetalert2@11.js"></script>
+    <script src="js/login/verificacion_sesion.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/login/verificacion_sesion.js') ?>"></script>
     <script src="js/gestion/editorEnriquecido.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/editorEnriquecido.js') ?>"></script>
     <script src="js/gestion/configuradorColores.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorColores.js') ?>"></script>
     <script src="js/gestion/configuradorPortal.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorPortal.js') ?>"></script>

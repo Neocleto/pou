@@ -2,7 +2,8 @@
 // Acceso de gestión: convenio vigente y proyecto correcto.
 require_once __DIR__ . '/../../login/permisos_proyecto.php';
 exigirAccesoProyecto(false, false);
-require_once __DIR__ . '/../../includes/valores_portal.php';
+require_once __DIR__ . '/../../includes/participacion_portal.php';
+$coloresParticipacion = obtenerColoresParticipacion();
 $tituloInicialParticipacion = '';
 foreach (obtenerSeccionesInicialesPortal() as $seccionInicialParticipacion) {
     if ($seccionInicialParticipacion['id'] === 'participacion') {
@@ -47,7 +48,7 @@ usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]);
         <i class="bi bi-hand-index-thumb text-primary fs-5"></i>
         <div>
           <div class="fw-bold text-primary">Botones de Participación</div>
-          <div class="text-muted small">Máximo 5 recursos configurados; pueden mostrarse u ocultarse sin eliminarlos.</div>
+          <div class="text-muted small">La plantilla añade cinco botones si el municipio todavía no tiene ninguno. Sube los documentos pendientes antes de publicar.</div>
         </div>
       </div>
 
@@ -129,10 +130,20 @@ usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]);
             <div class="form-text small mt-1">Elige un icono reconocible para la ciudadanía.</div>
           </div>
 
-          <div class="col-4">
-            <label for="color_boton_modal" class="form-label fw-bold mb-1">Color</label>
-            <input type="color" class="form-control form-control-color w-100" id="color_boton_modal" value="#540000">
-            <div class="form-text small mt-1">Color propio.</div>
+          <div class="col-4 portal-color-picker">
+            <label for="texto_color_boton_modal" class="form-label fw-bold mb-1">Color</label>
+            <div class="portal-color-field">
+              <button type="button" class="portal-color-trigger" data-color-open aria-expanded="false" aria-label="Elegir color"
+                      style="--chosen-color:<?= $coloresParticipacion['corporativo'] ?>">
+                <span></span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </button>
+              <input type="color" class="visually-hidden" tabindex="-1" id="color_boton_modal"
+                     aria-label="Color personalizado" value="<?= $coloresParticipacion['corporativo'] ?>">
+              <input type="text" class="form-control" id="texto_color_boton_modal" maxlength="7"
+                     pattern="#[0-9a-fA-F]{6}" required spellcheck="false" aria-label="Valor hexadecimal"
+                     value="<?= $coloresParticipacion['corporativo'] ?>">
+            </div>
+            <div class="portal-color-palette" hidden></div>
           </div>
         </div>
 

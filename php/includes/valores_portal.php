@@ -11,7 +11,7 @@ require_once __DIR__ . '/iconos_portal.php';
 function obtenerSeccionesInicialesPortal()
 {
     return [
-        ['id' => 'informacion', 'titulo' => 'Para qué sirve el plan de ordenación urbana', 'icono' => 'info-circle', 'color' => '#540000', 'visible' => true],
+        ['id' => 'informacion', 'titulo' => 'Para qué sirve el Plan de Ordenación Urbana', 'icono' => 'info-circle', 'color' => '#540000', 'visible' => true],
         ['id' => 'fases', 'titulo' => 'Fases en la tramitación del POU', 'icono' => 'pou-fases', 'color' => '#540000', 'visible' => true],
         ['id' => 'participacion', 'titulo' => 'Participación ciudadana en el POU', 'icono' => 'pou-manos', 'color' => '#540000', 'visible' => true],
         ['id' => 'documentos', 'titulo' => 'Documentos del POU', 'icono' => 'pou-documentos', 'color' => '#540000', 'visible' => true],

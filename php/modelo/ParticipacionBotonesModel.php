@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/archivos_municipio.php';
-require_once __DIR__ . '/../includes/iconos_portal.php';
+require_once __DIR__ . '/../includes/participacion_portal.php';
 // ============================================================================
 // MODELO: BOTONES DE PARTICIPACION
 //
@@ -32,11 +32,11 @@ class ParticipacionBotonesModel
     ) {
         $tipoContenido = $this->normalizarTipoContenido($tipoContenido);
         $formularioId = $this->normalizarFormularioId($formularioId);
+        $visible = $this->normalizarBooleano($visible);
 
         $this->validarContenidoBoton(
             $codMun,
             $tipoContenido,
-            $archivoUrl,
             $formularioId
         );
 
@@ -72,8 +72,21 @@ class ParticipacionBotonesModel
             ':color' => $this->normalizarColor($color),
             ':tipo_contenido' => $tipoContenido,
             ':formulario_id' => $formularioId,
-            ':visible' => $this->normalizarBooleano($visible) ? 1 : 0
+            ':visible' => $visible ? 1 : 0
         ]);
+    }
+
+
+    /** La plantilla de botones solo se usa si el municipio todavía no tiene ninguno. */
+    public function aplicarPlantilla($codMun)
+    {
+        if ($this->listarBotonesPorMunicipio($codMun)) {
+            return;
+        }
+
+        foreach (obtenerBotonesPlantillaParticipacion() as $boton) {
+            $this->crearBoton($codMun, $boton['titulo'], $boton['archivo'], $boton['icono'], $boton['color']);
+        }
     }
 
     /**
@@ -92,6 +105,7 @@ class ParticipacionBotonesModel
     ) {
         $tipoContenido = $this->normalizarTipoContenido($tipoContenido);
         $formularioId = $this->normalizarFormularioId($formularioId);
+        $visible = $this->normalizarBooleano($visible);
 
         // 1. Recuperamos el registro actual para mantener el archivo si no cambia.
         $actual = $this->obtenerBotonPorId($id);
@@ -110,11 +124,10 @@ class ParticipacionBotonesModel
         $this->validarContenidoBoton(
             $codMunValidacion,
             $tipoContenido,
-            $archivoFinal,
             $formularioId
         );
 
-        // 3. Guardamos todos los datos del boton.
+        // 2. Guardamos todos los datos del botón.
         $sql = "UPDATE pou.participacion_botones
                 SET texto_boton = :texto_boton,
                     archivo_url = :archivo_url,
@@ -136,7 +149,7 @@ class ParticipacionBotonesModel
             ':color' => $this->normalizarColor($color),
             ':tipo_contenido' => $tipoContenido,
             ':formulario_id' => $formularioId,
-            ':visible' => $this->normalizarBooleano($visible) ? 1 : 0
+            ':visible' => $visible ? 1 : 0
         ]);
         if ($ok && $archivoFinal !== ($actual['archivo_url'] ?? '')) {
             eliminarArchivoMunicipalPOU($actual['archivo_url'], $actual['cod_mun']);
@@ -168,7 +181,23 @@ class ParticipacionBotonesModel
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':cod_mun' => $codMun]);
 
-        return normalizarIconosDatosPortal($stmt->fetchAll(PDO::FETCH_ASSOC));
+        // La misma comprobación alimenta el portal, el editor y el aviso de publicación.
+        $botones = normalizarIconosDatosPortal($stmt->fetchAll(PDO::FETCH_ASSOC));
+        foreach ($botones as &$boton) {
+            $tipo = $boton['tipo_contenido'] ?? 'pdf';
+            $url = '';
+            if ($tipo !== 'formulario') {
+                $url = resolverArchivoParticipacion($boton['archivo_url'], $codMun);
+                if ($url === '') {
+                    $url = resolverArchivoParticipacion($boton['formulario_pdf_url'], $codMun);
+                }
+            }
+            $boton['url_documento'] = $url;
+            $boton['documento_pendiente'] = $tipo !== 'formulario' && $url === '';
+        }
+        unset($boton);
+
+        return $botones;
     }
 
     /**
@@ -189,11 +218,14 @@ class ParticipacionBotonesModel
 
         $stmt = $this->conn->prepare($sql);
 
+        // Solo se actualizan los botones que pertenecen al municipio.
+        $idsMunicipales = array_column($this->listarBotonesPorMunicipio($codMun), 'id');
+
         foreach ($botones as $boton) {
             $id = (int)($boton['id'] ?? 0);
             $texto = trim((string)($boton['texto_boton'] ?? ''));
 
-            if ($id <= 0 || $texto === '') {
+            if (!in_array($id, $idsMunicipales, true) || $texto === '') {
                 continue;
             }
 
@@ -204,10 +236,10 @@ class ParticipacionBotonesModel
                 $boton['formulario_id'] ?? null
             );
 
+            $visible = $this->normalizarBooleano($boton['visible'] ?? true);
             $this->validarContenidoBoton(
                 $codMun,
                 $tipoContenido,
-                $boton['archivo_url'] ?? '',
                 $formularioId
             );
 
@@ -223,7 +255,7 @@ class ParticipacionBotonesModel
                 ),
                 ':tipo_contenido' => $tipoContenido,
                 ':formulario_id' => $formularioId,
-                ':visible' => $this->normalizarBooleano($boton['visible'] ?? true) ? 1 : 0
+                ':visible' => $visible ? 1 : 0
             ]);
         }
     }
@@ -261,10 +293,8 @@ class ParticipacionBotonesModel
     private function validarContenidoBoton(
         $codMun,
         $tipoContenido,
-        $archivoUrl,
         $formularioId
     ) {
-        $necesitaPdf = in_array($tipoContenido, ['pdf', 'ambos'], true);
         $necesitaFormulario = in_array(
             $tipoContenido,
             ['formulario', 'ambos'],
@@ -278,7 +308,7 @@ class ParticipacionBotonesModel
                 throw new Exception('Selecciona el formulario online del boton.');
             }
 
-            $sql = "SELECT id, modalidad, pdf_url
+            $sql = "SELECT id, modalidad
                     FROM pou.formularios
                     WHERE id = :id
                       AND cod_mun = :cod_mun";
@@ -297,15 +327,6 @@ class ParticipacionBotonesModel
             if (!in_array($formulario['modalidad'], ['online', 'ambos'], true)) {
                 throw new Exception('El formulario elegido no admite respuestas online.');
             }
-        }
-
-        // 2. Para la opcion combinada se puede usar el PDF propio del boton
-        //    o el PDF configurado dentro del formulario vinculado.
-        $pdfFormulario = trim((string)($formulario['pdf_url'] ?? ''));
-        $hayPdf = trim((string)$archivoUrl) !== '' || $pdfFormulario !== '';
-
-        if ($necesitaPdf && !$hayPdf) {
-            throw new Exception('Selecciona un PDF o vincula un formulario que ya tenga PDF.');
         }
     }
 

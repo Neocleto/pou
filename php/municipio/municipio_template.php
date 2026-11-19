@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap@5.3.0.min.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/portal.css?v=pou-v9-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/portal.css') ?>">
+    <link rel="stylesheet" href="css/portal.css?v=participacion-original-20261119-<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/portal.css') ?>">
     <link rel="stylesheet" href="css/documentos.css?v=pou-v7-20261113-<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/documentos.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
@@ -200,52 +200,31 @@ $formulariosSinBoton = array_values(array_filter(
     }
 ));
 
-// 6. Preparamos solamente los recursos que tienen una acción disponible.
-//    Así el contador y la cuadrícula siempre coinciden con lo que se muestra.
+// 6. Los recursos pendientes se muestran deshabilitados hasta que tengan su documento.
 $recursosParticipacionVisibles = [];
 
 foreach ($botonesParticipacion as $boton) {
-    $botonVisible = !isset($boton['visible']) || booleanoPortal($boton['visible']);
+    $pendiente = !empty($boton['documento_pendiente']);
+    $botonVisible = $pendiente || !isset($boton['visible']) || booleanoPortal($boton['visible']);
 
-    // En la página pública no dibujamos recursos ocultos. En el editor sí los
-    // dejamos preparados para que el interruptor pueda mostrarlos al instante.
     if (!$botonVisible && !$modoEditorPortal) {
         continue;
     }
 
     $tipoContenido = $boton['tipo_contenido'] ?? 'pdf';
-    $muestraFormulario = in_array($tipoContenido, ['formulario', 'ambos'], true)
+    $muestraFormulario = !$pendiente && in_array($tipoContenido, ['formulario', 'ambos'], true)
         && booleanoPortal($boton['formulario_activo'] ?? false)
         && !empty($boton['formulario_slug']);
-    $muestraPdf = in_array($tipoContenido, ['pdf', 'ambos'], true);
-    $urlPdf = trim((string)($boton['archivo_url'] ?? ''));
 
-    if ($urlPdf === '') {
-        $urlPdf = trim((string)($boton['formulario_pdf_url'] ?? ''));
-    }
-
-    if ($urlPdf === '') {
-        $muestraPdf = false;
-    }
-
-    if (!$muestraFormulario && !$muestraPdf) {
+    if (!$pendiente && !$muestraFormulario && empty($boton['url_documento'])) {
         continue;
     }
 
     $boton['_muestra_formulario'] = $muestraFormulario;
-    $boton['_muestra_pdf'] = $muestraPdf;
-    $boton['_url_pdf'] = $urlPdf;
     $boton['_visible'] = $botonVisible;
     $recursosParticipacionVisibles[] = $boton;
 }
 
-$totalRecursosParticipacion = count(array_filter(
-    $recursosParticipacionVisibles,
-    static fn($boton) => !empty($boton['_visible'])
-));
-$claseCantidadRecursos = $totalRecursosParticipacion <= 6
-    ? 'resources-count-' . $totalRecursosParticipacion
-    : 'resources-count-many';
 ?>
 <body
     class="portal-page portal-loading"
@@ -479,7 +458,7 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                     class="portal-section portal-participation"
                     style="--section-color:<?= htmlspecialchars($coloresSecciones['participacion']) ?>;order:<?= (int)$ordenSecciones['participacion'] ?>;<?= !$visibilidadSecciones['participacion'] ? 'display:none;' : '' ?>">
                     <!-- Encabezado compartido con Documentos, dentro de la columna de texto. -->
-                    <div class="participation-layout<?= empty($recursosParticipacionVisibles) ? ' sin-recursos' : '' ?>">
+                    <div class="participation-layout">
                         <div class="portal-participation__copy">
                             <div class="portal-section__heading">
                                 <span class="section-icon" data-section-icon <?= $iconosSecciones['participacion'] === '' ? 'hidden' : '' ?>>
@@ -499,7 +478,7 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                         </div>
 
                         <?php if (!empty($recursosParticipacionVisibles)): ?>
-                            <div class="participation-resources <?= htmlspecialchars($claseCantidadRecursos) ?>" data-resource-count="<?= $totalRecursosParticipacion ?>">
+                            <div class="participation-resources">
                                 <?php foreach ($recursosParticipacionVisibles as $boton): ?>
                                     <?php
                                     // 1. Recuperamos el aspecto del recurso.
@@ -513,11 +492,15 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
 
                                     // 2. Las acciones ya se han validado antes de renderizar.
                                     $muestraFormulario = !empty($boton['_muestra_formulario']);
-                                    $muestraPdf = !empty($boton['_muestra_pdf']);
-                                    $urlPdf = (string)($boton['_url_pdf'] ?? '');
+                                    $pendiente = !empty($boton['documento_pendiente']);
+                                    $urlPdf = $boton['url_documento'] ?? '';
+                                    // El título identifica la encuesta aunque el municipio cambie su icono.
+                                    $esEncuesta = preg_match('/^\s*encuesta\b/iu', $boton['texto_boton'] ?? '');
                                     ?>
                                     <article
                                         class="participation-resource-card"
+                                        data-resource-survey="<?= $esEncuesta ? '1' : '0' ?>"
+                                        data-resource-pending="<?= $pendiente ? '1' : '0' ?>"
                                         data-participation-button-id="<?= (int)($boton['id'] ?? 0) ?>"
                                         data-resource-visible="<?= !empty($boton['_visible']) ? '1' : '0' ?>"
                                         style="--resource-color:<?= htmlspecialchars($colorBoton) ?>;<?= empty($boton['_visible']) ? 'display:none;' : '' ?>">
@@ -538,7 +521,12 @@ $claseCantidadRecursos = $totalRecursosParticipacion <= 6
                                                     </a>
                                                 <?php endif; ?>
 
-                                                <?php if ($muestraPdf): ?>
+                                                <?php if ($pendiente): ?>
+                                                    <button type="button" disabled>
+                                                        <i class="bi bi-lock" aria-hidden="true"></i>
+                                                        Documento pendiente
+                                                    </button>
+                                                <?php elseif ($urlPdf !== ''): ?>
                                                     <a href="<?= htmlspecialchars($urlPdf) ?>" target="_blank" rel="noopener noreferrer">
                                                         <i class="bi bi-download"></i>
                                                         <?= htmlspecialchars($boton['formulario_texto_pdf'] ?? 'Descargar PDF') ?>

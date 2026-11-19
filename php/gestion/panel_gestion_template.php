@@ -26,7 +26,8 @@ exigirAccesoProyecto(false, false);
     <link rel="stylesheet" href="css/acceso-moderno.css?v=pou-v6-20261113">
     <link rel="stylesheet" href="css/panel.css?v=pou-burdeos-20261113">
     <link rel="stylesheet" href="css/tabla-municipio.css?v=pou-20261112-2">
-    <link rel="stylesheet" href="css/iconos-portal.css">
+    <link rel="stylesheet" href="css/iconos-portal.css?v=encuestas-contorno">
+    <link rel="stylesheet" href="css/selector-color.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/selector-color.css') ?>">
     <link rel="stylesheet" href="css/wizard.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/wizard.css') ?>">
     <link rel="stylesheet" href="css/tour.css?v=pou-burdeos-20261113">
     <link rel="stylesheet" href="css/tema-pou.css">
@@ -50,6 +51,9 @@ exigirAccesoProyecto(false, false);
                 <div class="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                     <div>
                         <h2 class="mb-1">Panel de Gestión de Municipios</h2>
+                        <?php if (esSuperusuarioProyecto($conn, $_SESSION['usuario_id'])): ?>
+                            <div class="small fw-semibold text-primary mb-1">Superusuario · Acceso a todos los municipios</div>
+                        <?php endif; ?>
                         <div class="text-muted small">
                             Administra, configura y publica los POU de tus municipios mediante el asistente de 7 pasos.
                         </div>
@@ -333,7 +337,7 @@ exigirAccesoProyecto(false, false);
     <script src="lib/Sortable.min.js"></script>
 
     <!-- Script proyecto -->
-    <script src="js/login/verificacion_sesion.js?v=convenios_20261117"></script>
+    <script src="js/login/verificacion_sesion.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/login/verificacion_sesion.js') ?>"></script>
     <script src="js/gestion/utilidadesGestion.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/utilidadesGestion.js') ?>"></script>
     <script src="js/gestion/editorEnriquecido.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/editorEnriquecido.js') ?>"></script>
     <script src="js/gestion/wizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/wizard.js') ?>"></script>
@@ -342,6 +346,7 @@ exigirAccesoProyecto(false, false);
     <script src="js/gestion/tablaMunicipios.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/tablaMunicipios.js') ?>"></script>
     <script src="js/gestion/fasesWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/fasesWizard.js') ?>"></script>
     <script src="js/gestion/documentosWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/documentosWizard.js') ?>"></script>
+    <script src="js/gestion/configuradorColores.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorColores.js') ?>"></script>
     <script src="js/gestion/participacionWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/participacionWizard.js') ?>"></script>
     <script src="js/gestion/noticiasWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/noticiasWizard.js') ?>"></script>
     <script src="js/gestion/faqsWizard.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/faqsWizard.js') ?>"></script>

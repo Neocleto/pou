@@ -22,7 +22,7 @@ async function ejecutarAccionContenido(accion, boton) {
         const recurso = estadoPortal.botonesParticipacion[Number(boton.dataset.index)];
         estadoEditorContenido.recursoIndice = Number(boton.dataset.index);
         estadoEditorContenido.recursoEditando = recurso
-            ? { ...recurso, archivo_url_old: recurso.archivo_url || '' }
+            ? { ...recurso }
             : null;
         marcarCambios(false, 'local');
         actualizarListadoRecursosParticipacion(true);
@@ -191,7 +191,7 @@ async function guardarRecursoParticipacion() {
         return;
     }
 
-    if (necesitaPdf && !tienePdf) {
+    if (!recurso.id && recurso.visible !== false && necesitaPdf && !tienePdf) {
         Swal.fire('Revisa el botón', 'Sube un PDF o selecciona un formulario que ya tenga PDF.', 'warning');
         return;
     }
@@ -201,7 +201,6 @@ async function guardarRecursoParticipacion() {
         cod_mun: estadoPortal.codMun,
         texto_boton: recurso.texto_boton,
         archivo_url: recurso.archivo_url,
-        archivo_url_old: recurso.archivo_url_old || recurso.archivo_url,
         icono: recurso.icono,
         color: recurso.color,
         tipo_contenido: recurso.tipo_contenido,
@@ -704,7 +703,6 @@ function crearRecursoVacio() {
         id: null,
         texto_boton: '',
         archivo_url: '',
-        archivo_url_old: '',
         icono: 'file-earmark-arrow-down',
         color: estadoPortal.configuracion.color_primario || '#540000',
         tipo_contenido: 'pdf',
