@@ -78,7 +78,7 @@ class NoticiasModel {
     $stmt = $this->conn->prepare($sql);
     $ok = $stmt->execute($params);
     if ($ok && !empty($data['imagen_url']) && $data['imagen_url'] !== $anterior['imagen_url']) {
-      eliminarArchivoMunicipalPOU($anterior['imagen_url'], $anterior['cod_mun']);
+      eliminarArchivoMunicipalPOU($anterior['imagen_url'], $anterior['cod_mun'], $this->conn);
     }
     return $ok;
   }
@@ -93,7 +93,7 @@ class NoticiasModel {
       $stmt->execute([':id' => $id]);
 
       $this->conn->commit();
-      eliminarArchivoMunicipalPOU($noticia['imagen_url'], $noticia['cod_mun']);
+      eliminarArchivoMunicipalPOU($noticia['imagen_url'], $noticia['cod_mun'], $this->conn);
       return true;
     } catch (Exception $e) {
       $this->conn->rollBack();

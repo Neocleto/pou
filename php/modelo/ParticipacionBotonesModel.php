@@ -152,7 +152,7 @@ class ParticipacionBotonesModel
             ':visible' => $visible ? 1 : 0
         ]);
         if ($ok && $archivoFinal !== ($actual['archivo_url'] ?? '')) {
-            eliminarArchivoMunicipalPOU($actual['archivo_url'], $actual['cod_mun']);
+            eliminarArchivoMunicipalPOU($actual['archivo_url'], $actual['cod_mun'], $this->conn);
         }
         return $ok;
     }
@@ -269,7 +269,7 @@ class ParticipacionBotonesModel
         if (!$actual) throw new Exception('El recurso de participación no existe.');
         $stmt = $this->conn->prepare('DELETE FROM pou.participacion_botones WHERE id = ?');
         $stmt->execute([(int)$id]);
-        eliminarArchivoMunicipalPOU($actual['archivo_url'] ?? '', $actual['cod_mun']);
+        eliminarArchivoMunicipalPOU($actual['archivo_url'] ?? '', $actual['cod_mun'], $this->conn);
     }
 
     /**

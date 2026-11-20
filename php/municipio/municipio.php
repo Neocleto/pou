@@ -28,7 +28,6 @@ if (!$cod_mun) {
 
 // 2) Datos de sesión para el controlador (permiso de preview)
 $usuarioId = $_SESSION['usuario_id'] ?? null;
-$rol = $_SESSION['rol'] ?? null;
 $correoUsuario = $_SESSION['usuario_correo'] ?? '';
 
 $controller = new MunicipioController($conn);
@@ -39,7 +38,6 @@ try {
         $cod_mun,
         $esPreview,
         $usuarioId,
-        $rol,
         $correoUsuario
     );
 

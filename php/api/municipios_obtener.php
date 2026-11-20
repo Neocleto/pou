@@ -4,12 +4,18 @@
 // Devuelve municipios activos aplicando búsqueda, filtro y paginación.
 // ============================================================================
 
-require_once("../db/conexion.php");
+require_once(__DIR__ . "/../db/conexion.php");
 
 header("Content-Type: application/json; charset=utf-8");
 
 // 1. Parámetros recibidos.
-$busqueda = trim($_GET["search"] ?? "");
+$busqueda = $_GET["search"] ?? "";
+if (!is_string($busqueda)) {
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "La búsqueda recibida no es válida."]);
+    exit;
+}
+$busqueda = trim($busqueda);
 $filtrosPermitidos = ["todos", "a_m", "n_z", "z_a"];
 $filtro = $_GET["filter"] ?? "todos";
 
@@ -17,7 +23,7 @@ if (!in_array($filtro, $filtrosPermitidos, true)) {
     $filtro = "todos";
 }
 
-$pagina = max(1, (int)($_GET["page"] ?? 1));
+$pagina = max(1, (int)filter_var($_GET["page"] ?? 1, FILTER_VALIDATE_INT));
 $limite = 15;
 
 // 2. Condiciones comunes para el total y para el listado.

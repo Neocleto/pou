@@ -28,13 +28,12 @@ class MunicipioController {
      * @param string      $cod_mun
      * @param bool        $esPreview    true si se accede como previsualización
      * @param int|null    $usuarioId    id del usuario logueado (si lo hay)
-     * @param string|null $rol          rol del usuario (ej: 'admin')
+     * @param string      $correoUsuario correo de contacto del usuario
      */
     public function mostrarMunicipio(
         $cod_mun,
         $esPreview = false,
         $usuarioId = null,
-        $rol = null,
         $correoUsuario = ''
     ) {
         $municipioModel      = new MunicipioModel($this->conn);
@@ -86,9 +85,8 @@ class MunicipioController {
                 $usuarioId,
                 $correoUsuario
             );
-            $esAdmin = ($rol === 'admin');
 
-            if (!$puedeGestionar && !$esAdmin) {
+            if (!$puedeGestionar) {
                 echo "<div style='text-align:center; padding: 3rem; font-family: sans-serif;'>
                         <h2>No tienes permisos para previsualizar este POU.</h2>
                         <p>Si crees que es un error, contacta con el equipo de Desarrollo GIS.</p>

@@ -16,7 +16,7 @@ class DocumentosController {
         $this->conn = $db;
     }
 
-    public function mostrarDocumentos(string $cod_mun, bool $esPreview = false, $usuarioId = null, $rol = null, $correoUsuario = ''): array {
+    public function mostrarDocumentos(string $cod_mun, bool $esPreview = false, $usuarioId = null, $correoUsuario = ''): array {
         $municipioModel        = new MunicipioModel($this->conn);
         $documentoModel        = new DocumentosModel($this->conn);
         $fasesDocumentosModel  = new FasesDocumentosModel($this->conn);
@@ -53,9 +53,8 @@ class DocumentosController {
                 $usuarioId,
                 $correoUsuario
             );
-            $esAdmin = ($rol === 'admin');
 
-            if (!$puedeGestionar && !$esAdmin) {
+            if (!$puedeGestionar) {
                 echo "<div style='text-align:center; padding: 3rem; font-family: sans-serif;'>
                         <h2>No tienes permisos para previsualizar este POU.</h2>
                     </div>";

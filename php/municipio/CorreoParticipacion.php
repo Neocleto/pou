@@ -42,7 +42,8 @@ function obtenerDatosCorreoParticipacion($conn, $codMun)
                 COALESCE(enviar_docs_a_arquitecto, FALSE) AS enviar_docs_a_arquitecto,
                 COALESCE(buzon_participacion_activo, TRUE) AS buzon_participacion_activo
             FROM pou.municipios
-            WHERE cod_mun = :cod_mun";
+            WHERE cod_mun = :cod_mun
+              AND activo = TRUE AND baja = FALSE";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute([

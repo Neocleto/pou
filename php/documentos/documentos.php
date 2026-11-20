@@ -21,13 +21,12 @@ if (!$cod_mun) {
 }
 
 $usuarioId = $_SESSION['usuario_id'] ?? null;
-$rol       = $_SESSION['rol'] ?? null;
 $correoUsuario = $_SESSION['usuario_correo'] ?? '';
 
 $controlador = new DocumentosController($conn);
 
 // El controlador comprueba que el usuario pueda previsualizar este municipio.
-$datos = $controlador->mostrarDocumentos($cod_mun, $esPreview, $usuarioId, $rol, $correoUsuario);
+$datos = $controlador->mostrarDocumentos($cod_mun, $esPreview, $usuarioId, $correoUsuario);
 
 $municipio         = $datos['municipio'];
 $fasesMenu         = $datos['fasesMenu'];

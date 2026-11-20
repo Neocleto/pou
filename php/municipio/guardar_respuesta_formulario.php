@@ -6,17 +6,28 @@
 
 require_once(__DIR__ . '/../db/conexion.php');
 require_once(__DIR__ . '/../modelo/FormularioDinamicoModel.php');
+require_once(__DIR__ . '/../modelo/MunicipioModel.php');
 require_once(__DIR__ . '/CorreoParticipacion.php');
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
     // 1. Identificamos el formulario.
-    $formularioId = (int)($_POST['formulario_id'] ?? 0);
-    $codMun = trim($_POST['cod_mun'] ?? '');
+    $formularioId = filter_var($_POST['formulario_id'] ?? null, FILTER_VALIDATE_INT);
+    $codMun = $_POST['cod_mun'] ?? '';
+    if (!is_string($codMun)) {
+        throw new Exception('El municipio recibido no es válido.');
+    }
+    $codMun = trim($codMun);
 
     if ($formularioId <= 0 || $codMun === '') {
         throw new Exception('El formulario recibido no es válido.');
+    }
+
+    // La página pública y el envío directo exigen un municipio publicado.
+    $municipioModel = new MunicipioModel($conn);
+    if (!$municipioModel->obtenerMunicipioActivosPorCodigo($codMun)) {
+        throw new Exception('El municipio ya no está disponible para participar.');
     }
 
     $formularioModel = new FormularioDinamicoModel($conn);
@@ -38,13 +49,12 @@ try {
             $nombreCampo = 'p_' . $pregunta['id'];
             $valor = $_POST[$nombreCampo] ?? null;
 
-            if (!empty($pregunta['obligatorio']) && respuestaVacia($valor)) {
+            $valorNormalizado = normalizarRespuesta($pregunta, $valor);
+            if (!empty($pregunta['obligatorio']) && respuestaVacia($valorNormalizado)) {
                 throw new Exception(
                     'Debes completar la pregunta: ' . $pregunta['enunciado']
                 );
             }
-
-            $valorNormalizado = normalizarRespuesta($pregunta, $valor);
 
             $respuestas[] = [
                 'pregunta_id' => (int)$pregunta['id'],
@@ -139,11 +149,21 @@ function normalizarRespuesta(array $pregunta, $valor)
     $opcionesValidas = $pregunta['opciones'] ?? [];
 
     if ($tipo === 'opcion_multiple') {
-        $valores = is_array($valor) ? $valor : [];
+        if ($valor === null || $valor === '') return [];
+        if (!is_array($valor)) {
+            throw new Exception('La pregunta de selección múltiple debe contener una lista de opciones.');
+        }
+        // No descartamos opciones incorrectas: el usuario debe corregir el envío.
+        foreach ($valor as $opcion) {
+            if (!is_string($opcion) || !in_array($opcion, $opcionesValidas, true)) {
+                throw new Exception('Se ha recibido una opción de respuesta no válida.');
+            }
+        }
+        return array_values(array_unique($valor));
+    }
 
-        return array_values(array_filter($valores, function ($opcion) use ($opcionesValidas) {
-            return in_array($opcion, $opcionesValidas, true);
-        }));
+    if ($valor !== null && !is_scalar($valor)) {
+        throw new Exception('La pregunta debe contener una sola respuesta.');
     }
 
     if (in_array($tipo, ['opcion_unica', 'desplegable'], true)) {

@@ -18,14 +18,14 @@ header('Content-Type: application/json; charset=utf-8');
 // 1. Comprobamos la sesión.
 
 
-$codMun = trim($_POST['cod_mun'] ?? '');
+$codMun = $_POST['cod_mun'] ?? '';
 $archivo = $_FILES['archivo'] ?? null;
 $municipioModel = new MunicipioModel($conn);
 
 try {
     // 2. Validamos el municipio y los permisos.
-    if ($codMun === '') {
-        throw new Exception('No se ha indicado el municipio.');
+    if (!is_string($codMun) || !preg_match('/^\d{5}$/D', $codMun)) {
+        throw new Exception('El código del municipio no es válido.');
     }
 
     if (!$municipioModel->usuarioPuedeGestionarMunicipio(
@@ -63,7 +63,8 @@ try {
     $nombreOriginal = pathinfo($archivo['name'], PATHINFO_FILENAME);
     $nombreLimpio = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $nombreOriginal);
     $nombreLimpio = trim($nombreLimpio, '_') ?: 'formulario';
-    $nombreFinal = $nombreLimpio . '_' . date('Ymd_His') . '.pdf';
+    // El sufijo evita sobrescribir otra subida con el mismo nombre y segundo.
+    $nombreFinal = $nombreLimpio . '_' . bin2hex(random_bytes(8)) . '.pdf';
     $rutaFisica = $carpetaFisica . '/' . $nombreFinal;
 
     if (!move_uploaded_file($archivo['tmp_name'], $rutaFisica)) {
