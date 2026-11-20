@@ -616,7 +616,10 @@ function crearFilaRecursoParticipacion(boton, indice) {
         ? ` · ${boton.formulario_titulo}`
         : '';
     const pendiente = boton.documento_pendiente;
-    const estado = pendiente ? 'Pendiente de subir el documento' : (boton.visible !== false ? 'Visible' : 'Oculto temporalmente');
+    let estado = boton.visible !== false ? 'Visible' : 'Oculto temporalmente';
+    if (pendiente) {
+        estado = boton.documento_no_disponible ? 'Documento guardado · archivo no localizado' : 'Pendiente de subir el documento';
+    }
 
     return `
         <article class="portal-content-row" data-resource-row="${indice}">
@@ -641,7 +644,9 @@ function crearEditorRecursoParticipacion(recurso) {
     const necesitaFormulario = tipo === 'formulario' || tipo === 'ambos';
     const necesitaPdf = tipo === 'pdf' || tipo === 'ambos';
     const formulariosDisponibles = (estadoPortal.formularios || []).filter(function (formulario) {
-        return formulario.modalidad === 'online' || formulario.modalidad === 'ambos';
+        if (Number(formulario.id) === Number(recurso.formulario_id)) return true;
+        if (necesitaFormulario) return ['online', 'ambos'].includes(formulario.modalidad);
+        return Boolean(formulario.pdf_url);
     });
     const formularioSeleccionado = formulariosDisponibles.find(function (formulario) {
         return Number(formulario.id) === Number(recurso.formulario_id);
@@ -666,9 +671,9 @@ function crearEditorRecursoParticipacion(recurso) {
             <div class="portal-config-grid">
                 ${crearCampoTextoLocal('Título del botón', 'resource-title', recurso.texto_boton || '')}
                 ${crearCampoSeleccionLocal('Contenido del botón', 'resource-type', tipo, [
-                    ['pdf', 'Solo documento PDF'],
-                    ['formulario', 'Solo formulario online'],
-                    ['ambos', 'Formulario online y PDF']
+                    ['pdf', 'Solo documento'],
+                    ['formulario', 'Solo encuesta online'],
+                    ['ambos', 'Documento y encuesta online']
                 ])}
 
                 ${crearCampoIcono('Icono del botón', 'resource-icon', icono, 'data-content-local')}
@@ -683,9 +688,9 @@ function crearEditorRecursoParticipacion(recurso) {
                     <div class="portal-config-help">Ocultarlo no elimina el archivo, el formulario ni su diseño.</div>
                 </div>
 
-                ${necesitaFormulario ? `
+                ${necesitaFormulario || formulariosDisponibles.length ? `
                     ${crearCampoSeleccionLocal(
-                        'Formulario vinculado',
+                        necesitaFormulario ? 'Encuesta vinculada' : 'Reutilizar el PDF de una encuesta (opcional)',
                         'resource-form',
                         String(recurso.formulario_id || ''),
                         [
@@ -696,9 +701,9 @@ function crearEditorRecursoParticipacion(recurso) {
                             })
                         ]
                     )}
-                    <div class="portal-config-help" style="grid-column:1/-1">
-                        Las respuestas online se guardan y se envían al gestor municipal. También se avisa al arquitecto cuando el municipio tiene activada esa opción.
-                    </div>` : ''}
+                    ${necesitaFormulario ? `<div class="portal-config-help" style="grid-column:1/-1">
+                        El gestor municipal recibe el PDF de cada respuesta. En Datos generales puedes activar la copia para el arquitecto.
+                    </div>` : ''}` : ''}
 
                 ${necesitaPdf ? `
                     <div class="portal-config-field" style="grid-column:1/-1">
@@ -709,9 +714,11 @@ function crearEditorRecursoParticipacion(recurso) {
                         </div>
                         <input type="file" class="d-none" data-content-file="resource" accept="application/pdf,.pdf">
                         <div class="portal-config-help">
-                            ${pdfFormulario
-                                ? `El formulario vinculado ya tiene PDF: ${escaparHtml(pdfFormulario)}`
-                                : 'Sube el PDF que podrá descargar la ciudadanía.'}
+                            ${recurso.url_documento
+                                ? `<a href="${escaparHtml(recurso.url_documento)}" target="_blank" rel="noopener">Abrir el documento actual</a>`
+                                : recurso.documento_no_disponible
+                                    ? 'La ruta está guardada, pero el archivo no se encuentra en el servidor.'
+                                    : 'Sube el PDF que podrá descargar la ciudadanía.'}
                         </div>
                     </div>` : ''}
             </div>
@@ -1013,7 +1020,9 @@ document.addEventListener('change', async function (evento) {
             recurso.visible = true;
         }
         recurso.archivo_url = url;
+        recurso.url_documento = url;
         recurso.documento_pendiente = false;
+        recurso.documento_no_disponible = false;
         marcarCambios(true, 'local');
         actualizarListadoRecursosParticipacion();
         return;

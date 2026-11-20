@@ -117,8 +117,7 @@ $usuario_id = $_SESSION['usuario_id'] ?? '';
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" value="1" id="enviar_docs_a_arquitecto" name="enviar_docs_a_arquitecto">
                     <label class="form-check-label" for="enviar_docs_a_arquitecto">
-                        Los documentos referentes a la participación serán enviados al gestor del ayuntamiento.
-                        ¿Desea que los documentos lleguen también al correo del arquitecto responsable?
+                        El gestor municipal recibe los mensajes del buzón y las respuestas de las encuestas. Enviar también una copia al arquitecto responsable.
                     </label>
                 </div>
             </div>

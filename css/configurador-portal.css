@@ -1070,28 +1070,15 @@ textarea {
 }
 
 .portal-form-preview-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .75fr);
+    --encuesta-color-municipio: var(--form-preview-color);
+    gap: 8px 14px;
     align-items: center;
     min-height: 54px;
     padding: 8px 22px;
     background: #ffffff;
     border-bottom: 1px solid #eee0e1;
-}
-
-.portal-form-preview-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    color: #7a5659;
-    font-size: 0.75rem;
-    font-weight: 550;
-}
-
-.portal-form-preview-brand img {
-    width: auto;
-    height: 28px;
-    max-width: 190px;
-    object-fit: contain;
 }
 
 .portal-form-preview-content {
@@ -1911,3 +1898,23 @@ body.portal-builder-page {
 }
 .portal-builder-page .portal-icon-picker__empty { margin: 10px 0 2px; color: #916d70; }
 .portal-builder-page .portal-icon-field [hidden] { display: none !important; }
+
+/* Controles del formulario de prueba que se dibujan en configuradorVistaFormulario.js. */
+.portal-form-preview-test {
+    margin: 16px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #eaf0f8;
+}
+.portal-form-preview-result {
+    color: #146c43;
+    font-weight: 600;
+    text-align: right;
+}
+.portal-form-preview-question [data-error-grupo] {
+    color: #a0212c;
+}
+.portal-form-preview-actions button:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
+}

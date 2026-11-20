@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/iconos_portal.php';
+require_once __DIR__ . '/../includes/participacion_portal.php';
 
 // ============================================================================
 // MODELO DE FORMULARIOS DINÁMICOS
@@ -83,15 +84,18 @@ class FormularioDinamicoModel
     }
 
     /**
-     * Busca un formulario público por su dirección amigable.
+     * Busca la encuesta por su enlace. El modo de gestión se autoriza en formulario.php.
      */
-    public function obtenerPorSlug($codMun, $slug)
+    public function obtenerPorSlug($codMun, $slug, $soloActivos = true)
     {
         $sql = "SELECT id
                 FROM pou.formularios
                 WHERE cod_mun = :cod_mun
-                  AND slug = :slug
-                  AND activo = TRUE";
+                  AND slug = :slug";
+
+        if ($soloActivos) {
+            $sql .= ' AND activo = TRUE';
+        }
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([
@@ -125,13 +129,25 @@ class FormularioDinamicoModel
             throw new Exception('El formulario necesita un título.');
         }
 
+        // Estos tamaños corresponden a las columnas de formularios en PostgreSQL.
+        if (mb_strlen($titulo, 'UTF-8') > 180) {
+            throw new Exception('El título del formulario no puede superar 180 caracteres.');
+        }
+        if (mb_strlen($datos['texto_boton_online'] ?? '', 'UTF-8') > 80
+            || mb_strlen($datos['texto_boton_pdf'] ?? '', 'UTF-8') > 80) {
+            throw new Exception('El texto de cada botón no puede superar 80 caracteres.');
+        }
+
         $modalidad = $this->normalizarModalidad($datos['modalidad'] ?? 'online');
 
         // Validamos también en servidor. El navegador ayuda al usuario, pero
         // una petición manual nunca debe guardar un formulario incompleto.
-        $this->validarContenidoFormulario($datos, $modalidad);
+        $this->validarContenidoFormulario($datos, $modalidad, $codMun);
 
-        $slugBase = $datos['slug'] ?? $titulo;
+        $slugBase = trim($datos['slug'] ?? '');
+        if ($slugBase === '') {
+            $slugBase = $titulo;
+        }
         $slug = $this->crearSlugUnico($codMun, $slugBase, $formularioId);
 
         if ($formularioId) {
@@ -253,7 +269,7 @@ class FormularioDinamicoModel
             ':formulario_id' => (int)$formulario['id'],
             ':cod_mun' => $formulario['cod_mun'],
             ':referencia' => $referencia,
-            ':respuestas' => json_encode($respuestas, JSON_UNESCAPED_UNICODE),
+            ':respuestas' => json_encode($respuestas, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
             ':ip_hash' => $ipHash
         ]);
 
@@ -493,7 +509,8 @@ class FormularioDinamicoModel
             ':mensaje_confirmacion' => trim(
                 $datos['mensaje_confirmacion'] ?? 'Gracias por participar.'
             ),
-            ':activo' => !empty($datos['activo']),
+            // PDO enviaba false como una cadena vacía. PostgreSQL exige un booleano válido.
+            ':activo' => !empty($datos['activo']) ? 'true' : 'false',
             ':orden' => (int)($datos['orden'] ?? 0)
         ];
     }
@@ -609,14 +626,14 @@ class FormularioDinamicoModel
             }
 
             $opciones = array_map('trim', $pregunta['opciones'] ?? []);
-            $opciones = array_values(array_filter($opciones));
+            $opciones = array_values(array_unique(array_diff($opciones, [''])));
 
             $stmtPregunta->execute([
                 ':seccion_id' => $seccionId,
                 ':enunciado' => $enunciado,
                 ':ayuda' => trim($pregunta['ayuda'] ?? ''),
                 ':tipo' => $tipo,
-                ':obligatorio' => !empty($pregunta['obligatorio']),
+                ':obligatorio' => !empty($pregunta['obligatorio']) ? 'true' : 'false',
                 ':ancho' => ($pregunta['ancho'] ?? '') === 'medio'
                     ? 'medio'
                     : 'completo',
@@ -632,12 +649,12 @@ class FormularioDinamicoModel
      * Esta validación reproduce las reglas del configurador visual para que
      * los datos sigan siendo coherentes aunque la petición no venga del UI.
      */
-    private function validarContenidoFormulario(array $datos, $modalidad)
+    private function validarContenidoFormulario(array $datos, $modalidad, $codMun)
     {
         $pdfUrl = trim($datos['pdf_url'] ?? '');
         $necesitaPdf = $modalidad === 'pdf' || $modalidad === 'ambos';
 
-        if ($necesitaPdf && $pdfUrl === '') {
+        if ($necesitaPdf && resolverArchivoParticipacion($pdfUrl, $codMun) === '') {
             throw new Exception(
                 'La modalidad seleccionada necesita un documento PDF.'
             );
@@ -662,8 +679,12 @@ class FormularioDinamicoModel
         ];
 
         foreach ($secciones as $seccion) {
-            if (trim($seccion['titulo'] ?? '') === '') {
+            $tituloSeccion = trim($seccion['titulo'] ?? '');
+            if ($tituloSeccion === '') {
                 throw new Exception('Todos los apartados necesitan un título.');
+            }
+            if (mb_strlen($tituloSeccion, 'UTF-8') > 180) {
+                throw new Exception('El título de un apartado no puede superar 180 caracteres.');
             }
 
             $preguntas = $seccion['preguntas'] ?? [];
@@ -686,7 +707,7 @@ class FormularioDinamicoModel
                 if (in_array($tipo, $tiposConOpciones, true)) {
                     $opciones = $pregunta['opciones'] ?? [];
                     $opciones = is_array($opciones)
-                        ? array_values(array_filter(array_map('trim', $opciones)))
+                        ? array_unique(array_diff(array_map('trim', $opciones), ['']))
                         : [];
 
                     if (count($opciones) < 2) {

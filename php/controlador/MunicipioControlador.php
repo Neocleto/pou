@@ -118,7 +118,7 @@ class MunicipioController {
                 $cod_mun,
                 $esPreview
             ),
-            'formulariosPublicos'   => $this->obtenerFormulariosSeguros($formularioModel, $cod_mun),
+            'formulariosPublicos'   => $this->obtenerFormulariosSeguros($formularioModel, $cod_mun, $modoPreview),
             'modoPreview'          => $modoPreview,
         ];
     }
@@ -152,12 +152,12 @@ class MunicipioController {
     }
 
     /**
-     * Obtiene los formularios publicados o una lista vacía.
+     * La vista previa autorizada incluye borradores. El portal solo recoge publicados.
      */
-    private function obtenerFormulariosSeguros($model, $codMun)
+    private function obtenerFormulariosSeguros($model, $codMun, $modoPreview)
     {
         try {
-            return $model->listarPorMunicipio($codMun, true);
+            return $model->listarPorMunicipio($codMun, !$modoPreview);
         } catch (Exception $error) {
             return [];
         }

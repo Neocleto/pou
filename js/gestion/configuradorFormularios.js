@@ -29,6 +29,11 @@ function renderPanelFormularios() {
                     <small>${modalidad} · ${respuestas} respuestas · ${convertirBooleano(formulario.activo, false) ? 'Publicado' : 'Borrador'}</small>
                 </span>
                 <span class="portal-form-list__actions">
+                    ${esEncuestaOnline(formulario) && formulario.slug ? `
+                        <a class="portal-small-button" href="${escaparHtml(obtenerUrlPruebaEncuesta(formulario.slug))}"
+                           target="_blank" rel="noopener" title="Probar encuesta" aria-label="Probar ${escaparHtml(formulario.titulo)}">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </a>` : ''}
                     <button type="button" class="portal-small-button" data-action="edit-form" data-id="${Number(formulario.id)}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -43,7 +48,7 @@ function renderPanelFormularios() {
     document.getElementById('contenidoPanelConfigurador').innerHTML = `
         ${crearTarjetaConfiguracion(
             'Formularios del municipio',
-            'La ciudadanía podrá responder desde la página pública.',
+            'Después de guardar una encuesta, vincúlala al botón de participación que quieras usar.',
             `<div class="portal-form-builder-toolbar">
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary btn-sm" data-action="new-form">
@@ -78,7 +83,7 @@ function crearFormularioVacioPortal() {
         pdf_url: '',
         texto_boton_online: 'Realizar encuesta online',
         texto_boton_pdf: 'Descargar encuesta en PDF',
-        mensaje_confirmacion: 'Gracias por participar. Tu respuesta se ha registrado correctamente.',
+        mensaje_confirmacion: 'Tu respuesta se ha registrado correctamente.',
         activo: true,
         secciones: [
             {
@@ -171,7 +176,7 @@ function renderEditorFormulario() {
         ? crearCampoTextoFormulario(
             'Texto del botón online',
             'texto_boton_online',
-            formulario.texto_boton_online || ''
+            formulario.texto_boton_online || 'Realizar encuesta online'
         )
         : '';
 
@@ -311,7 +316,6 @@ function renderEditorFormulario() {
         ${constructorPreguntas}
     `;
     cambiarModoVistaPrevia('formulario');
-    renderizarVistaPreviaFormulario();
 }
 
 /**
@@ -466,9 +470,15 @@ function modificarPreguntaFormulario(boton) {
  * pulsar "Guardar formulario".
  */
 async function subirPdfFormularioPortal(archivo) {
-    if (!archivo || !estadoPortal.formularioActual) {
+    const formulario = estadoPortal.formularioActual;
+    if (!archivo || !formulario || formulario.subiendoPdf) {
         return;
     }
+
+    formulario.subiendoPdf = true;
+    const botonSubir = document.querySelector('[data-action="upload-form-pdf"]');
+    botonSubir.disabled = true;
+    mostrarGuardadoFormularioPortal(true, 'Subiendo PDF');
 
     const datos = new FormData();
     datos.append('cod_mun', estadoPortal.codMun);
@@ -483,7 +493,8 @@ async function subirPdfFormularioPortal(archivo) {
             }
         );
 
-        estadoPortal.formularioActual.pdf_url = resultado.url;
+        formulario.pdf_url = resultado.url;
+        if (estadoPortal.formularioActual !== formulario) return;
         renderEditorFormulario();
 
         Swal.fire({
@@ -495,6 +506,12 @@ async function subirPdfFormularioPortal(archivo) {
         });
     } catch (error) {
         Swal.fire('No se pudo subir el PDF', error.message, 'error');
+    } finally {
+        delete formulario.subiendoPdf;
+        if (estadoPortal.formularioActual === formulario) {
+            botonSubir.disabled = false;
+            mostrarGuardadoFormularioPortal(false);
+        }
     }
 }
 
@@ -553,7 +570,7 @@ function validarFormularioPortal(formulario) {
                 'desplegable'
             ].includes(pregunta.tipo);
 
-            if (necesitaOpciones && (!pregunta.opciones || pregunta.opciones.length < 2)) {
+            if (necesitaOpciones && new Set(pregunta.opciones || []).size < 2) {
                 return 'Las preguntas de opciones necesitan al menos dos respuestas posibles.';
             }
         }
@@ -572,7 +589,7 @@ function validarFormularioPortal(formulario) {
  *
  * @param {boolean} guardando Indica si la petición está activa.
  */
-function mostrarGuardadoFormularioPortal(guardando) {
+function mostrarGuardadoFormularioPortal(guardando, mensaje = 'Guardando') {
     const boton = document.querySelector('[data-action="save-form"]');
 
     if (!boton) {
@@ -581,7 +598,7 @@ function mostrarGuardadoFormularioPortal(guardando) {
 
     boton.disabled = guardando;
     boton.innerHTML = guardando
-        ? '<span class="spinner-border spinner-border-sm me-1"></span>Guardando'
+        ? '<span class="spinner-border spinner-border-sm me-1"></span>' + mensaje
         : '<i class="bi bi-check2-circle me-1"></i>Guardar formulario';
 }
 
@@ -590,6 +607,7 @@ function mostrarGuardadoFormularioPortal(guardando) {
  */
 async function guardarFormularioPortal() {
     const formulario = estadoPortal.formularioActual;
+    if (!formulario || formulario.subiendoPdf || formulario.guardando) return;
     const mensajeValidacion = validarFormularioPortal(formulario);
 
     if (mensajeValidacion) {
@@ -598,6 +616,7 @@ async function guardarFormularioPortal() {
     }
 
     mostrarGuardadoFormularioPortal(true);
+    formulario.guardando = true;
 
     try {
         const resultado = await solicitarJson(
@@ -611,31 +630,42 @@ async function guardarFormularioPortal() {
             }
         );
 
-        // Guardamos el identificador devuelto por el servidor. Si una recarga del
-        // listado falla, el formulario sigue sabiendo que ya existe en BBDD.
-        estadoPortal.formularioActual.id = Number(resultado.id || 0) || null;
+        // La respuesta de guardado ya incluye los datos confirmados en PostgreSQL.
+        // Una segunda petición al listado podía fallar y confundir un guardado correcto.
+        const guardado = resultado.formulario;
+        formulario.id = guardado.id;
+        formulario.slug = guardado.slug;
+        const indice = estadoPortal.formularios.findIndex(item => Number(item.id) === Number(guardado.id));
+        if (indice === -1) {
+            estadoPortal.formularios.push(guardado);
+        } else {
+            guardado.total_respuestas = estadoPortal.formularios[indice].total_respuestas;
+            estadoPortal.formularios[indice] = guardado;
+        }
 
-        const datos = await solicitarJson(
-            `php/gestion/formularios_dinamicos/acciones_formularios.php?accion=listar&cod_mun=${encodeURIComponent(estadoPortal.codMun)}`
-        );
-
-        estadoPortal.formularios = datos.formularios || [];
-        estadoPortal.formularioActual = null;
-
+        if (estadoPortal.formularioActual === formulario) {
+            estadoPortal.formularioActual = null;
+            renderPanelFormularios();
+        }
         renderMenuConfigurador();
-        renderPanelFormularios();
         recargarIframePortal();
 
-        Swal.fire({
+        const decision = await Swal.fire({
             icon: 'success',
             title: 'Formulario guardado',
-            timer: 1300,
-            showConfirmButton: false
+            text: 'En Botones de participación puedes elegir la tarjeta y vincular este formulario.',
+            confirmButtonText: 'Ir a los botones',
+            showCancelButton: true,
+            cancelButtonText: 'Cerrar'
         });
+        if (decision.isConfirmed) {
+            mostrarPanelConfigurador('seccion:participacion');
+        }
     } catch (error) {
         Swal.fire('No se pudo guardar el formulario', error.message, 'error');
     } finally {
-        mostrarGuardadoFormularioPortal(false);
+        delete formulario.guardando;
+        if (estadoPortal.formularioActual === formulario) mostrarGuardadoFormularioPortal(false);
     }
 }
 

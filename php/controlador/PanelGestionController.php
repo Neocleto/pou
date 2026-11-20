@@ -202,8 +202,13 @@ class PanelGestionController {
         }
 
         foreach ($botones as $boton) {
-            if ($boton['documento_pendiente']) {
+            if ($boton['documento_no_disponible']) {
+                $pasosIncompletos[] = 'Paso 5 - Comprueba el archivo asociado a «' . $boton['texto_boton'] . '». El servidor no lo encuentra.';
+            } elseif ($boton['documento_pendiente']) {
                 $pasosIncompletos[] = 'Paso 5 - Sube el documento de «' . $boton['texto_boton'] . '» antes de publicar.';
+            }
+            if ($boton['formulario_pendiente'] && !empty($boton['visible'])) {
+                $pasosIncompletos[] = 'Paso 5 - Activa el formulario online de «' . $boton['texto_boton'] . '» antes de publicar.';
             }
         }
 

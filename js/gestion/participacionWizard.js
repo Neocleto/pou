@@ -111,11 +111,6 @@ function cerrarPanelParticipacionSeguro() {
 // FUNCIÓN PRINCIPAL (la llama wizard.js cuando inyecta el paso 5)
 // ============================================================
 function inicializarPasoParticipacion() {
-  const codMun = getCodMunActual();
-
-  const hidden = document.getElementById("cod_mun_participacion");
-  if (hidden) hidden.value = codMun;
-
   const panel = document.getElementById("offcanvasBotonParticipacion");
   if (panel) document.querySelector("#modalWizard .modal-content").appendChild(panel);
 
@@ -125,12 +120,9 @@ function inicializarPasoParticipacion() {
     participacionUIBound = true;
   }
 
-  // Cargar botones de participación del municipio actual
-  if (codMun) {
-    cargarBotonesParticipacion(codMun);
-  } else {
-    renderizarBotonesParticipacion([]);
-  }
+  // Al editar, wizard.js carga los botones cuando ya conoce el municipio.
+  botonesParticipacionCargados = [];
+  renderizarBotonesParticipacion();
 }
 
 //
@@ -223,10 +215,14 @@ function bindParticipacionUI() {
     // Al añadir el documento pendiente, proponemos mostrar el botón. Se puede desmarcar antes de guardar.
     if (e.target.id === "archivo_boton_modal" && e.target.files.length) {
       const id = document.getElementById("boton_id").value;
-      const boton = botonesParticipacionCargados.find(boton => String(boton.id) === id);
+      const boton = botonesParticipacionCargados?.find(boton => String(boton.id) === id);
       if (boton?.documento_pendiente) {
         document.getElementById("visible_boton_modal").checked = true;
       }
+    }
+
+    if (e.target.id === "tipo_boton_modal") {
+      actualizarCamposBotonParticipacion();
     }
 
     // La vista previa cambia al elegir otro icono o color.
@@ -327,7 +323,7 @@ function abrirPanelBotonParticipacionEditar(id) {
   const panel = getPanelInstance();
   if (!panel) return;
 
-  const boton = botonesParticipacionCargados.find((b) => String(b.id) === String(id));
+  const boton = botonesParticipacionCargados?.find((b) => String(b.id) === String(id));
   if (!boton) {
     Swal?.fire?.("Error", "No se encontró el botón a editar.", "error");
     return;
@@ -379,7 +375,7 @@ function setPanelMode({ modo, boton }) {
     if (subtitulo) subtitulo.textContent = "Crea un botón visible en la sección pública";
     if (btn) btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Guardar';
     if (ayuda) ayuda.textContent = "Selecciona un archivo (obligatorio en creación).";
-    archivo?.setAttribute("required", "required");
+    archivo?.removeAttribute("required");
   } else {
     if (titulo) titulo.textContent = "Editar botón";
     if (subtitulo) subtitulo.textContent = "Actualiza texto y/o reemplaza el archivo";
@@ -412,13 +408,75 @@ function setPanelMode({ modo, boton }) {
         if (previewNombre) previewNombre.textContent = boton.url_documento.split("/").pop();
         preview?.classList.remove("d-none");
       } else if (boton.documento_pendiente && ayuda) {
-        ayuda.textContent = "El botón estará deshabilitado hasta que subas su documento.";
+        ayuda.textContent = boton.documento_no_disponible
+          ? "La ruta está guardada, pero el archivo no se encuentra en el servidor."
+          : "El botón estará deshabilitado hasta que subas su documento.";
       }
     }
+  }
+  const selectorTipo = document.getElementById("tipo_boton_modal");
+  const selectorFormulario = document.getElementById("formulario_boton_modal");
+  if (selectorTipo && selectorFormulario) {
+    selectorTipo.value = boton?.tipo_contenido || "pdf";
+    // Mantiene la encuesta existente si se abre el panel para editar solo su color.
+    selectorFormulario.replaceChildren(new Option("Selecciona una encuesta", ""));
+    if (boton?.formulario_id) {
+      const opcion = new Option(boton.formulario_titulo || "Encuesta vinculada", boton.formulario_id, true, true);
+      opcion.dataset.pdf = boton.formulario_pdf_url || "";
+      selectorFormulario.add(opcion);
+    }
+    actualizarCamposBotonParticipacion();
   }
   actualizarMuestraColorPortal(color);
   cerrarPaletasColorPortal();
   actualizarVistaIconoParticipacion();
+}
+
+// Obtiene las encuestas de este municipio con la misma acción del configurador.
+async function actualizarCamposBotonParticipacion() {
+  const tipo = document.getElementById("tipo_boton_modal").value;
+  const selector = document.getElementById("formulario_boton_modal");
+  const esOnline = tipo !== "pdf";
+  document.querySelector('label[for="formulario_boton_modal"]').textContent = esOnline
+    ? "Encuesta vinculada"
+    : "Reutilizar el PDF de una encuesta (opcional)";
+  document.getElementById("campoArchivoBoton").classList.toggle("d-none", tipo === "formulario");
+  selector.required = esOnline;
+
+  selector.disabled = true;
+  try {
+    const url = "php/gestion/formularios_dinamicos/acciones_formularios.php?accion=listar&cod_mun="
+      + encodeURIComponent(getCodMunActual());
+    const respuesta = await fetch(url, {cache: "no-store"});
+    const datos = await respuesta.json();
+    // El panel pudo cerrarse o cambiar de modalidad mientras llegaba el listado.
+    if (!selector.isConnected || document.getElementById("tipo_boton_modal").value !== tipo) return;
+    if (!respuesta.ok || !datos.ok) {
+      throw new Error(datos.mensaje || datos.message || "No se pudieron cargar las encuestas.");
+    }
+
+    const seleccionada = selector.selectedOptions[0];
+    selector.replaceChildren(new Option(esOnline ? "Selecciona una encuesta" : "Usar el archivo de la tarjeta", ""));
+    for (const formulario of datos.formularios) {
+      const admiteOnline = ["online", "ambos"].includes(formulario.modalidad);
+      if (esOnline && !admiteOnline) continue;
+      if (!esOnline && !formulario.pdf_url) continue;
+      const estado = formulario.activo ? "" : " · borrador";
+      const opcion = new Option(formulario.titulo + estado, formulario.id);
+      opcion.dataset.pdf = formulario.pdf_url || "";
+      selector.add(opcion);
+    }
+    if (seleccionada?.value) {
+      if (![...selector.options].some(opcion => opcion.value === seleccionada.value)) {
+        selector.add(seleccionada);
+      }
+      selector.value = seleccionada.value;
+    }
+  } catch (error) {
+    Swal.fire("No se pudieron cargar las encuestas", error.message, "error");
+  } finally {
+    selector.disabled = false;
+  }
 }
 
 /** Muestra el mismo icono y color que tendrá el botón público. */
@@ -445,54 +503,58 @@ function convertirBooleanoParticipacion(valor, porDefecto = true) {
 // ============================================================
 // Cargar / Render botones
 // ============================================================
-function cargarBotonesParticipacion(cod_mun) {
-  const sp = document.getElementById("spinnerListaBotones");
+async function cargarBotonesParticipacion(cod_mun) {
   const wrapper = document.getElementById("listaBotonesParticipacionWrapper");
-  const vacio = document.getElementById("estadoVacioBotones");
+  if (!wrapper) return;
 
-  sp?.classList.remove("d-none");
-  wrapper?.classList.add("d-none");
-  vacio?.classList.add("d-none");
+  const spinner = document.getElementById("spinnerListaBotones");
+  spinner.classList.remove("d-none");
+  renderizarBotonesParticipacion();
 
-  // DEVOLVEMOS LA PROMESA
-  return fetch(`php/gestion/acciones/acciones_participacion.php?action=listarBotonesParticipacion&cod_mun=${encodeURIComponent(cod_mun)}`)
-    .then((res) => res.json())
-    .then((data) => renderizarBotonesParticipacion(data.success ? (data.data || []) : []))
-    .catch(() => renderizarBotonesParticipacion([]))
-    .finally(() => sp?.classList.add("d-none"));
+  let botones = null;
+  try {
+    const respuesta = await fetch(`php/gestion/acciones/acciones_participacion.php?action=listarBotonesParticipacion&cod_mun=${encodeURIComponent(cod_mun)}`);
+    const datos = await respuesta.json();
+    if (datos.success && Array.isArray(datos.data)) botones = datos.data;
+  } catch (error) {
+    console.error("No se pudieron cargar los botones de participación.", error);
+  }
+
+  // El asistente puede haberse cerrado mientras llegaba la respuesta.
+  if (!wrapper.isConnected) return;
+  botonesParticipacionCargados = botones;
+  spinner.classList.add("d-none");
+  renderizarBotonesParticipacion();
 }
 
-function renderizarBotonesParticipacion(botones) {
-  botonesParticipacionCargados = Array.isArray(botones) ? botones : [];
-
+function renderizarBotonesParticipacion() {
   const wrapper = document.getElementById("listaBotonesParticipacionWrapper");
-  const vacio = document.getElementById("estadoVacioBotones");
-  const mensajeMaximo = document.getElementById("mensajeMaximoBotones");
-  const btnNuevo = document.getElementById("btnNuevoBotonParticipacion");
+  if (!wrapper) return;
 
-  const max = botonesParticipacionCargados.length >= MAX_BOTONES_GESTION;
-  if (max) {
-    mensajeMaximo?.classList.remove("d-none");
-    btnNuevo?.setAttribute("disabled", true);
-  } else {
-    mensajeMaximo?.classList.add("d-none");
-    btnNuevo?.removeAttribute("disabled");
-  }
+  const cargando = !document.getElementById("spinnerListaBotones").classList.contains("d-none");
+  const errorCarga = !cargando && botonesParticipacionCargados === null;
+  // Los botones de la plantilla solo se muestran cuando no hay botones guardados.
+  const vistaPlantilla = !cargando && plantillaPendiente && botonesParticipacionCargados?.length === 0;
+  const botones = vistaPlantilla ? JSON.parse(wrapper.dataset.botonesPlantilla) : (botonesParticipacionCargados || []);
+  const maximo = botones.length >= MAX_BOTONES_GESTION;
+  const mostrarLista = !cargando && botones.length > 0;
 
-  if (botonesParticipacionCargados.length === 0) {
-    if (wrapper) wrapper.innerHTML = "";
-    wrapper?.classList.add("d-none");
-    vacio?.classList.remove("d-none");
+  document.getElementById("btnNuevoBotonParticipacion").disabled = cargando || errorCarga || maximo;
+  document.getElementById("mensajeMaximoBotones").classList.toggle("d-none", cargando || vistaPlantilla || !maximo);
+  document.getElementById("mensajeBotonesPlantilla").classList.toggle("d-none", !vistaPlantilla);
+  document.getElementById("errorListaBotonesParticipacion").classList.toggle("d-none", !errorCarga);
+  document.getElementById("estadoVacioBotones").classList.toggle("d-none", cargando || errorCarga || mostrarLista);
+  wrapper.classList.toggle("d-none", !mostrarLista);
+
+  if (!mostrarLista) {
+    wrapper.innerHTML = "";
     return;
   }
-
-  vacio?.classList.add("d-none");
-  wrapper?.classList.remove("d-none");
 
   wrapper.innerHTML = `
     <div class="bg-white border rounded-4 overflow-hidden">
       <div class="list-group list-group-flush">
-        ${botonesParticipacionCargados.map((b) => {
+        ${botones.map((b) => {
           const texto = escapeHtml(b.texto_boton || "");
           const url = b.url_documento || "";
           const pendiente = b.documento_pendiente;
@@ -503,7 +565,12 @@ function renderizarBotonesParticipacion(botones) {
           );
           const color = escapeHtml(b.color || document.getElementById("color_boton_modal").defaultValue);
           const visible = !pendiente && convertirBooleanoParticipacion(b.visible, true);
-          const estado = pendiente ? "Pendiente de subir el documento" : (visible ? "Visible en la página pública" : "Oculto temporalmente");
+          let estado = visible ? "Visible en la página pública" : "Oculto temporalmente";
+          if (vistaPlantilla && !pendiente) estado = "Documento disponible";
+          if (b.formulario_pendiente) estado = "Encuesta pendiente de activar";
+          if (pendiente) {
+            estado = b.documento_no_disponible ? "Documento guardado · archivo no localizado" : "Pendiente de subir el documento";
+          }
 
           return `
             <div class="list-group-item py-1 ${visible ? "" : "bg-light"}">
@@ -525,12 +592,14 @@ function renderizarBotonesParticipacion(botones) {
                   <button type="button" class="btn btn-outline-primary btn-sm btnVerBoton" data-url="${escapeHtml(url)}" title="Ver archivo" ${url ? "" : "disabled"}>
                     <i class="bi bi-eye"></i>
                   </button>
-                  <button type="button" class="btn btn-outline-secondary btn-sm btnEditarBoton" data-id="${b.id}" title="Editar">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button type="button" class="btn btn-outline-danger btn-sm btnEliminarBoton" data-id="${b.id}" title="Eliminar">
-                    <i class="bi bi-trash"></i>
-                  </button>
+                  ${vistaPlantilla ? "" : `
+                    <button type="button" class="btn btn-outline-secondary btn-sm btnEditarBoton" data-id="${b.id}" title="Editar">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm btnEliminarBoton" data-id="${b.id}" title="Eliminar">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  `}
                 </div>
               </div>
             </div>
@@ -559,10 +628,16 @@ async function guardarOActualizarDesdePanel() {
   const icono = document.getElementById("icono_boton_modal")?.value ?? "file-earmark-arrow-down";
   const color = document.getElementById("color_boton_modal").value;
   const visible = document.getElementById("visible_boton_modal")?.checked !== false;
-  const botonActual = botonesParticipacionCargados.find(function (boton) {
-    return String(boton.id) === id;
-  });
-  const tipoContenido = botonActual?.tipo_contenido || 'pdf';
+  const tipoContenido = document.getElementById("tipo_boton_modal").value;
+  const selectorFormulario = document.getElementById("formulario_boton_modal");
+  const formularioId = selectorFormulario.value;
+  const necesitaFormulario = tipoContenido !== "pdf";
+  const necesitaDocumento = tipoContenido !== "formulario";
+
+  if (necesitaFormulario && (selectorFormulario.disabled || !formularioId)) {
+    Swal.fire("Selecciona una encuesta", "Elige la encuesta que quieres vincular al botón.", "warning");
+    return;
+  }
 
   if (!codMun) {
     Swal?.fire?.("Faltan datos", "No se ha detectado el municipio (cod_mun).", "warning");
@@ -575,7 +650,7 @@ async function guardarOActualizarDesdePanel() {
 
   const esEdicion = !!id;
 
-  const duplicado = botonesParticipacionCargados.some((b) => {
+  const duplicado = botonesParticipacionCargados?.some((b) => {
     const mismoTexto = (b.texto_boton || "").trim().toLowerCase() === texto.toLowerCase();
     const distintoId = String(b.id) !== String(id);
     return mismoTexto && (esEdicion ? distintoId : true);
@@ -586,7 +661,7 @@ async function guardarOActualizarDesdePanel() {
     return;
   }
 
-  if (!esEdicion && !archivo) {
+  if (!esEdicion && necesitaDocumento && !archivo && !selectorFormulario.selectedOptions[0]?.dataset.pdf) {
     Swal?.fire?.("Falta el documento", "Selecciona el archivo antes de mostrar el botón.", "warning");
     return;
   }
@@ -595,10 +670,10 @@ async function guardarOActualizarDesdePanel() {
     showSpinnerGuardando(true);
 
     let archivoUrlFinal = archivoActual;
-    if (archivo) archivoUrlFinal = await subirArchivoBoton(archivo, codMun);
+    if (necesitaDocumento && archivo) archivoUrlFinal = await subirArchivoBoton(archivo, codMun);
 
     if (!esEdicion) {
-      await crearBotonEnBBDD(codMun, texto, archivoUrlFinal, icono, color, visible);
+      await crearBotonEnBBDD(codMun, texto, archivoUrlFinal, icono, color, visible, tipoContenido, formularioId);
       Swal?.fire?.({
         icon: "success",
         title: "Creado",
@@ -617,7 +692,7 @@ async function guardarOActualizarDesdePanel() {
         color,
         visible,
         tipoContenido,
-        botonActual?.formulario_id || ''
+        formularioId
       );
       Swal?.fire?.({
         icon: "success",
@@ -662,7 +737,7 @@ function subirArchivoBoton(archivo, codMun) {
   });
 }
 
-function crearBotonEnBBDD(codMun, texto, archivoUrl, icono, color, visible) {
+function crearBotonEnBBDD(codMun, texto, archivoUrl, icono, color, visible, tipoContenido, formularioId) {
   const datos = new URLSearchParams();
   datos.append("action", "guardarBotonParticipacion");
   datos.append("cod_mun", codMun);
@@ -671,6 +746,8 @@ function crearBotonEnBBDD(codMun, texto, archivoUrl, icono, color, visible) {
   datos.append("icono", icono);
   datos.append("color", color);
   datos.append("visible", visible ? "1" : "0");
+  datos.append("tipo_contenido", tipoContenido);
+  datos.append("formulario_id", formularioId);
 
   return fetch("php/gestion/acciones/acciones_participacion.php", { method: "POST", body: datos })
     .then((r) => r.json())

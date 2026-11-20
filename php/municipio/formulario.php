@@ -7,17 +7,36 @@
 require_once(__DIR__ . '/../db/conexion.php');
 require_once(__DIR__ . '/../modelo/FormularioDinamicoModel.php');
 require_once(__DIR__ . '/../modelo/MunicipioModel.php');
+require_once(__DIR__ . '/../includes/participacion_portal.php');
 
-$codMun = trim($_GET['cod_mun'] ?? '');
-$slug = trim($_GET['slug'] ?? '');
+$codMun = $_GET['cod_mun'] ?? '';
+$slug = $_GET['slug'] ?? '';
+if (!is_string($codMun) || !preg_match('/^\d{5}$/D', $codMun) || !is_string($slug)) {
+    http_response_code(404);
+    exit('El formulario no está disponible.');
+}
 
 $formularioModel = new FormularioDinamicoModel($conn);
 $municipioModel = new MunicipioModel($conn);
 
-$formulario = $formularioModel->obtenerPorSlug($codMun, $slug);
-$municipio = $municipioModel->obtenerMunicipioActivosPorCodigo($codMun);
+// Una vista de prueba necesita sesión y acceso a este municipio, como el configurador.
+$esPreview = ($_GET['preview'] ?? '') === '1';
+if ($esPreview) {
+    exigirAccesoProyecto(false, false);
+    if (!$municipioModel->usuarioPuedeGestionarMunicipio(
+        $codMun, $_SESSION['usuario_id'] ?? null, $_SESSION['usuario_correo'] ?? ''
+    )) {
+        http_response_code(403);
+        exit('No tienes acceso a la vista previa de este municipio.');
+    }
+}
 
-// Solo se muestran formularios publicados y con modalidad online.
+$municipio = $esPreview
+    ? $municipioModel->obtenerMunicipioPorCodigo($codMun)
+    : $municipioModel->obtenerMunicipioActivosPorCodigo($codMun);
+$formulario = $formularioModel->obtenerPorSlug($codMun, $slug, !$esPreview);
+
+// La encuesta pública requiere municipio publicado y formulario activo con modalidad online.
 if (
     !$formulario
     || !$municipio
@@ -27,9 +46,13 @@ if (
     exit('El formulario no está disponible.');
 }
 
-/**
- * Escapa texto para atributos HTML.
- */
+$urlPdf = resolverArchivoParticipacion($formulario['pdf_url'] ?? '', $codMun);
+$urlVolver = 'php/municipio/municipio.php?cod_mun=' . urlencode($codMun);
+if ($esPreview) {
+    $urlVolver .= '&preview=1';
+}
+
+// Protege los textos de la encuesta al mostrarlos en HTML.
 function escaparAtributo($valor)
 {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
@@ -47,7 +70,8 @@ function escaparAtributo($valor)
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap@5.3.0.min.css">
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/formulario-publico.css">
+    <link rel="stylesheet" href="css/formulario-publico.css?v=<?= filemtime(__DIR__ . '/../../css/formulario-publico.css') ?>">
+    <link rel="stylesheet" href="css/formulario-cabecera.css?v=<?= filemtime(__DIR__ . '/../../css/formulario-cabecera.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
 <body
@@ -61,20 +85,20 @@ function escaparAtributo($valor)
 
     <!-- Cabecera institucional. -->
     <header class="form-public-header">
-        <div class="form-public-shell form-public-header__inner">
-            <img src="images/logo_idemap.png" alt="IDEMAP GEOportal" class="form-public-logo-idemap">
+        <div class="form-public-header__inner">
+            <div class="encuesta-marca__municipio">
+                <img class="encuesta-marca__escudo" src="<?= escaparAtributo($municipio['escudo']) ?>" alt="">
+                <strong>POU - <?= escaparAtributo($municipio['nombre']) ?></strong>
+            </div>
 
             <a
-                href="php/municipio/municipio.php?cod_mun=<?= urlencode($codMun) ?>"
+                href="<?= escaparAtributo($urlVolver) ?>"
                 class="form-public-back">
                 <i class="bi bi-arrow-left"></i>
                 Volver al POU
             </a>
 
-            <img
-                src="images/logo_diputacion_azul.png"
-                alt="Diputación Provincial de Málaga"
-                class="form-public-logo-diputacion">
+            <img class="encuesta-marca__diputacion" src="images/logo_diputacion_azul.png" alt="Diputación Provincial de Málaga">
         </div>
     </header>
 
@@ -98,9 +122,9 @@ function escaparAtributo($valor)
                 <?php endif; ?>
             </div>
 
-            <?php if ($formulario['modalidad'] === 'ambos' && !empty($formulario['pdf_url'])): ?>
+            <?php if ($formulario['modalidad'] === 'ambos' && $urlPdf !== ''): ?>
                 <a
-                    href="<?= escaparAtributo($formulario['pdf_url']) ?>"
+                    href="<?= escaparAtributo($urlPdf) ?>"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="form-public-pdf">
@@ -110,15 +134,24 @@ function escaparAtributo($valor)
             <?php endif; ?>
         </section>
 
-        <!-- Formulario generado dinámicamente. -->
+        <?php if ($esPreview): ?>
+            <p class="alert alert-info mt-3">Vista previa de gestión. Puedes rellenar y probar el formulario sin registrar respuestas.</p>
+        <?php endif; ?>
+
+        <!-- Formulario generado dinámicamente. En vista previa el POST tampoco apunta al registro real. -->
         <form
             id="formularioDinamicoPublico"
-            action="php/municipio/guardar_respuesta_formulario.php"
+            <?php if ($esPreview): ?>
+                action="<?= escaparAtributo(urlEncuestaMunicipal($codMun, $slug, true)) ?>" data-preview="1"
+            <?php else: ?>
+                action="php/municipio/guardar_respuesta_formulario.php"
+            <?php endif; ?>
             method="post"
             class="form-public-form"
             novalidate>
 
             <input type="hidden" name="formulario_id" value="<?= (int)$formulario['id'] ?>">
+            <input type="hidden" name="version_formulario" value="<?= escaparAtributo($formulario['actualizado_en'] ?? '') ?>">
             <input type="hidden" name="cod_mun" value="<?= escaparAtributo($codMun) ?>">
 
             <?php foreach ($formulario['secciones'] as $indiceSeccion => $seccion): ?>
@@ -139,19 +172,20 @@ function escaparAtributo($valor)
                         <?php foreach ($seccion['preguntas'] as $pregunta): ?>
                             <?php
                             $nombreCampo = 'p_' . $pregunta['id'];
+                            $idEtiqueta = 'etiqueta_' . $nombreCampo;
                             $claseAncho = $pregunta['ancho'] === 'medio'
                                 ? 'form-public-field--half'
                                 : '';
                             ?>
 
                             <div class="form-public-field <?= $claseAncho ?>">
-                                <label class="form-public-field__label">
+                                <div id="<?= escaparAtributo($idEtiqueta) ?>" class="form-public-field__label">
                                     <?= escaparAtributo($pregunta['enunciado']) ?>
 
                                     <?php if (!empty($pregunta['obligatorio'])): ?>
                                         <span aria-label="Campo obligatorio">*</span>
                                     <?php endif; ?>
-                                </label>
+                                </div>
 
                                 <?php if (!empty($pregunta['ayuda'])): ?>
                                     <small><?= escaparAtributo($pregunta['ayuda']) ?></small>
@@ -160,29 +194,29 @@ function escaparAtributo($valor)
                                 <?php if ($pregunta['tipo'] === 'texto'): ?>
                                     <input
                                         type="text"
-                                        name="<?= escaparAtributo($nombreCampo) ?>"
+                                        aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>" name="<?= escaparAtributo($nombreCampo) ?>"
                                         <?= !empty($pregunta['obligatorio']) ? 'required' : '' ?>>
 
                                 <?php elseif ($pregunta['tipo'] === 'texto_largo'): ?>
                                     <textarea
-                                        name="<?= escaparAtributo($nombreCampo) ?>"
+                                        aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>" name="<?= escaparAtributo($nombreCampo) ?>"
                                         rows="5"
                                         <?= !empty($pregunta['obligatorio']) ? 'required' : '' ?>></textarea>
 
                                 <?php elseif ($pregunta['tipo'] === 'numero'): ?>
                                     <input
-                                        type="number"
-                                        name="<?= escaparAtributo($nombreCampo) ?>"
+                                        type="number" step="any"
+                                        aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>" name="<?= escaparAtributo($nombreCampo) ?>"
                                         <?= !empty($pregunta['obligatorio']) ? 'required' : '' ?>>
 
                                 <?php elseif ($pregunta['tipo'] === 'fecha'): ?>
                                     <input
                                         type="date"
-                                        name="<?= escaparAtributo($nombreCampo) ?>"
+                                        aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>" name="<?= escaparAtributo($nombreCampo) ?>"
                                         <?= !empty($pregunta['obligatorio']) ? 'required' : '' ?>>
 
                                 <?php elseif ($pregunta['tipo'] === 'si_no'): ?>
-                                    <div class="form-public-options">
+                                    <div class="form-public-options" role="group" aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>">
                                         <label>
                                             <input
                                                 type="radio"
@@ -203,7 +237,7 @@ function escaparAtributo($valor)
 
                                 <?php elseif ($pregunta['tipo'] === 'desplegable'): ?>
                                     <select
-                                        name="<?= escaparAtributo($nombreCampo) ?>"
+                                        aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>" name="<?= escaparAtributo($nombreCampo) ?>"
                                         <?= !empty($pregunta['obligatorio']) ? 'required' : '' ?>>
                                         <option value="">Selecciona una opción</option>
 
@@ -216,7 +250,7 @@ function escaparAtributo($valor)
 
                                 <?php elseif ($pregunta['tipo'] === 'opcion_multiple'): ?>
                                     <div
-                                        class="form-public-options form-public-options--grid"
+                                        class="form-public-options form-public-options--grid" role="group" aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>"
                                         <?= !empty($pregunta['obligatorio']) ? 'data-required-group="true"' : '' ?>>
 
                                         <?php foreach ($pregunta['opciones'] as $opcion): ?>
@@ -231,7 +265,7 @@ function escaparAtributo($valor)
                                     </div>
 
                                 <?php else: ?>
-                                    <div class="form-public-options form-public-options--grid">
+                                    <div class="form-public-options form-public-options--grid" role="group" aria-labelledby="<?= escaparAtributo($idEtiqueta) ?>">
                                         <?php foreach ($pregunta['opciones'] as $indiceOpcion => $opcion): ?>
                                             <label>
                                                 <input
@@ -245,7 +279,7 @@ function escaparAtributo($valor)
                                     </div>
                                 <?php endif; ?>
 
-                                <div class="form-public-field__error" aria-live="polite"></div>
+                                <div class="form-public-field__error" data-error-grupo aria-live="polite"></div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -257,12 +291,33 @@ function escaparAtributo($valor)
 
                 <button type="submit" id="btnEnviarFormularioPublico">
                     <span class="form-public-submit-text">
-                        <?= escaparAtributo($formulario['texto_boton_online'] ?: 'Enviar respuestas') ?>
+                        <?= $esPreview ? 'Probar envío' : 'Enviar respuestas' ?>
                     </span>
                     <i class="bi bi-send"></i>
                 </button>
             </div>
+            <?php if ($esPreview): ?>
+                <p class="alert alert-success mt-3" id="resultadoPruebaEncuesta" role="status" hidden></p>
+            <?php endif; ?>
         </form>
+
+        <!-- El resultado permanece visible para que la persona pueda guardar el PDF. -->
+        <section class="form-public-confirmation" id="confirmacionEncuesta" tabindex="-1"
+                 aria-labelledby="tituloConfirmacionEncuesta" hidden>
+            <i class="bi bi-check-circle form-public-confirmation__icon" aria-hidden="true"></i>
+            <h2 id="tituloConfirmacionEncuesta">Gracias por participar</h2>
+            <p id="mensajeConfirmacionEncuesta"></p>
+            <p>Referencia <strong id="referenciaEncuesta"></strong></p>
+            <p class="alert alert-warning" id="avisoCorreoEncuesta" hidden></p>
+            <div class="form-public-confirmation__actions">
+                <a class="btn btn-primary" id="descargarJustificanteEncuesta" download>
+                    <i class="bi bi-download me-1" aria-hidden="true"></i> Descargar copia en PDF
+                </a>
+                <a class="form-public-back" href="<?= escaparAtributo($urlVolver) ?>">
+                    Volver al portal municipal
+                </a>
+            </div>
+        </section>
     </main>
 
     <footer class="form-public-footer">
@@ -272,12 +327,7 @@ function escaparAtributo($valor)
         </div>
     </footer>
 
-    <script>
-        window.formularioPublicoConfig = {
-            volverUrl: 'php/municipio/municipio.php?cod_mun=<?= urlencode($codMun) ?>'
-        };
-    </script>
     <script src="lib/sweetalert2@11.js"></script>
-    <script src="js/municipios/formularioPublico.js"></script>
+    <script src="js/municipios/formularioPublico.js?v=<?= filemtime(__DIR__ . '/../../js/municipios/formularioPublico.js') ?>"></script>
 </body>
 </html>

@@ -87,22 +87,16 @@ body.form-public-page {
 }
 
 .form-public-header__inner {
+    /* Mismo ancho y márgenes laterales que la cabecera del portal municipal. */
+    width: min(1800px, calc(100% - 64px));
+    margin: 0 auto;
     min-height: 86px;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    --encuesta-color-municipio: var(--form-primary);
+    --encuesta-ancho-diputacion: 235px;
     align-items: center;
     gap: 24px;
-}
-
-.form-public-logo-idemap {
-    width: 330px;
-    max-width: 42vw;
-}
-
-.form-public-logo-diputacion {
-    width: 230px;
-    max-width: 30vw;
-    justify-self: end;
 }
 
 .form-public-back {
@@ -423,10 +417,12 @@ body.form-public-page {
 
 @media (max-width: 900px) {
     .form-public-header__inner {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, .8fr);
+        gap: 12px;
+        padding-top: 12px;
     }
 
-    .form-public-back {
+    .form-public-header .form-public-back {
         order: 3;
         grid-column: 1 / -1;
         justify-self: center;
@@ -443,18 +439,15 @@ body.form-public-page {
     }
 }
 
+@media (max-width: 820px) {
+    .form-public-header__inner {
+        width: calc(100% - 32px);
+    }
+}
+
 @media (max-width: 680px) {
     .form-public-shell {
         width: calc(100% - 22px);
-    }
-
-    .form-public-logo-idemap {
-        width: 230px;
-        max-width: 65vw;
-    }
-
-    .form-public-logo-diputacion {
-        display: none;
     }
 
     .form-public-main {
@@ -489,4 +482,34 @@ body.form-public-page {
         flex-direction: column;
         padding: 18px 0;
     }
+}
+
+.form-public-form[hidden],
+.form-public-confirmation [hidden],
+.form-public-confirmation[hidden] {
+    display: none;
+}
+
+/* Confirmación tras registrar la respuesta. El enlace descarga la copia del envío. */
+.form-public-confirmation {
+    margin: 20px 0 0;
+    padding: clamp(20px, 4vw, 38px);
+    background: #fff;
+    border: 1px solid #dfe6ee;
+    border-radius: 14px;
+}
+.form-public-confirmation__icon {
+    color: #16734a;
+    font-size: 2rem;
+}
+.form-public-confirmation__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.form-public-confirmation .btn-primary {
+    --bs-btn-bg: var(--form-color);
+    --bs-btn-border-color: var(--form-color);
+    --bs-btn-hover-bg: var(--form-primary);
+    --bs-btn-hover-border-color: var(--form-primary);
 }

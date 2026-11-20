@@ -194,6 +194,12 @@ class ParticipacionBotonesModel
             }
             $boton['url_documento'] = $url;
             $boton['documento_pendiente'] = $tipo !== 'formulario' && $url === '';
+            $boton['documento_no_disponible'] = $boton['documento_pendiente']
+                && (trim($boton['archivo_url'] ?? '') !== '' || trim($boton['formulario_pdf_url'] ?? '') !== '');
+            // Cada acción tiene su requisito. El PDF y la encuesta se muestran por separado.
+            $boton['formulario_pendiente'] = in_array($tipo, ['formulario', 'ambos'], true)
+                && (empty($boton['formulario_activo']) || empty($boton['formulario_slug'])
+                    || !in_array($boton['formulario_modalidad'], ['online', 'ambos'], true));
         }
         unset($boton);
 
@@ -300,33 +306,32 @@ class ParticipacionBotonesModel
             ['formulario', 'ambos'],
             true
         );
-        $formulario = null;
-
-        // 1. Cuando el boton usa formulario, comprobamos que pertenezca al municipio.
-        if ($necesitaFormulario) {
-            if (!$formularioId) {
-                throw new Exception('Selecciona el formulario online del boton.');
+        // Las tarjetas con PDF también pueden reutilizar el de una encuesta del municipio.
+        if (!$formularioId) {
+            if ($necesitaFormulario) {
+                throw new Exception('Selecciona el formulario online del botón.');
             }
+            return;
+        }
 
-            $sql = "SELECT id, modalidad
-                    FROM pou.formularios
-                    WHERE id = :id
-                      AND cod_mun = :cod_mun";
+        $sql = "SELECT id, modalidad
+                FROM pou.formularios
+                WHERE id = :id
+                  AND cod_mun = :cod_mun";
 
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([
-                ':id' => $formularioId,
-                ':cod_mun' => $codMun
-            ]);
-            $formulario = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':id' => $formularioId,
+            ':cod_mun' => $codMun
+        ]);
+        $formulario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$formulario) {
-                throw new Exception('El formulario elegido no pertenece al municipio.');
-            }
+        if (!$formulario) {
+            throw new Exception('El formulario elegido no pertenece al municipio.');
+        }
 
-            if (!in_array($formulario['modalidad'], ['online', 'ambos'], true)) {
-                throw new Exception('El formulario elegido no admite respuestas online.');
-            }
+        if ($necesitaFormulario && !in_array($formulario['modalidad'], ['online', 'ambos'], true)) {
+            throw new Exception('El formulario elegido no admite respuestas online.');
         }
     }
 

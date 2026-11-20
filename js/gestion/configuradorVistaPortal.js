@@ -223,7 +223,7 @@ function actualizarAccesosVistaPrevia(documento) {
             const icono = obtenerIconoAccesoPortal(acceso);
             // El buzón se dibuja como imagen, igual que en la plantilla PHP.
             const dibujoIcono = `<i class="bi bi-${escaparHtml(icono)}" aria-hidden="true"></i>`;
-            const nuevaPestana = acceso.tipo_destino === 'url'
+            const nuevaPestana = ['url', 'formulario'].includes(acceso.tipo_destino)
                 ? ' target="_blank" rel="noopener noreferrer"'
                 : '';
 
@@ -245,8 +245,7 @@ function actualizarAccesosVistaPrevia(documento) {
 function accesoTieneDestinoDisponible(acceso) {
     if (acceso.tipo_destino === 'formulario') {
         return estadoPortal.formularios.some(function (formulario) {
-            return formulario.slug === acceso.destino
-                && convertirBooleano(formulario.activo, false);
+            return formulario.slug === acceso.destino && esEncuestaOnline(formulario);
         });
     }
 
@@ -366,7 +365,7 @@ function buscarSeccionVistaPrevia(documento, idSeccion) {
  */
 function obtenerHrefAccesoVistaPrevia(acceso) {
     if (acceso.tipo_destino === 'formulario') {
-        return `/pou/php/municipio/formulario.php?cod_mun=${encodeURIComponent(estadoPortal.codMun)}&slug=${encodeURIComponent(acceso.destino || '')}`;
+        return obtenerUrlPruebaEncuesta(acceso.destino || '');
     }
 
     if ((acceso.tipo_destino || 'seccion') === 'seccion') {

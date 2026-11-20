@@ -640,9 +640,6 @@ document.getElementById("btnGuardar")?.addEventListener("click", () => {
         .then(data => {
             if (data.success) {
                 municipioGuardado = true; // Marcamos que ya se ha guardado
-                if (plantillaPendiente) {
-                    cargarBotonesParticipacion(datosWizard[1].cod_mun);
-                }
 
                 // Mostramos mensaje de éxito
                 if (!modoEdicion) {
@@ -1159,7 +1156,7 @@ async function editarMunicipio(codMun) {
             // ===========================
             // PASO 5.1: Botones de participación
             // ===========================
-            cargarBotonesParticipacion(codMun);
+            await cargarBotonesParticipacion(codMun);
 
             // ===========================
             // PASO 6: Noticias
@@ -1232,9 +1229,6 @@ function guardarMunicipioAntesDeSubir(callback, opciones = {}) {
             if (data.success) {
                 municipioGuardado = true;
                 modoEdicion = true;
-                if (plantillaPendiente) {
-                    cargarBotonesParticipacion(datosWizard[1].cod_mun);
-                }
 
                 refrescarFotoInicial();
                 
@@ -1613,7 +1607,8 @@ function inicializarBotonBuscarPolitica() {
 
 // --- Helper: refresca datosWizard desde el DOM y hace la "foto" inicial ---
 function refrescarFotoInicial() {
-  // Solo se llama después de guardar: la plantilla ya no debe volver a aplicarse.
+  // Tras guardar la plantilla, sustituimos la vista provisional por los botones guardados.
+  const plantillaGuardada = plantillaPendiente;
   plantillaPendiente = false;
   // 1) Regenerar datosWizard de TODOS los pasos desde el DOM
   for (let p = 1; p <= totalSteps; p++) {
@@ -1626,6 +1621,10 @@ function refrescarFotoInicial() {
   // 3) Paso 7 (FAQs): alinear la foto inicial también
   if (typeof preguntasAsignadasLocal !== "undefined") {
     preguntasAsignadasInicial = preguntasAsignadasLocal.map(p => ({ ...p }));
+  }
+
+  if (plantillaGuardada) {
+    cargarBotonesParticipacion(datosWizard[1].cod_mun);
   }
 
   // 4) Recalcular botones (guardar/cancelar)

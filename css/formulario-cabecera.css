@@ -1,0 +1,32 @@
+/* Identidad compartida por el formulario y su vista previa en el configurador. */
+.encuesta-marca__municipio {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 0;
+    color: var(--encuesta-color-municipio, #21165e);
+    font-size: clamp(.85rem, 1.2vw, 1.08rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.encuesta-marca__escudo {
+    flex-shrink: 0;
+    width: 42px;
+    height: 48px;
+    object-fit: contain;
+}
+.encuesta-marca__diputacion {
+    display: block;
+    justify-self: end;
+    width: min(100%, var(--encuesta-ancho-diputacion, 180px));
+    height: auto;
+}
+@media (max-width: 480px) {
+    .encuesta-marca__escudo {
+        width: 30px;
+        height: 36px;
+    }
+    .encuesta-marca__municipio {
+        gap: .4rem;
+    }
+}

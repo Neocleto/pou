@@ -842,6 +842,24 @@ body.portal-page {
     text-decoration: none;
 }
 
+/* La descarga y la encuesta online comparten fila y usan todo el ancho de la tarjeta. */
+.portal-page .portal-participation .participation-resource-card__actions:has(> :nth-child(2)) {
+    grid-column: 1 / -1;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+.portal-page .portal-participation .participation-resource-card__actions:has(> :nth-child(2)) > :is(a, button) {
+    min-width: 0;
+    padding-inline: 5px;
+    gap: 4px;
+    overflow-wrap: anywhere;
+}
+
+.portal-page .portal-participation .participation-resource-card__actions:has(> :nth-child(2)) i {
+    flex-shrink: 0;
+}
+
 .portal-page .portal-participation .participation-resource-card__actions a:hover,
 .portal-page .portal-participation .participation-resource-card__actions a:focus-visible {
     color: var(--resource-color);
@@ -962,6 +980,15 @@ body.portal-page {
 
     .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"] .participation-resource-card__icon {
         grid-row: 2;
+    }
+
+    /* Con dos botones, el icono queda junto al título para dejar libre su fila. */
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"]:has(.participation-resource-card__icon):has(.participation-resource-card__actions > :nth-child(2)) .participation-resource-card__content > strong {
+        grid-column: 2;
+    }
+
+    .portal-page .portal-participation .participation-resource-card[data-resource-survey="1"]:has(.participation-resource-card__actions > :nth-child(2)) .participation-resource-card__icon {
+        grid-row: 1;
     }
 
 }

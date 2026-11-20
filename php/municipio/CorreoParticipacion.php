@@ -147,77 +147,18 @@ function enviarCorreoParticipacion($mail, array $municipio)
     return $resultado;
 }
 
-/**
- * Envia el aviso de una nueva respuesta de formulario.
- */
-function enviarCorreoRespuestaFormulario(
-    $conn,
-    array $formulario,
-    array $respuestas,
-    $referencia
-) {
-    $municipio = obtenerDatosCorreoParticipacion(
-        $conn,
-        $formulario['cod_mun']
-    );
-
+// El gestor recibe siempre el PDF. CorreoParticipacion usa la casilla del
+// paso Datos generales para decidir si envía también una copia al arquitecto.
+function enviarCorreoRespuestaFormulario(array $municipio, array $formulario, $referencia, $pdf)
+{
     $mail = crearCorreoParticipacionPOU();
-
-    $filas = '';
-
-    foreach ($respuestas as $respuesta) {
-        $valor = $respuesta['respuesta'] ?? '';
-
-        if (is_array($valor)) {
-            $valor = implode(', ', $valor);
-        }
-
-        if (trim((string)$valor) === '') {
-            $valor = 'Sin respuesta';
-        }
-
-        $filas .= '<tr>'
-            . '<th style="padding:10px;border:1px solid #dce3ec;text-align:left;vertical-align:top;background:#f5f8fc;">'
-            . htmlspecialchars((string)($respuesta['pregunta'] ?? ''), ENT_QUOTES, 'UTF-8')
-            . '</th>'
-            . '<td style="padding:10px;border:1px solid #dce3ec;vertical-align:top;">'
-            . nl2br(htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8'))
-            . '</td>'
-            . '</tr>';
-    }
-
-    $nombreMunicipio = htmlspecialchars(
-        (string)($municipio['nombre'] ?? $formulario['cod_mun']),
-        ENT_QUOTES,
-        'UTF-8'
-    );
-    $tituloFormulario = htmlspecialchars(
-        (string)($formulario['titulo'] ?? 'Formulario POU'),
-        ENT_QUOTES,
-        'UTF-8'
-    );
-    $referenciaSegura = htmlspecialchars(
-        (string)$referencia,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-
-    $mail->isHTML(true);
-    $mail->Subject = 'Nueva respuesta POU: ' . ($formulario['titulo'] ?? 'Formulario');
-    $mail->Body = '
-        <div style="font-family:Arial,sans-serif;color:#26364a;line-height:1.5;">
-            <h2 style="margin:0 0 12px;color:#540000;">Nueva respuesta de participación</h2>
-            <p style="margin:0 0 5px;"><strong>Municipio:</strong> ' . $nombreMunicipio . '</p>
-            <p style="margin:0 0 5px;"><strong>Formulario:</strong> ' . $tituloFormulario . '</p>
-            <p style="margin:0 0 18px;"><strong>Referencia:</strong> ' . $referenciaSegura . '</p>
-            <table style="width:100%;border-collapse:collapse;font-size:14px;">' . $filas . '</table>
-        </div>';
-    $mail->AltBody = 'Nueva respuesta POU. Municipio: '
-        . ($municipio['nombre'] ?? $formulario['cod_mun'])
-        . '. Formulario: '
-        . ($formulario['titulo'] ?? 'Formulario')
-        . '. Referencia: '
-        . $referencia;
+    $mail->Timeout = 10;
+    $mail->Subject = 'Nueva respuesta de participación: ' . $formulario['titulo'];
+    $mail->Body = "Municipio: {$municipio['nombre']}\n"
+        . "Encuesta: {$formulario['titulo']}\n"
+        . "Referencia: {$referencia}\n\n"
+        . 'La respuesta completa se incluye en el PDF adjunto.';
+    $mail->addStringAttachment($pdf, 'participacion-' . $referencia . '.pdf', 'base64', 'application/pdf');
 
     return enviarCorreoParticipacion($mail, $municipio);
 }

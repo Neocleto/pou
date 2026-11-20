@@ -26,6 +26,7 @@ $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap-icons.css">
     <link rel="stylesheet" href="css/selector-color.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/selector-color.css') ?>">
     <link rel="stylesheet" href="css/configurador-portal.css?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/css/configurador-portal.css') ?>">
+    <link rel="stylesheet" href="css/formulario-cabecera.css?v=<?= filemtime(__DIR__ . '/../../css/formulario-cabecera.css') ?>">
     <link rel="stylesheet" href="css/tema-pou.css">
 </head>
 <body class="portal-builder-page">
@@ -176,6 +177,7 @@ $municipio['escudo'] = obtenerEscudoMunicipio($codMun, $municipio['escudo'] ?? '
     <script src="js/gestion/configuradorDatosPortal.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorDatosPortal.js') ?>"></script>
     <script src="js/gestion/configuradorFormularios.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorFormularios.js') ?>"></script>
     <script src="js/gestion/configuradorVistaPortal.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorVistaPortal.js') ?>"></script>
+    <script src="js/municipios/formularioPublico.js?v=<?= filemtime(__DIR__ . '/../../js/municipios/formularioPublico.js') ?>"></script>
     <script src="js/gestion/configuradorVistaFormulario.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorVistaFormulario.js') ?>"></script>
     <script src="js/gestion/configuradorBloquesPortal.js?v=<?= (int)@filemtime(dirname(__DIR__, 2) . '/js/gestion/configuradorBloquesPortal.js') ?>"></script>
 </body>

@@ -8,37 +8,46 @@ require_once(__DIR__ . '/../db/conexion.php');
 require_once(__DIR__ . '/../modelo/FormularioDinamicoModel.php');
 require_once(__DIR__ . '/../modelo/MunicipioModel.php');
 require_once(__DIR__ . '/CorreoParticipacion.php');
+require_once(__DIR__ . '/JustificanteEncuesta.php');
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
 try {
     // 1. Identificamos el formulario.
     $formularioId = filter_var($_POST['formulario_id'] ?? null, FILTER_VALIDATE_INT);
     $codMun = $_POST['cod_mun'] ?? '';
     if (!is_string($codMun)) {
-        throw new Exception('El municipio recibido no es válido.');
+        throw new InvalidArgumentException('El municipio recibido no es válido.');
     }
     $codMun = trim($codMun);
 
     if ($formularioId <= 0 || $codMun === '') {
-        throw new Exception('El formulario recibido no es válido.');
+        throw new InvalidArgumentException('El formulario recibido no es válido.');
     }
 
     // La página pública y el envío directo exigen un municipio publicado.
     $municipioModel = new MunicipioModel($conn);
-    if (!$municipioModel->obtenerMunicipioActivosPorCodigo($codMun)) {
-        throw new Exception('El municipio ya no está disponible para participar.');
+    $municipio = $municipioModel->obtenerMunicipioActivosPorCodigo($codMun);
+    if (!$municipio) {
+        throw new InvalidArgumentException('El municipio ya no está disponible para participar.');
     }
 
     $formularioModel = new FormularioDinamicoModel($conn);
     $formulario = $formularioModel->obtenerCompleto($formularioId, $codMun);
 
     if (!$formulario || empty($formulario['activo'])) {
-        throw new Exception('El formulario ya no está disponible.');
+        throw new InvalidArgumentException('El formulario ya no está disponible.');
     }
 
     if (!in_array($formulario['modalidad'], ['online', 'ambos'], true)) {
-        throw new Exception('Este formulario no admite respuestas online.');
+        throw new InvalidArgumentException('Este formulario no admite respuestas online.');
+    }
+
+    // Si se editó la encuesta, conservamos lo escrito en la página original.
+    $version = $_POST['version_formulario'] ?? null;
+    if ($version !== null && $version !== ($formulario['actualizado_en'] ?? '')) {
+        throw new InvalidArgumentException('La encuesta se ha actualizado. Abre la versión nueva para contestar.');
     }
 
     // 2. Validamos todas las preguntas configuradas.
@@ -51,12 +60,14 @@ try {
 
             $valorNormalizado = normalizarRespuesta($pregunta, $valor);
             if (!empty($pregunta['obligatorio']) && respuestaVacia($valorNormalizado)) {
-                throw new Exception(
+                throw new InvalidArgumentException(
                     'Debes completar la pregunta: ' . $pregunta['enunciado']
                 );
             }
 
             $respuestas[] = [
+                'apartado_id' => (int)$seccion['id'],
+                'apartado' => $seccion['titulo'],
                 'pregunta_id' => (int)$pregunta['id'],
                 'pregunta' => $pregunta['enunciado'],
                 'respuesta' => $valorNormalizado
@@ -64,61 +75,56 @@ try {
         }
     }
 
-    // 3. Guardamos la respuesta y devolvemos su referencia.
+    // 3. Preparamos el justificante antes de confirmar el registro. Si falla
+    // el PDF, deshacemos el guardado y el navegador conserva lo introducido.
+    $conn->beginTransaction();
     $referencia = $formularioModel->guardarRespuesta(
-        $formulario,
-        $respuestas,
-        $_SERVER['REMOTE_ADDR'] ?? ''
+        $formulario, $respuestas, $_SERVER['REMOTE_ADDR'] ?? ''
     );
+    $pdf = crearJustificanteEncuesta($formulario, $municipio, $respuestas, $referencia);
+    $conn->commit();
 
-    // 4. Avisamos al gestor y, si está configurado, también al arquitecto.
-    //    La respuesta ya está guardada. Si el correo falla, no se pierde.
+    // 4. El correo usa la configuración del municipio. Si SMTP falla, la
+    // respuesta y su justificante siguen disponibles: no pedimos repetirla.
     $correoEnviado = false;
-    $resultadoCorreo = ['gestor' => false, 'arquitecto' => null, 'advertencia' => ''];
-
+    $avisoCorreo = '';
     try {
-        $resultadoCorreo = enviarCorreoRespuestaFormulario(
-            $conn,
-            $formulario,
-            $respuestas,
-            $referencia
-        );
+        $resultadoCorreo = enviarCorreoRespuestaFormulario($municipio, $formulario, $referencia, $pdf);
         $correoEnviado = $resultadoCorreo['gestor'];
-    } catch (Throwable $errorCorreo) {
-        $correoEnviado = false;
-        error_log(
-            'POU - No se pudo enviar la respuesta ' . $referencia
-            . ': ' . $errorCorreo->getMessage()
-        );
+        $avisoCorreo = $resultadoCorreo['advertencia'];
+    } catch (Throwable $error) {
+        $avisoCorreo = 'La respuesta está registrada. No se ha podido enviar el aviso por correo.';
+        error_log('Encuesta ' . $referencia . ': ' . $error->getMessage());
     }
 
+    // La pantalla ya muestra el título de agradecimiento por encima del mensaje.
     $mensaje = trim($formulario['mensaje_confirmacion'] ?? '');
-
-    if ($mensaje === '') {
-        $mensaje = 'Gracias por participar. Tu respuesta se ha registrado correctamente.';
-    }
-
-    if (!$correoEnviado) {
-        $mensaje .= ' La respuesta se ha guardado, aunque el aviso por correo no se ha podido enviar.';
-    }
-
-    if ($resultadoCorreo['advertencia'] !== '') {
-        $mensaje .= ' ' . $resultadoCorreo['advertencia'];
-    }
+    $mensaje = preg_replace('/^Gracias por participar[.!]\s*/iu', '', $mensaje);
 
     echo json_encode([
         'ok' => true,
-        'mensaje' => $mensaje . ' Referencia: ' . $referencia,
+        'mensaje' => $mensaje ?: 'Tu respuesta se ha registrado correctamente.',
+        'referencia' => $referencia,
+        'pdf_base64' => base64_encode($pdf),
         'correo_enviado' => $correoEnviado,
-        'copia_arquitecto_enviada' => $resultadoCorreo['arquitecto'],
-        'advertencia_correo' => $resultadoCorreo['advertencia']
-    ]);
+        'advertencia_correo' => $avisoCorreo
+    ], JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (Throwable $error) {
-    http_response_code(400);
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
+
+    $errorDeValidacion = $error instanceof InvalidArgumentException;
+    if (!$errorDeValidacion) {
+        error_log('No se pudo registrar la encuesta: ' . $error->getMessage());
+    }
+    http_response_code($errorDeValidacion ? 400 : 500);
     echo json_encode([
         'ok' => false,
-        'mensaje' => $error->getMessage()
-    ]);
+        'mensaje' => $errorDeValidacion
+            ? $error->getMessage()
+            : 'No se ha podido registrar la respuesta. Inténtalo de nuevo en unos instantes.'
+    ], JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 /**
@@ -127,14 +133,7 @@ try {
 function respuestaVacia($valor)
 {
     if (is_array($valor)) {
-        $hayRespuesta = false;
-        foreach ($valor as $elemento) {
-            if (!is_scalar($elemento) && $elemento !== null) {
-                throw new Exception('La respuesta contiene valores no válidos.');
-            }
-            if (trim((string)$elemento) !== '') $hayRespuesta = true;
-        }
-        return !$hayRespuesta;
+        return count($valor) === 0;
     }
 
     return $valor === null || trim((string)$valor) === '';
@@ -151,19 +150,19 @@ function normalizarRespuesta(array $pregunta, $valor)
     if ($tipo === 'opcion_multiple') {
         if ($valor === null || $valor === '') return [];
         if (!is_array($valor)) {
-            throw new Exception('La pregunta de selección múltiple debe contener una lista de opciones.');
+            throw new InvalidArgumentException('La pregunta de selección múltiple debe contener una lista de opciones.');
         }
         // No descartamos opciones incorrectas: el usuario debe corregir el envío.
         foreach ($valor as $opcion) {
             if (!is_string($opcion) || !in_array($opcion, $opcionesValidas, true)) {
-                throw new Exception('Se ha recibido una opción de respuesta no válida.');
+                throw new InvalidArgumentException('Se ha recibido una opción de respuesta no válida.');
             }
         }
         return array_values(array_unique($valor));
     }
 
     if ($valor !== null && !is_scalar($valor)) {
-        throw new Exception('La pregunta debe contener una sola respuesta.');
+        throw new InvalidArgumentException('La pregunta debe contener una sola respuesta.');
     }
 
     if (in_array($tipo, ['opcion_unica', 'desplegable'], true)) {
@@ -172,7 +171,7 @@ function normalizarRespuesta(array $pregunta, $valor)
         }
 
         if (!in_array($valor, $opcionesValidas, true)) {
-            throw new Exception('Se ha recibido una opción de respuesta no válida.');
+            throw new InvalidArgumentException('Se ha recibido una opción de respuesta no válida.');
         }
 
         return $valor;
@@ -180,7 +179,7 @@ function normalizarRespuesta(array $pregunta, $valor)
 
     if ($tipo === 'si_no') {
         if ($valor !== null && $valor !== '' && !in_array($valor, ['Sí', 'No'], true)) {
-            throw new Exception('Se ha recibido una respuesta Sí/No no válida.');
+            throw new InvalidArgumentException('Se ha recibido una respuesta Sí/No no válida.');
         }
 
         return $valor;
@@ -192,7 +191,7 @@ function normalizarRespuesta(array $pregunta, $valor)
         }
 
         if (!is_numeric($valor)) {
-            throw new Exception('Se ha recibido un valor numérico no válido.');
+            throw new InvalidArgumentException('Se ha recibido un valor numérico no válido.');
         }
 
         return $valor;
@@ -207,7 +206,7 @@ function normalizarRespuesta(array $pregunta, $valor)
         $esFechaValida = $fecha && $fecha->format('Y-m-d') === $valor;
 
         if (!$esFechaValida) {
-            throw new Exception('Se ha recibido una fecha no válida.');
+            throw new InvalidArgumentException('Se ha recibido una fecha no válida.');
         }
 
         return $valor;

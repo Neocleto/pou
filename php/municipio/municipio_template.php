@@ -30,6 +30,7 @@
 // ============================================================================
 require_once __DIR__ . '/../includes/valores_portal.php';
 require_once __DIR__ . '/../includes/imagenes_municipio.php';
+require_once __DIR__ . '/../includes/participacion_portal.php';
 
 // CONFIGURACIÓN Y TEXTOS EDITABLES
 // ============================================================================
@@ -48,7 +49,8 @@ if (is_string($contenidoGuardado)) {
 $contenido = combinarContenidoPortal($contenidoPorDefecto, is_array($contenidoGuardado) ? $contenidoGuardado : []);
 $codMun = (string)($municipio['cod_mun'] ?? '');
 $nombreMunicipio = $municipio['nombre'] ?? '';
-$modoEditorPortal = !empty($modoPreview) && !empty($_GET['editor']);
+$modoPreview = !empty($modoPreview);
+$modoEditorPortal = $modoPreview && !empty($_GET['editor']);
 
 // ============================================================================
 // 3. IMAGENES DEL MUNICIPIO
@@ -173,15 +175,15 @@ foreach ($seccionesPersonalizadas as $idSeccion => $seccionPersonalizada) {
     $destinosDisponibles['#' . $idSeccion] = $visibilidadSecciones[$idSeccion] ?? false;
 }
 
-// 5. Separamos los formularios ya vinculados a un boton para no duplicarlos.
+// 5. Separamos los formularios ya vinculados a un botón para no duplicarlos.
 $idsFormulariosVinculados = [];
-$slugsFormulariosPublicos = [];
+$slugsEncuestasOnline = [];
 
 foreach ($formulariosPublicos as $formularioPublico) {
     $slugFormulario = trim((string)($formularioPublico['slug'] ?? ''));
 
-    if ($slugFormulario !== '') {
-        $slugsFormulariosPublicos[$slugFormulario] = true;
+    if ($slugFormulario !== '' && in_array($formularioPublico['modalidad'], ['online', 'ambos'], true)) {
+        $slugsEncuestasOnline[$slugFormulario] = true;
     }
 }
 
@@ -212,11 +214,12 @@ foreach ($botonesParticipacion as $boton) {
     }
 
     $tipoContenido = $boton['tipo_contenido'] ?? 'pdf';
-    $muestraFormulario = !$pendiente && in_array($tipoContenido, ['formulario', 'ambos'], true)
-        && booleanoPortal($boton['formulario_activo'] ?? false)
-        && !empty($boton['formulario_slug']);
+    // En gestión también se puede probar una encuesta vinculada que aún esté en borrador.
+    $slugEncuesta = $boton['formulario_slug'] ?? '';
+    $muestraFormulario = in_array($tipoContenido, ['formulario', 'ambos'], true)
+        && isset($slugsEncuestasOnline[$slugEncuesta]);
 
-    if (!$pendiente && !$muestraFormulario && empty($boton['url_documento'])) {
+    if (!$pendiente && empty($boton['formulario_pendiente']) && !$muestraFormulario && empty($boton['url_documento'])) {
         continue;
     }
 
@@ -331,14 +334,11 @@ foreach ($botonesParticipacion as $boton) {
                             }
 
                             if ($tipoDestino === 'formulario') {
-                                if (!isset($slugsFormulariosPublicos[$acceso['destino'] ?? ''])) {
+                                if (!isset($slugsEncuestasOnline[$acceso['destino'] ?? ''])) {
                                     continue;
                                 }
 
-                                $destino = 'php/municipio/formulario.php?cod_mun='
-                                    . urlencode($codMun)
-                                    . '&slug='
-                                    . urlencode($acceso['destino'] ?? '');
+                                $destino = urlEncuestaMunicipal($codMun, $acceso['destino'], $modoPreview);
                             }
 
                             if ($tipoDestino === 'url') {
@@ -494,13 +494,15 @@ foreach ($botonesParticipacion as $boton) {
                                     $muestraFormulario = !empty($boton['_muestra_formulario']);
                                     $pendiente = !empty($boton['documento_pendiente']);
                                     $urlPdf = $boton['url_documento'] ?? '';
+                                    $formularioPendiente = !empty($boton['formulario_pendiente']);
+                                    $tarjetaPendiente = !$muestraFormulario && $urlPdf === '' && ($pendiente || $formularioPendiente);
                                     // El título identifica la encuesta aunque el municipio cambie su icono.
                                     $esEncuesta = preg_match('/^\s*encuesta\b/iu', $boton['texto_boton'] ?? '');
                                     ?>
                                     <article
                                         class="participation-resource-card"
                                         data-resource-survey="<?= $esEncuesta ? '1' : '0' ?>"
-                                        data-resource-pending="<?= $pendiente ? '1' : '0' ?>"
+                                        data-resource-pending="<?= $tarjetaPendiente ? '1' : '0' ?>"
                                         data-participation-button-id="<?= (int)($boton['id'] ?? 0) ?>"
                                         data-resource-visible="<?= !empty($boton['_visible']) ? '1' : '0' ?>"
                                         style="--resource-color:<?= htmlspecialchars($colorBoton) ?>;<?= empty($boton['_visible']) ? 'display:none;' : '' ?>">
@@ -514,23 +516,27 @@ foreach ($botonesParticipacion as $boton) {
                                             <strong data-participation-button-text><?= htmlspecialchars($boton['texto_boton'] ?? '') ?></strong>
 
                                             <div class="participation-resource-card__actions">
-                                                <?php if ($muestraFormulario): ?>
-                                                    <a href="php/municipio/formulario.php?cod_mun=<?= urlencode($codMun) ?>&slug=<?= urlencode($boton['formulario_slug']) ?>">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                        <?= htmlspecialchars($boton['formulario_texto_online'] ?? 'Responder online') ?>
-                                                    </a>
-                                                <?php endif; ?>
-
                                                 <?php if ($pendiente): ?>
                                                     <button type="button" disabled>
                                                         <i class="bi bi-lock" aria-hidden="true"></i>
-                                                        Documento pendiente
+                                                        <?= !empty($boton['documento_no_disponible']) ? 'Documento no disponible' : 'Documento pendiente' ?>
                                                     </button>
                                                 <?php elseif ($urlPdf !== ''): ?>
                                                     <a href="<?= htmlspecialchars($urlPdf) ?>" target="_blank" rel="noopener noreferrer">
                                                         <i class="bi bi-download"></i>
-                                                        <?= htmlspecialchars($boton['formulario_texto_pdf'] ?? 'Descargar PDF') ?>
+                                                        <?= htmlspecialchars(trim($boton['formulario_texto_pdf'] ?? '') ?: 'Descargar PDF') ?>
                                                     </a>
+                                                <?php endif; ?>
+
+                                                <?php if ($muestraFormulario): ?>
+                                                    <a href="<?= htmlspecialchars(urlEncuestaMunicipal($codMun, $boton['formulario_slug'], $modoPreview)) ?>"<?= $modoEditorPortal ? ' target="_blank" rel="noopener"' : '' ?>>
+                                                        <i class="bi bi-pencil-square"></i>
+                                                        <?= htmlspecialchars(trim($boton['formulario_texto_online'] ?? '') ?: 'Realizar encuesta online') ?>
+                                                    </a>
+                                                <?php elseif ($formularioPendiente): ?>
+                                                    <button type="button" disabled>
+                                                        <i class="bi bi-lock" aria-hidden="true"></i> Encuesta no disponible
+                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -549,6 +555,7 @@ foreach ($botonesParticipacion as $boton) {
 
                             <div class="portal-survey-grid">
                                 <?php foreach ($formulariosSinBoton as $formulario): ?>
+                                    <?php $pdfFormulario = resolverArchivoParticipacion($formulario['pdf_url'] ?? '', $codMun); ?>
                                     <article class="portal-survey-card" style="--survey-color:<?= htmlspecialchars($formulario['color'] ?? $configuracion['color_participacion']) ?>">
                                         <?php if (trim((string)($formulario['icono'] ?? '')) !== ''): ?>
                                             <span class="portal-survey-card__icon">
@@ -560,12 +567,12 @@ foreach ($botonesParticipacion as $boton) {
                                             <p><?= htmlspecialchars($formulario['descripcion'] ?? '') ?></p>
                                             <div class="portal-survey-card__actions">
                                                 <?php if (in_array($formulario['modalidad'], ['online', 'ambos'], true)): ?>
-                                                    <a href="php/municipio/formulario.php?cod_mun=<?= urlencode($codMun) ?>&slug=<?= urlencode($formulario['slug']) ?>">
+                                                    <a href="<?= htmlspecialchars(urlEncuestaMunicipal($codMun, $formulario['slug'], $modoPreview)) ?>"<?= $modoEditorPortal ? ' target="_blank" rel="noopener"' : '' ?>>
                                                         <?= htmlspecialchars($formulario['texto_boton_online'] ?? 'Responder online') ?>
                                                     </a>
                                                 <?php endif; ?>
-                                                <?php if (in_array($formulario['modalidad'], ['pdf', 'ambos'], true) && !empty($formulario['pdf_url'])): ?>
-                                                    <a href="<?= htmlspecialchars($formulario['pdf_url']) ?>" target="_blank" rel="noopener noreferrer">
+                                                <?php if (in_array($formulario['modalidad'], ['pdf', 'ambos'], true) && $pdfFormulario !== ''): ?>
+                                                    <a href="<?= htmlspecialchars($pdfFormulario) ?>" target="_blank" rel="noopener noreferrer">
                                                         <?= htmlspecialchars($formulario['texto_boton_pdf'] ?? 'Descargar PDF') ?>
                                                     </a>
                                                 <?php endif; ?>

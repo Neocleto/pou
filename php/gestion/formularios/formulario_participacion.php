@@ -4,6 +4,20 @@ require_once __DIR__ . '/../../login/permisos_proyecto.php';
 exigirAccesoProyecto(false, false);
 require_once __DIR__ . '/../../includes/participacion_portal.php';
 $coloresParticipacion = obtenerColoresParticipacion();
+
+// El asistente muestra los mismos botones que el servidor crea al guardar la plantilla.
+$botonesVistaPlantilla = [];
+foreach (obtenerBotonesPlantillaParticipacion() as $boton) {
+    $archivo = $boton['archivo'];
+    $disponible = $archivo !== '' && existeDocumentoParticipacion(dirname(__DIR__, 3), 'docs/comun/', $archivo);
+    $botonesVistaPlantilla[] = [
+        'texto_boton' => $boton['titulo'],
+        'icono' => normalizarIconoPortal($boton['icono']),
+        'color' => $boton['color'],
+        'url_documento' => $disponible ? $archivo : '',
+        'documento_pendiente' => !$disponible,
+    ];
+}
 $tituloInicialParticipacion = '';
 foreach (obtenerSeccionesInicialesPortal() as $seccionInicialParticipacion) {
     if ($seccionInicialParticipacion['id'] === 'participacion') {
@@ -67,7 +81,16 @@ usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]);
       <div class="small">Pulsa <strong>“Nuevo botón”</strong> para crear el primero.</div>
     </div>
 
-    <div id="listaBotonesParticipacionWrapper" class="d-none"></div>
+    <p id="mensajeBotonesPlantilla" class="small text-muted d-none mb-2">
+      Pulsa <strong>Guardar</strong> para añadir estos botones y poder editarlos.
+    </p>
+
+    <p id="errorListaBotonesParticipacion" class="small text-danger d-none mb-0" role="status">
+      No se han podido cargar los botones de participación.
+    </p>
+
+    <div id="listaBotonesParticipacionWrapper" class="d-none"
+         data-botones-plantilla="<?= htmlspecialchars(json_encode($botonesVistaPlantilla), ENT_QUOTES, 'UTF-8') ?>"></div>
 
     <div id="spinnerListaBotones" class="text-center py-3 d-none">
       <div class="spinner-border text-primary" role="status"></div>
@@ -159,10 +182,26 @@ usort($iconosParticipacion, function ($a, $b) { return strcasecmp($a[1], $b[1]);
           </div>
         </div>
 
+        <!-- La modalidad decide qué acciones tendrá la tarjeta pública. -->
         <div class="mb-3">
-          <label class="form-label fw-bold mb-1">Archivo</label>
+          <label for="tipo_boton_modal" class="form-label fw-bold mb-1">Contenido del botón</label>
+          <select class="form-select" id="tipo_boton_modal">
+            <option value="pdf">Solo documento</option>
+            <option value="formulario">Solo encuesta online</option>
+            <option value="ambos">Documento y encuesta online</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="formulario_boton_modal" class="form-label fw-bold mb-1">Encuesta vinculada</label>
+          <select class="form-select" id="formulario_boton_modal"></select>
+          <div class="form-text">Crea las encuestas en Diseñar formularios. Actívalas allí para recibir respuestas.</div>
+        </div>
+
+        <div class="mb-3" id="campoArchivoBoton">
+          <label for="archivo_boton_modal" class="form-label fw-bold mb-1">Archivo</label>
           <input type="file" class="form-control" id="archivo_boton_modal"
-                 accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png">
+                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
           <div class="form-text small mt-1" id="ayudaArchivoModal">
             Si no seleccionas archivo, se mantiene el actual.
           </div>

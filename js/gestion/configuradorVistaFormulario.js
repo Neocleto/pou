@@ -1,8 +1,8 @@
 /****************************************************************************
  * VISTA PREVIA DE FORMULARIOS POU
  *
- * Genera una representacion realista del formulario mientras el usuario lo
- * diseña. No envia respuestas ni guarda datos: solo muestra el resultado.
+ * Permite rellenar y validar el borrador con los datos del editor.
+ * La prueba se ejecuta localmente y no llama al PHP de envío.
  ****************************************************************************/
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -17,12 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
  * Actualiza la previsualización con cada cambio de un campo o de sus opciones.
  */
 document.addEventListener('input', function (evento) {
-    if (evento.target.dataset.formField || evento.target.dataset.formOptions) {
-        window.requestAnimationFrame(renderizarVistaPreviaFormulario);
-    }
-});
-
-document.addEventListener('change', function (evento) {
     if (evento.target.dataset.formField || evento.target.dataset.formOptions) {
         window.requestAnimationFrame(renderizarVistaPreviaFormulario);
     }
@@ -88,10 +82,11 @@ function renderizarVistaPreviaFormulario() {
     contenedor.innerHTML = `
         <div class="portal-form-preview-page" style="--form-preview-color:${escaparHtml(color)}">
             <header class="portal-form-preview-header">
-                <div class="portal-form-preview-brand">
-                    <img src="images/logo_diputacion_azul.png" alt="Diputación Provincial de Málaga">
-                    <span>POU · ${escaparHtml(estadoPortal.municipio.nombre || '')}</span>
+                <div class="encuesta-marca__municipio">
+                    <img class="encuesta-marca__escudo" src="${escaparHtml(obtenerRutaProyecto(estadoPortal.municipio.escudo || estadoPortal.municipio.escudo_automatico))}" alt="">
+                    <strong>POU - ${escaparHtml(estadoPortal.municipio.nombre || '')}</strong>
                 </div>
+                <img class="encuesta-marca__diputacion" src="images/logo_diputacion_azul.png" alt="Diputación Provincial de Málaga">
             </header>
 
             <main class="portal-form-preview-content">
@@ -109,14 +104,16 @@ function renderizarVistaPreviaFormulario() {
                 ${ofrecePdf ? crearAvisoPdfFormulario(formulario) : ''}
 
                 ${ofreceOnline ? `
-                    <form class="portal-form-preview-form" onsubmit="return false">
+                    <form class="portal-form-preview-form" novalidate>
+                        <p class="portal-form-preview-test">Modo de prueba. Puedes rellenar y probar el envío sin registrar respuestas.</p>
                         ${secciones || crearMensajeSinPreguntas()}
                         <div class="portal-form-preview-actions">
-                            <button type="button" disabled>
-                                ${escaparHtml(formulario.texto_boton_online || 'Enviar respuesta')}
+                            <button type="submit" ${formulario.secciones?.some(seccion => seccion.preguntas?.length) ? '' : 'disabled'}>
+                                Probar envío
                                 <i class="bi bi-send"></i>
                             </button>
                         </div>
+                        <p class="portal-form-preview-result" role="status"></p>
                     </form>` : `
                     <div class="portal-form-preview-only-pdf">
                         <i class="bi bi-file-earmark-pdf"></i>
@@ -126,6 +123,16 @@ function renderizarVistaPreviaFormulario() {
                     </div>`}
             </main>
         </div>`;
+
+    const prueba = contenedor.querySelector('.portal-form-preview-form');
+    prueba?.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        const resultado = prueba.querySelector('.portal-form-preview-result');
+        resultado.textContent = '';
+        if (validarCamposEncuesta(prueba)) {
+            resultado.textContent = 'Prueba completada. La respuesta de prueba no se ha guardado ni enviado.';
+        }
+    });
 }
 
 /**
@@ -167,69 +174,64 @@ function crearSeccionVistaFormulario(seccion, indiceSeccion) {
 }
 
 /**
- * Crea una pregunta y un control desactivado adecuado a su tipo.
+ * Crea la etiqueta y el control que se pueden probar en el borrador.
  */
 function crearPreguntaVistaFormulario(pregunta, indiceSeccion, indicePregunta) {
     const ancho = pregunta.ancho === 'medio' ? 'is-half' : 'is-full';
+    const nombre = `preview_${indiceSeccion}_${indicePregunta}`;
     const obligatorio = pregunta.obligatorio ? '<em>*</em>' : '';
 
     return `
-        <label class="portal-form-preview-question ${ancho}">
-            <span>${escaparHtml(pregunta.enunciado || `Pregunta ${indicePregunta + 1}`)} ${obligatorio}</span>
+        <div class="portal-form-preview-question ${ancho}">
+            <span id="${nombre}_etiqueta">${escaparHtml(pregunta.enunciado || `Pregunta ${indicePregunta + 1}`)} ${obligatorio}</span>
             ${pregunta.ayuda ? `<small>${escaparHtml(pregunta.ayuda)}</small>` : ''}
-            ${crearControlVistaFormulario(pregunta, indiceSeccion, indicePregunta)}
-        </label>`;
+            ${crearControlVistaFormulario(pregunta, nombre)}
+            <small class="form-public-field__error" data-error-grupo aria-live="polite"></small>
+        </div>`;
 }
 
 /**
  * Devuelve el control visual correspondiente al tipo de pregunta.
  */
-function crearControlVistaFormulario(pregunta, indiceSeccion, indicePregunta) {
-    const nombre = `preview_${indiceSeccion}_${indicePregunta}`;
+function crearControlVistaFormulario(pregunta, nombre) {
+    const requerido = pregunta.obligatorio ? 'required' : '';
+    const atributo = `name="${nombre}" aria-labelledby="${nombre}_etiqueta" ${requerido}`;
 
     if (pregunta.tipo === 'texto_largo') {
-        return '<textarea rows="4" disabled placeholder="Escribe tu respuesta"></textarea>';
+        return `<textarea rows="4" ${atributo} placeholder="Escribe tu respuesta"></textarea>`;
     }
 
     if (pregunta.tipo === 'numero') {
-        return '<input type="number" disabled placeholder="0">';
+        return `<input type="number" step="any" ${atributo}>`;
     }
 
     if (pregunta.tipo === 'fecha') {
-        return '<input type="date" disabled>';
+        return `<input type="date" ${atributo}>`;
     }
 
-    if (pregunta.tipo === 'si_no') {
-        return `
-            <span class="portal-form-preview-options">
-                <span><input type="radio" name="${nombre}" disabled> Sí</span>
-                <span><input type="radio" name="${nombre}" disabled> No</span>
-            </span>`;
-    }
-
+    const opciones = pregunta.tipo === 'si_no' ? ['Sí', 'No'] : (pregunta.opciones || []);
     if (pregunta.tipo === 'desplegable') {
         return `
-            <select disabled>
-                <option>Selecciona una opción</option>
-                ${(pregunta.opciones || []).map(function (opcion) {
-                    return `<option>${escaparHtml(opcion)}</option>`;
-                }).join('')}
+            <select ${atributo}>
+                <option value="">Selecciona una opción</option>
+                ${opciones.map(opcion => `<option>${escaparHtml(opcion)}</option>`).join('')}
             </select>`;
     }
 
-    if (pregunta.tipo === 'opcion_unica' || pregunta.tipo === 'opcion_multiple') {
-        const tipo = pregunta.tipo === 'opcion_multiple' ? 'checkbox' : 'radio';
-        const opciones = pregunta.opciones || [];
-
+    if (['si_no', 'opcion_unica', 'opcion_multiple'].includes(pregunta.tipo)) {
+        const multiple = pregunta.tipo === 'opcion_multiple';
+        const tipo = multiple ? 'checkbox' : 'radio';
         return `
-            <span class="portal-form-preview-options is-stacked">
-                ${opciones.map(function (opcion) {
-                    return `<span><input type="${tipo}" name="${nombre}" disabled> ${escaparHtml(opcion)}</span>`;
-                }).join('') || '<span>Añade al menos dos opciones.</span>'}
-            </span>`;
+            <div class="portal-form-preview-options is-stacked" role="group" aria-labelledby="${nombre}_etiqueta"
+                ${multiple && requerido ? 'data-required-group="true"' : ''}>
+                ${opciones.map((opcion, indice) => `<label>
+                    <input type="${tipo}" name="${nombre}" value="${escaparHtml(opcion)}"
+                        ${!multiple && indice === 0 ? requerido : ''}> ${escaparHtml(opcion)}
+                </label>`).join('') || '<span>Añade al menos dos opciones.</span>'}
+            </div>`;
     }
 
-    return '<input type="text" disabled placeholder="Escribe tu respuesta">';
+    return `<input type="text" ${atributo} placeholder="Escribe tu respuesta">`;
 }
 
 function crearMensajeSinPreguntas() {

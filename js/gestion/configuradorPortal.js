@@ -559,7 +559,8 @@ function gestionarCambioContenido(evento) {
     }
 
     if (archivoPdfFormulario) {
-        subirPdfFormularioPortal(evento.target.files[0]);
+        // Un selector de archivo dispara input y change. La subida se hace una sola vez.
+        if (evento.type === 'change') subirPdfFormularioPortal(evento.target.files[0]);
         return;
     }
 
@@ -587,7 +588,7 @@ function gestionarCambioContenido(evento) {
 
             if (acceso) {
                 if (acceso.tipo_destino === 'seccion') acceso.destino = '#informacion';
-                if (acceso.tipo_destino === 'formulario') acceso.destino = estadoPortal.formularios[0]?.slug || '';
+                if (acceso.tipo_destino === 'formulario') acceso.destino = estadoPortal.formularios.find(esEncuestaOnline)?.slug || '';
                 if (acceso.tipo_destino === 'url') acceso.destino = 'https://';
             }
 
@@ -1323,7 +1324,7 @@ function crearCampoDestinoAcceso(acceso, indice) {
     }
 
     if (tipo === 'formulario') {
-        const formularios = estadoPortal.formularios || [];
+        const formularios = estadoPortal.formularios.filter(esEncuestaOnline);
 
         return `
             <div class="portal-config-field">
@@ -1463,6 +1464,8 @@ function normalizarBotonParticipacion(boton) {
         id: Number(boton.id || 0),
         texto_boton: boton.texto_boton || '',
         archivo_url: boton.archivo_url || '',
+        url_documento: boton.url_documento || '',
+        documento_no_disponible: convertirBooleano(boton.documento_no_disponible, false),
         documento_pendiente: convertirBooleano(boton.documento_pendiente, false),
         icono: obtenerIconoBotonParticipacionPortal(boton),
         color: colorRecurso,
@@ -1695,3 +1698,13 @@ window.addEventListener('beforeunload', function (evento) {
     evento.preventDefault();
     evento.returnValue = '';
 });
+
+function esEncuestaOnline(formulario) {
+    return ['online', 'ambos'].includes(formulario.modalidad);
+}
+
+// El configurador siempre abre la encuesta como prueba, también si el municipio no está publicado.
+function obtenerUrlPruebaEncuesta(slug) {
+    const parametros = new URLSearchParams({cod_mun: estadoPortal.codMun, slug, preview: '1'});
+    return obtenerRutaProyecto('php/municipio/formulario.php?' + parametros.toString());
+}

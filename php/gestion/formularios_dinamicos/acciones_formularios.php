@@ -1,8 +1,8 @@
 <?php
 // Acceso de gestión: convenio vigente y proyecto correcto.
 require_once __DIR__ . '/../../login/permisos_proyecto.php';
-$accionAcceso = $_REQUEST['accion'] ?? 'listar';
-$soloLectura = in_array($accionAcceso, ['listar', 'obtener', 'respuestas'], true);
+$accion = $_POST['accion'] ?? $_GET['accion'] ?? 'listar';
+$soloLectura = in_array($accion, ['listar', 'obtener', 'respuestas'], true);
 exigirAccesoProyecto(!$soloLectura);
 
 // ============================================================================
@@ -24,21 +24,17 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-// 1. Comprobamos la sesión.
-
-
 $formularioModel = new FormularioDinamicoModel($conn);
 $municipioModel = new MunicipioModel($conn);
 
-$accion = $_REQUEST['accion'] ?? 'listar';
-$codMun = trim($_REQUEST['cod_mun'] ?? '');
+$codMun = $_POST['cod_mun'] ?? $_GET['cod_mun'] ?? '';
 $usuarioId = $_SESSION['usuario_id'];
 $correoUsuario = $_SESSION['usuario_correo'] ?? '';
 
 try {
     // 2. Validamos el municipio y sus permisos.
-    if ($codMun === '') {
-        throw new Exception('No se ha indicado el municipio.');
+    if (!is_string($codMun) || !preg_match('/^\d{5}$/D', $codMun)) {
+        throw new Exception('El código del municipio no es válido.');
     }
 
     $puedeGestionar = $municipioModel->usuarioPuedeGestionarMunicipio(
@@ -90,10 +86,12 @@ try {
             $datos
         );
 
+        $formulario = $formularioModel->obtenerCompleto($formularioId, $codMun);
         $conn->commit();
 
         responderFormularioOk([
             'id' => $formularioId,
+            'formulario' => $formulario,
             'mensaje' => 'Formulario guardado correctamente.'
         ]);
     }
@@ -173,7 +171,11 @@ try {
         $conn->rollBack();
     }
 
-    responderFormularioError($error->getMessage());
+    if (get_class($error) === Exception::class) {
+        responderFormularioError($error->getMessage());
+    }
+    error_log('Formularios POU: ' . $error->getMessage());
+    responderFormularioError('No se ha podido completar la operación del formulario.', 500);
 }
 
 /**
